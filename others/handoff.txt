@@ -1,6 +1,17 @@
-Context: Intern ako ngayon sa DICT, Computer Science course ko. May pinapagawa sa amin na system ng supervisor namin. Ang system ay attendance-related, pero hindi siya employee daily time-in/time-out. Mas accurate siyang tawagin na **Program/Event Attendance Management System for External Attendees**, with Google Forms currently used as the attendance form.
+Context:
+Intern/OJT ako ngayon sa Department of Information and Communications Technology (DICT). Computer Science ang course ko. May pinapagawa sa akin/sa amin na system ng DICT supervisor namin, and possible itong gamitin sa actual office workflow. Hindi ito thesis, hindi school project, at hindi lang pang-defense. Treat this as a real internal government-office system that needs to be practical, maintainable, secure, and privacy-conscious.
 
-Goal: Gusto kong gawin itong professional app, hindi basta school-project CRUD. Pero ayokong ma-overwhelm, kaya kailangan muna i-solidify ang scope, MVP, requirements, database design, and roadmap bago mag-code.
+System being planned:
+The system is attendance-related, but it is NOT an employee daily time-in/time-out system. It is for managing attendance of external attendees/clients for DICT programs and events.
+
+Best current system name/framing:
+**Program and Event Attendance Monitoring and Reporting System for DICT**
+
+More specific version:
+**QR-Based Program and Event Attendance Management System with Google Forms Integration**
+
+Goal:
+I want help planning this properly before coding. I want the system to be professional and realistic, not overengineered. Focus first on solid scope, MVP, requirements, database design, user roles, workflow, and roadmap.
 
 Supervisor’s minimum requirements/scratch notes:
 
@@ -26,7 +37,7 @@ Database:
 * MySQL
 * Implement normalization, at least 2NF or 3NF
 
-Other specific notes from supervisor:
+Other specific supervisor notes:
 
 * External attendees do not need accounts.
 * Admin creates an event under a program.
@@ -36,36 +47,31 @@ Other specific notes from supervisor:
 * Use PSGC Code for address.
 
 Important update:
-The attendance form is currently Google Forms. So the system should not immediately be treated as a custom form builder unless we decide to make that Phase 2.
+The attendance form is currently Google Forms. So the system should not immediately be treated as a custom form builder unless we explicitly decide to make that Phase 2.
 
-Current best framing:
-**QR-Based Program and Event Attendance Management System with Google Forms Integration**
+Current best understanding:
+Google Forms is the attendance collection layer. The system should be the admin/event/reporting layer around it.
 
-Current understanding of the workflow:
+Correct MVP framing:
+The system manages programs/events, stores Google Form links, generates QR codes, imports or syncs responses, validates attendance data, generates reports, enforces RBAC, and records audit logs.
+
+Do NOT overpromise that the app itself generates the full attendance form unless Google Forms API/Apps Script or a custom built-in form is actually implemented.
+
+Current workflow:
 
 1. Admin logs in.
 2. Admin creates/manages programs.
 3. Admin creates events under programs.
 4. Each event has a Google Form attendance link.
 5. System stores the event’s Google Form link.
-6. System generates a QR code pointing to that Google Form link, ideally a pre-filled Google Form link with an event code.
+6. System generates a QR code pointing to the Google Form link, ideally a pre-filled Google Form link with an event code.
 7. External attendee scans QR/opens link.
 8. External attendee submits attendance through Google Forms.
 9. Google Forms responses are exported or synced.
 10. System imports/reads the responses.
-11. System validates/organizes attendance records.
+11. System validates and stores attendance records in MySQL.
 12. Admin views dashboard and reports per event/program.
 13. System records audit trail for important admin actions.
-
-Important scope correction:
-Since Google Forms is being used, the MVP should not overpromise that the app itself generates the full attendance form unless we actually implement Google Forms API/Apps Script or a custom form. Sa MVP, better sabihin:
-
-* The system manages programs/events.
-* The system stores/links Google Forms.
-* The system generates QR codes for the forms.
-* The system imports/syncs Google Form responses.
-* The system generates reports and dashboard summaries.
-* The system maintains RBAC and audit logs.
 
 Recommended MVP:
 
@@ -73,15 +79,15 @@ Recommended MVP:
 * RBAC
 * Super Admin dashboard
 * Program Admin dashboard
-* Manage programs
+* Program management
 * Assign Program Admins to programs
-* Manage events under programs
+* Event management under programs
 * Attach Google Form link per event
 * Generate QR code per event
-* Open/close/archive event
-* Import Google Form responses, probably via CSV first
+* Event status: draft/open/closed/archived
+* Import Google Form responses, most likely CSV import first
 * Validate imported attendance records
-* Detect duplicate entries within the same event only
+* Detect duplicate submissions within the same event only
 * Dashboard summary
 * Reports per event
 * Reports per program
@@ -101,16 +107,19 @@ Recommended Phase 2:
 * Possible duplicate review/merge feature
 
 Important decision already made:
-Same-person detection across events is useful but should not be core MVP. It is too advanced for now and can cause complexity in identity matching, duplicate detection, privacy, and database design. For MVP, focus only on duplicate detection within the same event.
+Same-person detection across events is useful, but it should NOT be part of the MVP. It is too advanced for now and can cause complexity in identity matching, duplicate detection, privacy, and database design.
+
+For MVP, focus only on duplicate detection within the same event.
 
 Reasoning:
-Core muna:
+Core first:
 
 1. Reliable event attendance capture
-2. Clean reports
-3. RBAC and audit trail
-4. Stable program/event management
-5. Then advanced identity matching later
+2. Clean import process from Google Forms/Sheets
+3. Clean reports
+4. RBAC and audit trail
+5. Stable program/event management
+6. Then advanced identity matching later
 
 For MVP duplicate detection:
 
@@ -118,7 +127,7 @@ For MVP duplicate detection:
 * Same event + same mobile number = duplicate or possible duplicate
 * Name-only matching is weak and should not be relied on
 
-Current recommended MVP database tables:
+Recommended MVP database tables:
 
 * users
 * roles
@@ -132,6 +141,42 @@ Current recommended MVP database tables:
 * psgc_provinces
 * psgc_cities_municipalities
 * psgc_barangays
+
+Possible `users` fields:
+
+* id
+* role_id
+* full_name
+* email
+* password_hash
+* status
+* created_at
+* updated_at
+
+Possible `roles` fields:
+
+* id
+* role_name
+* description
+
+Possible `programs` fields:
+
+* id
+* program_name
+* description
+* office_or_division
+* status
+* created_by
+* created_at
+* updated_at
+
+Possible `program_admin_assignments` fields:
+
+* id
+* user_id
+* program_id
+* assigned_by
+* assigned_at
 
 Possible `events` fields:
 
@@ -169,6 +214,7 @@ Possible `attendance_records` fields:
 * source: csv_import/google_sheet/manual
 * import_batch_id
 * status
+* duplicate_flag
 * created_at
 * updated_at
 
@@ -199,15 +245,16 @@ Possible `audit_logs` fields:
 
 RBAC logic:
 
-* Super Admin can manage all programs, events, users, reports, and audit logs.
-* Program Admin can only manage assigned programs and events under those programs.
+* Super Admin can manage all programs, events, users, reports, imports, exports, and audit logs.
+* Program Admin can only manage assigned programs and events under those assigned programs.
+* Program Admin should not access programs/events outside their assignment.
 * External Attendee has no account and only submits attendance through Google Forms.
 
-Important professional requirements:
+Important real-office requirements:
 
 * Password hashing
-* RBAC enforcement, especially Program Admin restrictions
-* Audit trail
+* Strict RBAC enforcement
+* Audit trail for important actions
 * Soft delete/archive instead of hard delete where appropriate
 * Report export
 * Search/filter/pagination
@@ -216,6 +263,20 @@ Important professional requirements:
 * Avoid collecting unnecessary personal data
 * Do not collect government ID unless explicitly required
 * Do not add biometrics/facial recognition; overkill and privacy-heavy
+* Documentation should be clear enough for future DICT staff/admins to maintain
+
+Operational questions still needing clarification from supervisor:
+
+1. Will Google Forms be permanent, or is it acceptable to make it Phase 1 only and later replace it with a custom form?
+2. Who creates the Google Form: DICT staff manually, or should the system generate/manage it later?
+3. Will attendance responses be imported manually via CSV first, or should the system sync from Google Sheets?
+4. What exact fields are required in the Google Form?
+5. Is email required, mobile required, or at least one of the two?
+6. How strict should duplicate checking be?
+7. Are Program Admins assigned to one program only or multiple programs?
+8. Who can export reports?
+9. What report format is required: CSV, Excel, PDF, or all?
+10. What retention/privacy rules does the office expect?
 
 Biggest risks:
 
@@ -226,6 +287,7 @@ Biggest risks:
 5. Duplicate submissions from public links
 6. Treating Google Forms as the whole system
 7. Adding same-person detection too early
+8. Not documenting the system well enough for actual DICT use
 
 Need help next with:
 
@@ -238,6 +300,7 @@ Need help next with:
 * 2NF/3NF explanation
 * Development roadmap
 * Questions to clarify with supervisor
+* Documentation wording suitable for a real DICT internal system, not a school/thesis project
 
-Preferred tone/help style:
-Be direct and critical. Do not just validate ideas. Help me simplify the scope, avoid bad architecture, and make the system professional but realistic.
+Preferred help style:
+Be direct and critical. Do not just validate ideas. Help simplify the scope, avoid bad architecture, and make the system professional but realistic for actual DICT use.
