@@ -1,0 +1,41 @@
+
+
+Features 
+- Login for admin
+- Attendance UI for external user
+-Dashboard Summary
+-Programs /Adding of programs
+-Adding of Event per program
+-Reports Generation per event/program
+-Audit Trail
+
+Implement the RBAC
+3 roles in the system
+-Super admin
+-admin per program
+-external clients
+
+
+=======================================================================================================
+
+Database niyo MySQL, implement kayo normalization atleast 2nd normal form or 3rd normal form - ipa generate niyo to kay claude maganda yun sa database structure
+
+=======================================================================================================
+
+ME:
+btw sir, yung process ng attendance ay parang magsesend nalang ng qr/link sa attendee (then mag iinput nalang sila ng details nila nang mabilisan)
+kumbaga walang account ang external client parang mag iinput lang talaga sila sa attendance form?
+
+
+SIR:
+
+Yup, walang account ang external, 
+
+Mag gegenerate lang si admin ng event sa program nila then maga generate automatic ng qr code and link, yun naman yung attendace form na pag iinputan ng mga external users
+
+======================================================================================================
+
+tandaan niyo guys sa attendance lalo na sa name dapat sa standard format hiwalay ang first name , midde name at last name
+======================================================================================================
+
+gamit rin kayo ng PSGC Code sa address
