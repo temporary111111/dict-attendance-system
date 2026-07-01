@@ -1,0 +1,243 @@
+Context: Intern ako ngayon sa DICT, Computer Science course ko. May pinapagawa sa amin na system ng supervisor namin. Ang system ay attendance-related, pero hindi siya employee daily time-in/time-out. Mas accurate siyang tawagin na **Program/Event Attendance Management System for External Attendees**, with Google Forms currently used as the attendance form.
+
+Goal: Gusto kong gawin itong professional app, hindi basta school-project CRUD. Pero ayokong ma-overwhelm, kaya kailangan muna i-solidify ang scope, MVP, requirements, database design, and roadmap bago mag-code.
+
+Supervisor’s minimum requirements/scratch notes:
+
+Features:
+
+* Login for admin
+* Attendance UI for external user
+* Dashboard summary
+* Programs / adding of programs
+* Adding of event per program
+* Reports generation per event/program
+* Audit trail
+* Implement RBAC
+
+Roles:
+
+* Super Admin
+* Admin per program
+* External clients / external attendees
+
+Database:
+
+* MySQL
+* Implement normalization, at least 2NF or 3NF
+
+Other specific notes from supervisor:
+
+* External attendees do not need accounts.
+* Admin creates an event under a program.
+* System should generate a QR code and/or link for the attendance form.
+* External users open the QR/link and input their details.
+* For names, use standard format: separate first name, middle name, last name, and suffix.
+* Use PSGC Code for address.
+
+Important update:
+The attendance form is currently Google Forms. So the system should not immediately be treated as a custom form builder unless we decide to make that Phase 2.
+
+Current best framing:
+**QR-Based Program and Event Attendance Management System with Google Forms Integration**
+
+Current understanding of the workflow:
+
+1. Admin logs in.
+2. Admin creates/manages programs.
+3. Admin creates events under programs.
+4. Each event has a Google Form attendance link.
+5. System stores the event’s Google Form link.
+6. System generates a QR code pointing to that Google Form link, ideally a pre-filled Google Form link with an event code.
+7. External attendee scans QR/opens link.
+8. External attendee submits attendance through Google Forms.
+9. Google Forms responses are exported or synced.
+10. System imports/reads the responses.
+11. System validates/organizes attendance records.
+12. Admin views dashboard and reports per event/program.
+13. System records audit trail for important admin actions.
+
+Important scope correction:
+Since Google Forms is being used, the MVP should not overpromise that the app itself generates the full attendance form unless we actually implement Google Forms API/Apps Script or a custom form. Sa MVP, better sabihin:
+
+* The system manages programs/events.
+* The system stores/links Google Forms.
+* The system generates QR codes for the forms.
+* The system imports/syncs Google Form responses.
+* The system generates reports and dashboard summaries.
+* The system maintains RBAC and audit logs.
+
+Recommended MVP:
+
+* Admin login/logout
+* RBAC
+* Super Admin dashboard
+* Program Admin dashboard
+* Manage programs
+* Assign Program Admins to programs
+* Manage events under programs
+* Attach Google Form link per event
+* Generate QR code per event
+* Open/close/archive event
+* Import Google Form responses, probably via CSV first
+* Validate imported attendance records
+* Detect duplicate entries within the same event only
+* Dashboard summary
+* Reports per event
+* Reports per program
+* Export reports
+* Audit trail
+
+Recommended Phase 2:
+
+* Automatic Google Sheets sync
+* Google Forms API or Apps Script integration
+* Custom attendance form inside the system
+* PSGC cascading dropdowns: Region → Province → City/Municipality → Barangay
+* Same-person detection across multiple events
+* Unique attendee analytics
+* Repeat attendee tracking
+* Attendee profile management
+* Possible duplicate review/merge feature
+
+Important decision already made:
+Same-person detection across events is useful but should not be core MVP. It is too advanced for now and can cause complexity in identity matching, duplicate detection, privacy, and database design. For MVP, focus only on duplicate detection within the same event.
+
+Reasoning:
+Core muna:
+
+1. Reliable event attendance capture
+2. Clean reports
+3. RBAC and audit trail
+4. Stable program/event management
+5. Then advanced identity matching later
+
+For MVP duplicate detection:
+
+* Same event + same email = duplicate or possible duplicate
+* Same event + same mobile number = duplicate or possible duplicate
+* Name-only matching is weak and should not be relied on
+
+Current recommended MVP database tables:
+
+* users
+* roles
+* programs
+* program_admin_assignments
+* events
+* attendance_records
+* attendance_import_batches
+* audit_logs
+* psgc_regions
+* psgc_provinces
+* psgc_cities_municipalities
+* psgc_barangays
+
+Possible `events` fields:
+
+* id
+* program_id
+* event_title
+* event_description
+* venue
+* event_date
+* google_form_url
+* google_sheet_url or google_sheet_id
+* event_code
+* qr_code_path
+* status: draft/open/closed/archived
+* created_by
+* created_at
+* updated_at
+
+Possible `attendance_records` fields:
+
+* id
+* event_id
+* timestamp_from_google_form
+* first_name
+* middle_name
+* last_name
+* suffix
+* email
+* mobile_number
+* region_code
+* province_code
+* city_municipality_code
+* barangay_code
+* street_address
+* source: csv_import/google_sheet/manual
+* import_batch_id
+* status
+* created_at
+* updated_at
+
+Possible `attendance_import_batches` fields:
+
+* id
+* event_id
+* imported_by
+* source_filename
+* total_rows
+* successful_rows
+* failed_rows
+* imported_at
+
+Possible `audit_logs` fields:
+
+* id
+* user_id
+* action
+* entity_type
+* entity_id
+* description
+* old_value optional
+* new_value optional
+* ip_address optional
+* user_agent optional
+* created_at
+
+RBAC logic:
+
+* Super Admin can manage all programs, events, users, reports, and audit logs.
+* Program Admin can only manage assigned programs and events under those programs.
+* External Attendee has no account and only submits attendance through Google Forms.
+
+Important professional requirements:
+
+* Password hashing
+* RBAC enforcement, especially Program Admin restrictions
+* Audit trail
+* Soft delete/archive instead of hard delete where appropriate
+* Report export
+* Search/filter/pagination
+* PSGC-aware address handling
+* Data privacy notice/consent in the attendance form
+* Avoid collecting unnecessary personal data
+* Do not collect government ID unless explicitly required
+* Do not add biometrics/facial recognition; overkill and privacy-heavy
+
+Biggest risks:
+
+1. Scope creep
+2. Overpromising Google Forms automation
+3. Weak RBAC
+4. Messy PSGC handling
+5. Duplicate submissions from public links
+6. Treating Google Forms as the whole system
+7. Adding same-person detection too early
+
+Need help next with:
+
+* Clean MVP scope
+* Functional requirements
+* Non-functional requirements
+* User roles and permissions
+* User flow
+* Database/ERD v1
+* 2NF/3NF explanation
+* Development roadmap
+* Questions to clarify with supervisor
+
+Preferred tone/help style:
+Be direct and critical. Do not just validate ideas. Help me simplify the scope, avoid bad architecture, and make the system professional but realistic.
