@@ -2,20 +2,15 @@
 
 ## Program and Event Attendance Monitoring and Reporting System for DICT
 
-## External Entities
-
-### Super Admin
-# DFD Level 0 / Context Diagram
-
-## Program and Event Attendance Monitoring and Reporting System for DICT
-
 ## 1. Purpose
 
 This DFD Level 0 shows the high-level data flow between the main system and its external entities.
 
-The system manages DICT programs and events, stores Google Form links, generates QR codes, imports attendance responses, generates reports, and records audit logs.
+The system manages DICT programs and events, generates public attendance links and QR codes, collects attendance through a fixed system attendance page, stores attendance records, generates downloadable attendance sheets using the DICT template, generates reports, and records audit logs.
 
-For the MVP, Google Forms is used as the attendance collection tool. External attendees submit attendance through Google Forms, not directly through the system.
+Important update:
+
+Google Forms and Google Sheets are no longer external entities in the MVP. Attendance is collected directly by the system.
 
 ---
 
@@ -30,10 +25,11 @@ The system handles:
 * Admin login
 * Program management
 * Event management
-* Google Form link management
-* QR code generation
-* Attendance response import
+* Attendance link and QR code generation
+* Fixed public attendance submission
 * Attendance validation
+* Attendance records management
+* Attendance sheet generation
 * Report generation
 * Audit trail
 
@@ -52,6 +48,8 @@ Data sent to the system:
 * Admin account details
 * Program Admin assignments
 * Event details
+* Event status changes
+* Attendance sheet generation requests
 * Report requests
 
 Data received from the system:
@@ -60,6 +58,9 @@ Data received from the system:
 * Dashboard summary
 * Program records
 * Event records
+* Generated attendance link and QR code
+* Attendance records
+* Downloadable attendance sheets
 * Attendance reports
 * Audit logs
 
@@ -72,9 +73,10 @@ The Program Admin manages events and attendance records for assigned programs on
 Data sent to the system:
 
 * Login credentials
-* Event details
-* Google Form link
-* Attendance CSV file
+* Event details for assigned programs
+* Event status changes for assigned events
+* QR code/link generation requests
+* Attendance sheet generation requests
 * Report requests
 
 Data received from the system:
@@ -82,141 +84,82 @@ Data received from the system:
 * Login result
 * Assigned program list
 * Event records
-* Generated QR code
-* Attendance import result
-* Event/program reports
+* Generated attendance link and QR code
+* Attendance records for assigned events
+* Downloadable attendance sheets for assigned events, if allowed
+* Event/program reports for assigned scope
 
 ---
 
 ## 3.3 External Attendee
 
-The External Attendee submits attendance details through Google Forms.
-
-Data sent to Google Forms:
-
-* Name
-* Contact details
-* Address details
-* Consent response
-* Event code, if included in the form
-
-Data received:
-
-* Google Form confirmation message
-
-Important: The External Attendee does not log in to the system.
-
----
-
-## 3.4 Google Forms / Google Sheets
-
-Google Forms collects attendance responses from external attendees. Google Sheets or exported CSV files provide attendance data for import into the system.
-
-Data received from the system/admin:
-
-* Google Form link used for QR generation
-* Event code, if pre-filled link is used
+The External Attendee submits attendance details through the system's fixed public attendance page.
 
 Data sent to the system:
 
-* Attendance response data
-* Response timestamp
-* Submitted attendee details
-* Exported CSV file or linked Google Sheet data
+* Name
+* School/University
+* Designation/Category
+* Sex
+* Email address
+* Consent responses
+* Signature, if required
+
+Data received from the system:
+
+* Public attendance page
+* Validation messages
+* Submission confirmation
+
+Important:
+
+The External Attendee does not log in to the admin system.
+
+---
+
+## 3.4 DICT Attendance Sheet Template
+
+The supervisor-provided DICT attendance sheet format is used as an output template.
+
+Data sent to the system:
+
+* Template layout requirements
+* Required attendance sheet fields
+* Privacy notice wording, if office-approved
+
+Data received from the system:
+
+* Generated downloadable attendance sheet for a selected event
+
+Important:
+
+The template is not a dynamic form builder. It is the format used for generated reports/downloads.
 
 ---
 
 ## 4. High-Level Data Flow Summary
 
-1. Super Admin logs in and manages programs, users, events, and reports.
+1. Super Admin logs in and manages users, programs, events, reports, and audit logs.
 2. Program Admin logs in and manages events under assigned programs.
-3. Program Admin attaches a Google Form link to an event.
-4. The system generates a QR code pointing to the Google Form link.
-5. External Attendee scans QR code and submits attendance through Google Forms.
-6. Google Forms stores attendance responses.
-7. Admin exports or syncs the attendance responses.
-8. The system imports and validates attendance data.
+3. Admin opens an event for attendance collection.
+4. The system generates a public attendance link and QR code.
+5. External Attendee scans the QR code or opens the link.
+6. External Attendee submits attendance through the fixed system page.
+7. The system validates and stores the attendance record.
+8. Admin closes the event after attendance collection.
 9. The system generates dashboard summaries and reports.
-10. The system records important admin actions in the audit trail.
-
-The Super Admin manages system users, programs, events, reports, and audit logs.
-
-### Program Admin
-
-The Program Admin manages events and attendance records only for assigned programs.
-
-### External Attendee
-
-The External Attendee submits attendance details through Google Forms. The attendee does not have a system account.
-
-### Google Forms / Google Sheets
-
-Google Forms collects attendance responses from external attendees. Google Sheets or exported CSV files provide the attendance response data to the system.
+10. The system generates downloadable attendance sheets using the DICT template.
+11. The system records important admin actions in the audit trail.
 
 ---
 
-## Main Process
+## 5. Critical Rules Reflected in DFD Level 0
 
-### Program and Event Attendance Monitoring and Reporting System
-
-The system manages DICT programs and events, stores Google Form links, generates QR codes, imports attendance responses, validates records, generates reports, and records audit logs.
-
----
-
-## Data Flows
-
-### Super Admin to System
-
-* Login credentials
-* Program details
-* Admin account details
-* Program Admin assignments
-* Event details
-* Report requests
-
-### System to Super Admin
-
-* Login result
-* Dashboard summary
-* Program records
-* Event records
-* Attendance reports
-* Audit logs
-
-### Program Admin to System
-
-* Login credentials
-* Event details
-* Google Form link
-* CSV attendance file
-* Report requests
-
-### System to Program Admin
-
-* Login result
-* Assigned program list
-* Event list
-* Generated QR code
-* Attendance import results
-* Event/program reports
-
-### External Attendee to Google Forms
-
-* Attendance details
-* Name
-* Contact information
-* Address information
-* Consent response
-
-### Google Forms / Google Sheets to System
-
-* Attendance response data
-* Exported CSV file
-* Response timestamp
-* Submitted attendee details
-
-### System to Google Form Link / QR
-
-* Stored Google Form link
-* Event code
-* QR code pointing to the attendance form
+1. External Attendees do not have system accounts.
+2. Attendance is submitted directly to the system.
+3. Google Forms and CSV import are not part of the core MVP flow.
+4. Program Admin access is limited to assigned programs.
+5. Attendance records are linked to events.
+6. Events are linked to programs.
+7. The attendance sheet template is an output/report format.
+8. Audit logs are created for important admin actions.

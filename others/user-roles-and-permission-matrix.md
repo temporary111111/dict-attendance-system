@@ -8,6 +8,12 @@ This document defines the access permissions of each user role in the system. Th
 
 The system will use Role-Based Access Control (RBAC). Each admin user will be assigned a role, and each role will determine what actions the user can perform.
 
+Updated scope:
+
+* Attendance is collected through the system's fixed public attendance page.
+* Google Forms and CSV import are not part of the core MVP flow.
+* The supervisor-provided attendance sheet is a downloadable report/output template.
+
 ---
 
 ## 2. User Roles
@@ -18,7 +24,7 @@ The MVP will support three main user categories:
 2. Program Admin
 3. External Attendee
 
-Only Super Admin and Program Admin users can log in to the system. External Attendees do not have accounts and only submit attendance through Google Forms.
+Only Super Admin and Program Admin users can log in to the admin system. External Attendees do not have accounts and only submit attendance through the public event attendance page.
 
 ---
 
@@ -34,8 +40,9 @@ The Super Admin is responsible for:
 * Managing all programs
 * Assigning Program Admins to programs
 * Managing all events
+* Generating event attendance links and QR codes
 * Viewing all attendance records
-* Importing attendance responses
+* Generating and downloading official attendance sheets
 * Generating reports
 * Exporting reports
 * Viewing audit logs
@@ -52,13 +59,13 @@ The Program Admin has limited access based on assigned programs.
 The Program Admin is responsible for:
 
 * Managing events under assigned programs
-* Attaching Google Form links to assigned events
-* Generating QR codes for assigned events
-* Importing attendance records for assigned events
+* Opening and closing attendance collection for assigned events
+* Generating QR codes and public attendance links for assigned events
 * Viewing attendance records under assigned programs
+* Generating attendance sheets for assigned events, if allowed
 * Generating reports for assigned programs/events
 
-The Program Admin must not access programs, events, attendance records, or reports outside their assigned programs.
+The Program Admin must not access programs, events, attendance records, reports, or downloads outside their assigned programs.
 
 ---
 
@@ -70,55 +77,56 @@ The External Attendee:
 
 * Does not have a login account
 * Does not access the admin system
-* Only opens the Google Form through a QR code or link
-* Submits attendance details through Google Forms
+* Opens the event attendance page through a QR code or public link
+* Submits attendance details through the fixed system attendance page
 
 ---
 
 ## 4. Permissions Matrix
 
-| Module / Feature                       |           Super Admin |                Program Admin |         External Attendee |
-| -------------------------------------- | --------------------: | ---------------------------: | ------------------------: |
-| Log in to admin system                 |                   Yes |                          Yes |                        No |
-| Log out of admin system                |                   Yes |                          Yes |                        No |
-| View dashboard                         |                   Yes |                      Limited |                        No |
-| View all dashboard data                |                   Yes |                           No |                        No |
-| View assigned program dashboard data   |                   Yes |                          Yes |                        No |
-| Create admin users                     |                   Yes |                           No |                        No |
-| Edit admin users                       |                   Yes |                           No |                        No |
-| Activate/deactivate admin users        |                   Yes |                           No |                        No |
-| Assign Program Admins to programs      |                   Yes |                           No |                        No |
-| Create programs                        |                   Yes | No, unless allowed by policy |                        No |
-| View all programs                      |                   Yes |                           No |                        No |
-| View assigned programs                 |                   Yes |                          Yes |                        No |
-| Edit all programs                      |                   Yes |                           No |                        No |
-| Edit assigned programs                 |                   Yes |   Maybe, depending on policy |                        No |
-| Archive programs                       |                   Yes |                           No |                        No |
-| Create events                          |                   Yes |  Yes, assigned programs only |                        No |
-| View all events                        |                   Yes |                           No |                        No |
-| View assigned program events           |                   Yes |                          Yes |                        No |
-| Edit all events                        |                   Yes |                           No |                        No |
-| Edit assigned program events           |                   Yes |                          Yes |                        No |
-| Archive all events                     |                   Yes |                           No |                        No |
-| Archive assigned program events        |                   Yes |    Yes, if allowed by policy |                        No |
-| Attach Google Form link                |                   Yes |    Yes, assigned events only |                        No |
-| Update Google Form link                |                   Yes |    Yes, assigned events only |                        No |
-| Generate QR code                       |                   Yes |    Yes, assigned events only |                        No |
-| Open/close event attendance status     |                   Yes |    Yes, assigned events only |                        No |
-| Submit attendance                      |                    No |                           No | Yes, through Google Forms |
-| Import attendance responses            |                   Yes |    Yes, assigned events only |                        No |
-| View all attendance records            |                   Yes |                           No |                        No |
-| View assigned event attendance records |                   Yes |                          Yes |                        No |
-| Edit attendance records                |            Restricted |             Restricted or No |                        No |
-| Delete attendance records              | No, archive/void only |                           No |                        No |
-| Mark attendance as void/invalid        |                   Yes |  Maybe, assigned events only |                        No |
-| View reports for all programs          |                   Yes |                           No |                        No |
-| View reports for assigned programs     |                   Yes |                          Yes |                        No |
-| Export all reports                     |                   Yes |                           No |                        No |
-| Export assigned program reports        |                   Yes |    Yes, if allowed by policy |                        No |
-| View audit logs                        |                   Yes |                No or limited |                        No |
-| Manage PSGC reference data             |                   Yes |                           No |                        No |
-| Access system settings                 |                   Yes |                           No |                        No |
+| Module / Feature                         | Super Admin | Program Admin                 | External Attendee        |
+| ---------------------------------------- | ----------: | -----------------------------:| -----------------------: |
+| Log in to admin system                   | Yes         | Yes                           | No                       |
+| Log out of admin system                  | Yes         | Yes                           | No                       |
+| View dashboard                           | Yes         | Limited                       | No                       |
+| View all dashboard data                  | Yes         | No                            | No                       |
+| View assigned program dashboard data     | Yes         | Yes                           | No                       |
+| Create admin users                       | Yes         | No                            | No                       |
+| Edit admin users                         | Yes         | No                            | No                       |
+| Activate/deactivate admin users          | Yes         | No                            | No                       |
+| Assign Program Admins to programs        | Yes         | No                            | No                       |
+| Create programs                          | Yes         | No                            | No                       |
+| View all programs                        | Yes         | No                            | No                       |
+| View assigned programs                   | Yes         | Yes                           | No                       |
+| Edit all programs                        | Yes         | No                            | No                       |
+| Edit assigned programs                   | Yes         | No                            | No                       |
+| Archive programs                         | Yes         | No                            | No                       |
+| Create events                            | Yes         | Yes, assigned programs only   | No                       |
+| View all events                          | Yes         | No                            | No                       |
+| View assigned program events             | Yes         | Yes                           | No                       |
+| Edit all events                          | Yes         | No                            | No                       |
+| Edit assigned program events             | Yes         | Yes                           | No                       |
+| Archive all events                       | Yes         | No                            | No                       |
+| Archive assigned program events          | Yes         | No, close only by default     | No                       |
+| Open/close event attendance status       | Yes         | Yes, assigned events only     | No                       |
+| Generate public attendance link          | Yes         | Yes, assigned events only     | No                       |
+| Generate QR code                         | Yes         | Yes, assigned events only     | No                       |
+| Submit attendance                        | No          | No                            | Yes, public page only    |
+| View all attendance records              | Yes         | No                            | No                       |
+| View assigned event attendance records   | Yes         | Yes                           | No                       |
+| Edit attendance records                  | Restricted  | Restricted or No              | No                       |
+| Delete attendance records                | No, void only | No                          | No                       |
+| Mark attendance as void/invalid          | Yes         | Maybe, assigned events only   | No                       |
+| Generate all attendance sheets           | Yes         | No                            | No                       |
+| Generate assigned event attendance sheet | Yes         | Yes, if allowed by policy     | No                       |
+| Download all attendance sheets           | Yes         | No                            | No                       |
+| Download assigned attendance sheets      | Yes         | Yes, if allowed by policy     | No                       |
+| View reports for all programs            | Yes         | No                            | No                       |
+| View reports for assigned programs       | Yes         | Yes                           | No                       |
+| Export all reports                       | Yes         | No                            | No                       |
+| Export assigned program reports          | Yes         | Yes, if allowed by policy     | No                       |
+| View audit logs                          | Yes         | No or limited                 | No                       |
+| Access system settings                   | Yes         | No                            | No                       |
 
 ---
 
@@ -132,7 +140,7 @@ Only the Super Admin should create programs.
 
 Reason:
 
-Program records are high-level records. If every Program Admin can create programs, the system may become messy and inconsistent.
+Program records are high-level records. If every Program Admin can create programs, the system may become inconsistent.
 
 Recommended rule:
 
@@ -153,10 +161,6 @@ Recommended rule:
 
 * Super Admin: can edit program details
 * Program Admin: can view assigned program details but cannot edit program details
-
-Optional future rule:
-
-Program Admins may edit limited fields only, such as program description or remarks, if approved by office policy.
 
 ---
 
@@ -190,17 +194,13 @@ Fields Program Admins may edit:
 * Event description
 * Venue
 * Event date
-* Google Form link
-* Google Sheet link, if used
-* Event status
+* Event status, if allowed by policy
 
 ---
 
 ## 5.5 Event Archiving
 
-Program Admins may archive events only if the office allows it.
-
-Sa MVP, safer kung Super Admin lang muna ang final archive authority.
+Program Admins may close events under assigned programs, but event archiving should be limited.
 
 Recommended stricter rule:
 
@@ -211,7 +211,22 @@ This reduces accidental hiding of important records.
 
 ---
 
-## 5.6 Attendance Record Editing
+## 5.6 Attendance Link and QR Code
+
+Program Admins should be allowed to generate attendance links and QR codes for assigned events.
+
+Recommended rule:
+
+* Super Admin: can generate links and QR codes for all events
+* Program Admin: can generate links and QR codes for assigned events only
+
+Important rule:
+
+The generated QR code points to the system's public attendance page for the event.
+
+---
+
+## 5.7 Attendance Record Editing
 
 Attendance records should not be freely editable.
 
@@ -221,20 +236,20 @@ Attendance records are official operational records. If admins can casually edit
 
 Recommended MVP rule:
 
-* Imported attendance records should be viewable.
+* Attendance records should be viewable.
 * Editing should be restricted.
-* If correction is needed, record should be marked as void/invalid or corrected through a controlled process.
+* If correction is needed, the record should be marked as void/invalid or corrected through a controlled process.
 * Any correction must be logged in the audit trail.
 
 Recommended permission:
 
 * Super Admin: can mark records as void/invalid
-* Program Admin: can request or flag issues, but not directly delete records
-* External Attendee: no access
+* Program Admin: can request or flag issues, or mark records only if allowed by policy
+* External Attendee: no access after submission
 
 ---
 
-## 5.7 Attendance Deletion
+## 5.8 Attendance Deletion
 
 Hard deletion should not be allowed for attendance records in the MVP.
 
@@ -244,11 +259,21 @@ Recommended rule:
 * Use status such as valid, duplicate, invalid, or void.
 * Keep audit logs for any status changes.
 
-This is safer for real office use.
+---
+
+## 5.9 Attendance Sheet Download
+
+The downloadable attendance sheet may contain personal information, consent responses, and signatures if implemented.
+
+Recommended rule:
+
+* Super Admin: can generate and download attendance sheets for all events
+* Program Admin: can generate and download attendance sheets only for assigned events, if allowed by office policy
+* All downloads must be recorded in the audit trail
 
 ---
 
-## 5.8 Report Export
+## 5.10 Report Export
 
 Report export should be controlled because reports may contain personal information.
 
@@ -260,7 +285,7 @@ Recommended rule:
 
 ---
 
-## 5.9 Audit Log Access
+## 5.11 Audit Log Access
 
 Only Super Admin should view the full audit trail in the MVP.
 
@@ -284,6 +309,7 @@ The Super Admin can access:
 * All programs
 * All events
 * All attendance records
+* All attendance sheet downloads/exports
 * All reports
 * All audit logs
 * All admin users
@@ -297,6 +323,7 @@ A Program Admin can access only:
 * Programs assigned to them
 * Events under assigned programs
 * Attendance records under assigned events
+* Attendance sheets under assigned events, if allowed
 * Reports under assigned programs/events
 
 A Program Admin must not access:
@@ -304,6 +331,7 @@ A Program Admin must not access:
 * Unassigned programs
 * Events under unassigned programs
 * Attendance records from unassigned events
+* Attendance sheets from unassigned events
 * Reports from unassigned programs
 * Admin account management
 * Full audit trail
@@ -314,7 +342,7 @@ A Program Admin must not access:
 
 External Attendees do not access stored system data.
 
-They only submit attendance through the Google Form link provided for the event.
+They only submit attendance through the public event attendance page.
 
 ---
 
@@ -329,20 +357,29 @@ Hiding buttons in the UI is not enough.
 
 Example:
 
-Even if the Program Admin cannot see the “Edit Program” button, the backend must still block unauthorized requests if the Program Admin tries to access the endpoint directly.
+Even if the Program Admin cannot see the Edit Event button, the backend must still block unauthorized requests if the Program Admin tries to access the endpoint directly.
 
 ---
 
 ## 8. Required Authorization Checks
 
-Every protected action should check:
+Every protected admin action should check:
 
 1. Is the user logged in?
 2. Is the user active?
-3. What is the user’s role?
+3. What is the user's role?
 4. If Program Admin, is the program assigned to this user?
 5. If accessing an event, does the event belong to an assigned program?
 6. If accessing attendance records, do the records belong to an assigned event/program?
+7. If generating/downloading an attendance sheet, does the event belong to an assigned program?
+
+Public attendance submission should check:
+
+1. Does the event code/link exist?
+2. Is the event open?
+3. Is the event archived?
+4. Is the submitted data valid?
+5. Does the submission look like a duplicate for the same event?
 
 ---
 
@@ -359,34 +396,46 @@ Otherwise, deny access.
 
 ---
 
-## 9.2 Program Admin importing attendance
+## 9.2 Program Admin opening attendance collection
 
 Allowed only if:
 
 * User role is Program Admin
-* Selected event belongs to assigned program
+* Selected event belongs to an assigned program
 * Event is not archived
 
 Otherwise, deny access.
 
 ---
 
-## 9.3 Super Admin exporting program report
+## 9.3 External attendee submitting attendance
+
+Allowed only if:
+
+* Public event link is valid
+* Event status is open
+* Submission passes validation
+
+Otherwise, reject or show an appropriate message.
+
+---
+
+## 9.4 Super Admin downloading event attendance sheet
 
 Allowed if:
 
 * User role is Super Admin
-* Program exists
+* Event exists
 
 ---
 
-## 9.4 Program Admin exporting program report
+## 9.5 Program Admin downloading event attendance sheet
 
 Allowed only if:
 
 * User role is Program Admin
-* Program is assigned to that Program Admin
-* Export permission is enabled for Program Admins
+* Event belongs to a program assigned to that Program Admin
+* Download permission is enabled for Program Admins
 
 ---
 
@@ -405,11 +454,10 @@ Can:
 * View assigned programs
 * Create events under assigned programs
 * Edit events under assigned programs
-* Attach/update Google Form links for assigned events
-* Generate QR codes for assigned events
+* Generate QR codes and attendance links for assigned events
 * Open/close assigned events
-* Import attendance responses for assigned events
 * View attendance records for assigned events
+* Generate attendance sheets for assigned events, if allowed
 * Generate reports for assigned programs/events
 * Export assigned reports, if allowed
 
@@ -426,7 +474,7 @@ Cannot:
 
 ### External Attendee
 
-Can only submit attendance through Google Forms.
+Can only submit attendance through the public event attendance page.
 
 ---
 
@@ -434,23 +482,25 @@ Can only submit attendance through Google Forms.
 
 The system should log the following actions:
 
-| Action                         | Logged for Super Admin | Logged for Program Admin |
-| ------------------------------ | ---------------------: | -----------------------: |
-| Login                          |                    Yes |                      Yes |
-| Logout                         |                    Yes |                      Yes |
-| Create program                 |                    Yes |           Not applicable |
-| Update program                 |                    Yes |           Not applicable |
-| Archive program                |                    Yes |           Not applicable |
-| Assign Program Admin           |                    Yes |           Not applicable |
-| Create event                   |                    Yes |                      Yes |
-| Update event                   |                    Yes |                      Yes |
-| Close event                    |                    Yes |                      Yes |
-| Archive event                  |                    Yes |               If allowed |
-| Attach/update Google Form link |                    Yes |                      Yes |
-| Generate QR code               |                    Yes |                      Yes |
-| Import attendance records      |                    Yes |                      Yes |
-| Export report                  |                    Yes |                      Yes |
-| Mark attendance invalid/void   |                    Yes |               If allowed |
+| Action                              | Logged for Super Admin | Logged for Program Admin |
+| ----------------------------------- | ---------------------: | -----------------------: |
+| Login                               | Yes                    | Yes                      |
+| Logout                              | Yes                    | Yes                      |
+| Create program                      | Yes                    | Not applicable           |
+| Update program                      | Yes                    | Not applicable           |
+| Archive program                     | Yes                    | Not applicable           |
+| Assign Program Admin                | Yes                    | Not applicable           |
+| Create event                        | Yes                    | Yes                      |
+| Update event                        | Yes                    | Yes                      |
+| Open event attendance               | Yes                    | Yes                      |
+| Close event attendance              | Yes                    | Yes                      |
+| Archive event                       | Yes                    | If allowed               |
+| Generate attendance link / QR code  | Yes                    | Yes                      |
+| Generate/download attendance sheet  | Yes                    | Yes, if allowed          |
+| Export report                       | Yes                    | Yes, if allowed          |
+| Mark attendance invalid/void        | Yes                    | If allowed               |
+
+Public attendee submissions may also be logged as system events, but audit logs should not expose unnecessary personal data.
 
 ---
 

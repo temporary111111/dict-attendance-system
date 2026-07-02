@@ -39,3 +39,32 @@ tandaan niyo guys sa attendance lalo na sa name dapat sa standard format hiwalay
 ======================================================================================================
 
 gamit rin kayo ng PSGC Code sa address
+
+======================================================================================================
+
+LATEST UPDATE / CLARIFICATION:
+
+Hindi na connected sa Google Forms ang system.
+
+Hindi rin gagawa ng dynamic form builder. Fixed attendance input lang ang gagamitin ng external attendees.
+
+Yung PDF na binigay ng supervisor:
+[ Attendance ] Coding Competition - Coding Competition.pdf
+
+Ang meaning nito ay attendance sheet/report template na susundin kapag admin magge-generate at magdo-download ng attendance sheet after/during the event.
+
+Updated flow:
+1. Admin creates program.
+2. Admin creates event under program.
+3. System generates QR/link for the event attendance page.
+4. External attendee opens QR/link and submits fixed attendance details.
+5. System saves attendance records directly to MySQL.
+6. Admin closes event when attendance collection is done.
+7. Admin downloads generated attendance sheet using the DICT template format.
+
+Important:
+- No Google Forms for MVP.
+- No Google Sheets sync for MVP.
+- No CSV import as main attendance flow.
+- No form builder for MVP.
+- Template is output/report format, not input form builder.

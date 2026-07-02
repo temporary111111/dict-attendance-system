@@ -4,9 +4,16 @@
 
 ## 1. Purpose
 
-This process flow explains how the system will work from program creation up to attendance reporting.
+This process flow explains how the system will work from program creation up to attendance sheet generation and reporting.
 
-The system is intended for DICT program/event attendance monitoring. It is not an employee daily time-in/time-out system. External attendees will not have system accounts. For the MVP, attendance responses will be collected through Google Forms, then imported or synced into the system for validation, reporting, and record management.
+The system is intended for DICT program/event attendance monitoring. It is not an employee daily time-in/time-out system. External attendees will not have system accounts. The system will collect attendance through a fixed public attendance page and will generate downloadable attendance sheets based on the DICT template provided by the supervisor.
+
+Important scope update:
+
+* Google Forms is no longer part of the MVP.
+* CSV import is no longer the primary attendance flow.
+* The system will not include a form builder.
+* The supervisor-provided attendance sheet is the downloadable output/report template.
 
 ---
 
@@ -18,14 +25,16 @@ The basic workflow is:
 2. Super Admin creates a program.
 3. Super Admin assigns Program Admins to the program.
 4. Program Admin or Super Admin creates an event under the program.
-5. Admin attaches the Google Form link to the event.
-6. System generates a QR code for the Google Form link.
+5. Admin opens the event for attendance collection.
+6. System generates a public attendance link and QR code for the event.
 7. External attendee scans the QR code or opens the link.
-8. External attendee submits attendance through Google Forms.
-9. Admin imports the Google Form responses into the system.
-10. System validates and stores attendance records.
-11. Admin views dashboard and generates reports.
-12. System records important actions in the audit trail.
+8. External attendee submits attendance through the fixed system attendance page.
+9. System validates and stores the attendance record in MySQL.
+10. Admin monitors attendance records while the event is open.
+11. Admin closes the event after attendance collection is finished.
+12. Admin generates and downloads the official attendance sheet using the DICT template.
+13. Admin views dashboard and reports per event/program.
+14. System records important actions in the audit trail.
 
 ---
 
@@ -47,10 +56,9 @@ The basic workflow is:
 ## 3.2 Create Program
 
 1. Super Admin opens the Program Management module.
-2. Super Admin selects “Add Program.”
+2. Super Admin selects Add Program.
 3. System displays the program form.
 4. Super Admin enters program details:
-
    * Program name
    * Description
    * Office/division
@@ -65,7 +73,7 @@ The basic workflow is:
 ## 3.3 Assign Program Admin
 
 1. Super Admin opens a specific program.
-2. Super Admin selects “Assign Program Admin.”
+2. Super Admin selects Assign Program Admin.
 3. System displays available admin users.
 4. Super Admin selects one or more Program Admins.
 5. System saves the program assignment.
@@ -111,19 +119,16 @@ If the Program Admin tries to open an unassigned program directly through the UR
 ## 5.1 Create Event
 
 1. Super Admin or Program Admin opens a program.
-2. User selects “Add Event.”
+2. User selects Add Event.
 3. System checks permission:
-
    * Super Admin can create events under any program.
    * Program Admin can create events only under assigned programs.
 4. System displays the event form.
 5. User enters event details:
-
    * Event title
    * Event description
    * Venue
    * Event date
-   * Google Form link
 6. System generates or accepts an event code.
 7. System validates required fields.
 8. System saves the event under the selected program.
@@ -131,37 +136,24 @@ If the Program Admin tries to open an unassigned program directly through the UR
 
 ---
 
-## 5.2 Attach or Update Google Form Link
+## 5.2 Generate Attendance Link and QR Code
 
 1. Admin opens the event details page.
-2. Admin enters or updates the Google Form link.
-3. System validates that the link is not empty and follows a valid URL format.
-4. System saves the Google Form link.
-5. System records the update in the audit trail.
+2. Admin selects Generate Attendance Link or Generate QR Code.
+3. System verifies that the event exists and that the user has access.
+4. System creates a public attendance URL for the event.
+5. System generates a QR code pointing to the public attendance URL.
+6. System stores the public attendance URL and QR code reference.
+7. Admin can view, download, or print the QR code.
+8. System records the QR generation action in the audit trail.
 
 Important rule:
 
-For the MVP, the system stores and manages the Google Form link. It does not automatically create the Google Form unless Google Forms API or Apps Script integration is added later.
+The QR code points to the system's public attendance page, not to Google Forms.
 
 ---
 
-## 5.3 Generate QR Code
-
-1. Admin opens the event details page.
-2. Admin selects “Generate QR Code.”
-3. System checks if the event has a valid Google Form link.
-4. System generates a QR code pointing to the Google Form link.
-5. System stores the QR code path or QR data.
-6. Admin can view, download, or print the QR code.
-7. System records the QR generation action in the audit trail.
-
-Recommended improvement:
-
-Use a pre-filled Google Form link containing the event code, so the attendance response can be matched to the correct event more reliably.
-
----
-
-## 5.4 Set Event Status
+## 5.3 Set Event Status
 
 An event may have statuses such as:
 
@@ -182,122 +174,76 @@ Recommended rules:
 
 * Draft: Event is being prepared.
 * Open: Attendance collection is active.
-* Closed: Attendance collection is finished, but reports are still available.
+* Closed: Attendance collection is finished; reports and downloads are available.
 * Archived: Event is hidden from normal active views but kept for records.
 
 ---
 
 ## 6. External Attendee Process Flow
 
-## 6.1 Open Attendance Form
+## 6.1 Open Attendance Page
 
-1. External attendee scans the QR code or opens the attendance link.
-2. The link opens the assigned Google Form.
-3. External attendee fills out the attendance form.
+1. External attendee scans the QR code or opens the public attendance link.
+2. System checks if the event exists.
+3. System checks if the event status is open.
+4. System displays the fixed attendance page for the event.
 
-Recommended Google Form fields:
+Fixed attendance fields:
 
-* Event Code
 * First Name
 * Middle Name
 * Last Name
 * Suffix
+* School/University
+* Designation/Category
+* Sex
 * Email Address
-* Mobile Number
-* Region
-* Province
-* City/Municipality
-* Barangay
-* Street/Purok/Sitio
-* Agency/Organization, if needed
-* Data Privacy Consent
+* Consent for photo/video/audio documentation and possible DICT publication
+* Consent to be included in the organizer's database for future processing of relevant documents
+* Signature, if digital signature capture is required by the office
+
+Important rule:
+
+External attendees do not log in to the system.
 
 ---
 
 ## 6.2 Submit Attendance
 
-1. External attendee submits the Google Form.
-2. Google Forms stores the response.
-3. The response becomes available in Google Forms or linked Google Sheets.
-4. The system does not immediately receive the response unless automatic sync is implemented.
-5. For MVP, admin will import the response data manually through CSV or similar file export.
+1. External attendee fills out the fixed attendance page.
+2. External attendee submits the form.
+3. System validates required fields.
+4. System validates email format.
+5. System checks consent responses.
+6. System checks duplicate submissions within the same event.
+7. System saves valid attendance record to MySQL.
+8. System flags possible duplicate records if needed.
+9. System shows a confirmation message.
 
 Important rule:
 
-External attendees do not log in to the system. Their only interaction is through the Google Form.
+Attendance records are stored directly by the system. There is no Google Forms export/import step in the MVP.
 
 ---
 
-## 7. Attendance Import Process Flow
+## 7. Attendance Validation Rules
 
-For MVP, the recommended method is CSV import from Google Forms or Google Sheets.
-
-## 7.1 Export Responses from Google Forms/Sheets
-
-1. Admin opens the Google Form or linked Google Sheet.
-2. Admin exports the responses as CSV.
-3. Admin downloads the CSV file.
-4. Admin opens the system and selects the related event.
-
----
-
-## 7.2 Import Attendance CSV
-
-1. Admin opens the event details page.
-2. Admin selects “Import Attendance.”
-3. System displays the import page.
-4. Admin uploads the CSV file.
-5. System reads the CSV columns.
-6. System checks if required columns are present.
-7. System validates each row.
-8. System imports valid records.
-9. System flags invalid or duplicate records.
-10. System displays import summary.
-11. System records the import action in the audit trail.
-
----
-
-## 7.3 Import Validation Rules
-
-During import, the system should check:
+During attendance submission, the system should check:
 
 * Required fields are not empty.
-* Event code matches the selected event, if event code exists.
-* Email format is valid, if email is provided.
-* Mobile number format is valid, if mobile number is provided.
-* PSGC fields are valid or match available PSGC reference data.
+* Email format is valid.
+* Sex field has a valid value.
+* Consent values are recorded.
+* Event status is open.
 * Duplicate entries within the same event are flagged.
 
----
-
-## 7.4 Duplicate Checking for MVP
-
-The system should only detect duplicates within the same event.
-
-Recommended rules:
+Duplicate checking for MVP:
 
 * Same event + same email = duplicate or possible duplicate.
-* Same event + same mobile number = duplicate or possible duplicate.
 
 Name-only matching should not be used as the main duplicate check because different people can have the same or similar names.
 
 Cross-event same-person detection should be Phase 2, not MVP.
-
----
-
-## 7.5 Import Result Summary
-
-After import, the system should show:
-
-* Total rows found
-* Successfully imported rows
-* Duplicate rows
-* Invalid rows
-* Failed rows
-* Import date and time
-* Imported by
-
-The system should store this in an import batch record.
 
 ---
 
@@ -307,7 +253,7 @@ The system should store this in an import batch record.
 
 1. Admin opens a program.
 2. Admin selects an event.
-3. System displays imported attendance records for that event.
+3. System displays attendance records for that event.
 4. Admin can search or filter records.
 5. Program Admin can only view records under assigned programs.
 6. Super Admin can view all attendance records.
@@ -318,10 +264,9 @@ The system should store this in an import batch record.
 
 Recommended MVP behavior:
 
-1. System flags duplicate or invalid records during import.
-2. Admin reviews the flagged records.
+1. System flags duplicate or invalid records during submission.
+2. Admin reviews flagged records.
 3. Admin may mark a record as:
-
    * Valid
    * Duplicate
    * Invalid
@@ -334,30 +279,41 @@ Avoid hard deleting attendance records. Use status fields instead.
 
 ---
 
-## 9. Report Generation Process Flow
+## 9. Attendance Sheet Generation Process Flow
 
-## 9.1 Event Report
+## 9.1 Generate Event Attendance Sheet
 
-1. Admin opens Reports module.
-2. Admin selects a specific event.
-3. System retrieves attendance records for that event.
-4. System generates event attendance report.
+1. Admin opens the event details page or Reports module.
+2. Admin selects Generate Attendance Sheet.
+3. System verifies that the admin has access to the event.
+4. System retrieves valid attendance records for the selected event.
+5. System formats the records using the DICT attendance sheet template.
+6. System includes:
+   * DICT heading
+   * Event title
+   * Venue
+   * Event date
+   * Privacy notice
+   * Attendance table
+7. System paginates attendance rows as needed.
+8. Admin downloads the generated file.
+9. System records the download/export action in the audit trail.
 
-The event report should include:
+The attendance sheet should include the following columns:
 
-* Program name
-* Event title
-* Event date
-* Venue
-* Total attendance count
-* Attendee list
-* Name fields
-* Contact fields, if allowed
-* Address fields
-* Submission timestamp
+* Row number
+* Name
+* School/University
+* Designation/Category
+* Sex: F/M
+* Email Address
+* Consent for photo/video/audio documentation and possible publication
+* Consent for organizer database/future processing
+* Signature
 
-5. Admin may export the report.
-6. System records the export action in the audit trail.
+Important rule:
+
+The downloaded attendance sheet is the template-based output. It is not a dynamic form builder.
 
 ---
 
@@ -393,7 +349,7 @@ After login, the Super Admin dashboard should display:
 * Total events
 * Total attendance records
 * Recent created events
-* Recent imports
+* Recent attendance submissions
 * Recent audit activities
 * Attendance count per program
 
@@ -408,7 +364,7 @@ After login, the Program Admin dashboard should display only assigned program da
 * Assigned programs
 * Events under assigned programs
 * Attendance count per assigned event
-* Recent imports under assigned events
+* Recent attendance submissions under assigned events
 
 Program Admin must not see global system totals unless filtered only to their assigned programs.
 
@@ -428,17 +384,19 @@ Actions to log:
 * Assign Program Admin
 * Create event
 * Update event
-* Change event status
-* Attach/update Google Form link
+* Open event attendance
+* Close event attendance
+* Archive event
 * Generate QR code
-* Import attendance
+* Submit attendance, as a system event
+* Generate/download attendance sheet
 * Export report
 * Mark attendance as invalid/duplicate/void
 * Activate/deactivate admin account
 
 Each audit log should contain:
 
-* User who performed the action
+* User who performed the action, if an admin action
 * Action performed
 * Affected module/entity
 * Affected record ID, if applicable
@@ -460,7 +418,7 @@ Each audit log should contain:
 
 Recommended message:
 
-“Invalid credentials. Please try again.”
+Invalid credentials. Please try again.
 
 ---
 
@@ -469,36 +427,35 @@ Recommended message:
 1. Program Admin attempts to access an unassigned program/event.
 2. System checks permissions.
 3. System blocks access.
-4. System displays “Access denied.”
+4. System displays Access denied.
 5. System may log the unauthorized attempt.
 
 ---
 
-## 12.3 Missing Google Form Link
+## 12.3 Closed or Archived Event
 
-1. Admin attempts to generate QR code.
-2. System checks if Google Form link exists.
-3. If missing, system blocks QR generation.
-4. System asks admin to attach a valid Google Form link first.
-
----
-
-## 12.4 Invalid CSV Import
-
-1. Admin uploads a CSV file.
-2. System checks required columns.
-3. If required columns are missing, import is rejected.
-4. System displays the missing columns.
-5. System does not import incomplete data.
+1. External attendee opens the attendance link.
+2. System checks event status.
+3. If the event is closed or archived, system blocks new submission.
+4. System displays a safe message that attendance submission is no longer available.
 
 ---
 
-## 12.5 Duplicate Records
+## 12.4 Duplicate Submission
 
-1. System detects duplicate based on event + email or event + mobile number.
-2. System flags duplicate record.
-3. System does not silently overwrite the existing record.
-4. Admin can review duplicate records.
+1. External attendee submits attendance.
+2. System checks for an existing record with the same event and email.
+3. If match is found, system flags or rejects the duplicate based on policy.
+4. System does not silently overwrite the existing record.
+
+---
+
+## 12.5 Invalid Attendance Submission
+
+1. External attendee submits incomplete or invalid data.
+2. System validates required fields and email format.
+3. System displays field-level errors.
+4. System does not save incomplete data as a valid attendance record.
 
 ---
 
@@ -506,7 +463,7 @@ Recommended message:
 
 ## Rule 1: External Attendees Have No Accounts
 
-External attendees only submit attendance through Google Forms.
+External attendees only submit attendance through the public event attendance page.
 
 ---
 
@@ -530,25 +487,31 @@ Program Admins can only access assigned programs and related events/records.
 
 ---
 
-## Rule 5: Google Forms Is the MVP Collection Layer
+## Rule 5: The System Collects Attendance Directly
 
-The system manages the event and reporting workflow. Google Forms collects the attendance responses.
-
----
-
-## Rule 6: CSV Import Is the MVP Data Entry Method
-
-Automatic Google Sheets sync can be added later, but should not be required for the MVP.
+The system's public attendance page is the MVP collection layer.
 
 ---
 
-## Rule 7: Do Not Hard Delete Attendance Records
+## Rule 6: No Form Builder in MVP
+
+The attendance page uses fixed fields based on the required DICT attendance format.
+
+---
+
+## Rule 7: Generate Template-Based Attendance Sheets
+
+The official event attendance sheet is generated after or during the event using stored attendance records and the supervisor-provided template format.
+
+---
+
+## Rule 8: Do Not Hard Delete Attendance Records
 
 Attendance records should be marked as valid, duplicate, invalid, or void instead of being permanently deleted.
 
 ---
 
-## Rule 8: Audit Trail Is Required
+## Rule 9: Audit Trail Is Required
 
 Important admin actions must be logged.
 
@@ -559,23 +522,22 @@ Important admin actions must be logged.
 Example:
 
 1. Super Admin logs in.
-2. Super Admin creates a program called “Digital Literacy Training.”
+2. Super Admin creates a program called Digital Literacy Training.
 3. Super Admin assigns Juan as Program Admin.
 4. Juan logs in.
-5. Juan sees only “Digital Literacy Training.”
-6. Juan creates an event called “Day 1 Orientation.”
-7. Juan attaches the Google Form link for Day 1 Orientation.
-8. System generates a QR code.
-9. Juan prints or displays the QR code.
+5. Juan sees only Digital Literacy Training.
+6. Juan creates an event called Day 1 Orientation.
+7. Juan opens the event for attendance collection.
+8. System generates a QR code and public attendance link.
+9. Juan displays the QR code.
 10. Attendees scan the QR code.
-11. Attendees submit the Google Form.
-12. Juan exports responses from Google Forms/Sheets as CSV.
-13. Juan uploads the CSV to the system under “Day 1 Orientation.”
-14. System validates and imports attendance records.
-15. System flags duplicates or invalid rows.
-16. Juan views the event attendance report.
-17. Juan exports the report.
-18. System logs all important actions in the audit trail.
+11. Attendees submit attendance through the fixed system page.
+12. System validates and stores attendance records.
+13. Juan monitors attendance records.
+14. Juan closes the event after attendance collection.
+15. Juan generates the DICT attendance sheet.
+16. Juan downloads the attendance sheet.
+17. System logs all important actions in the audit trail.
 
 ---
 
@@ -587,11 +549,12 @@ The MVP should focus on:
 
 * Admin login
 * Program and event management
-* Google Form link and QR code handling
-* CSV import of attendance responses
+* Event public attendance link and QR code generation
+* Fixed system attendance submission
 * Attendance validation
+* Template-based attendance sheet generation
 * Reports
 * RBAC
 * Audit trail
 
-The system should not start with advanced features such as same-person detection across events, custom form builder, automatic Google Forms creation, or biometric attendance. Those are future enhancements after the core workflow is stable.
+The system should not start with advanced features such as dynamic form builder, same-person detection across events, Google Forms integration, biometric attendance, or advanced analytics. Those can be future enhancements after the core workflow is stable.

@@ -8,16 +8,22 @@ This DFD Level 1 shows the major internal processes of the system and how data f
 
 Unlike DFD Level 0, which shows the system as one whole process, DFD Level 1 breaks the system into core functions.
 
+Important update:
+
+The MVP no longer uses Google Forms, Google Sheets, or CSV import as the primary attendance flow. Attendance is submitted through the system's fixed public attendance page.
+
 ---
 
 ## 2. External Entities
 
-The external entities remain the same as DFD Level 0:
+The external entities are:
 
 1. Super Admin
 2. Program Admin
 3. External Attendee
-4. Google Forms / Google Sheets
+4. DICT Attendance Sheet Template
+
+The DICT Attendance Sheet Template is not a user. It represents the official output format that generated attendance sheets must follow.
 
 ---
 
@@ -78,9 +84,9 @@ Includes:
 * Description
 * Venue
 * Event date
-* Google Form link
 * Event code
-* QR code path
+* Public attendance URL
+* QR code path/data
 * Status
 * Timestamps
 
@@ -88,36 +94,37 @@ Includes:
 
 ### D5 Attendance Records
 
-Stores imported attendance records.
+Stores submitted attendance records.
 
 Includes:
 
 * Attendance record ID
 * Event ID
-* Response timestamp
 * Name fields
-* Contact details
-* Address details
+* School/University
+* Designation/Category
+* Sex
+* Email address
+* Consent responses
+* Optional signature data
 * Attendance status
-* Import batch ID
+* Submission timestamp
 
 ---
 
-### D6 Attendance Import Batches
+### D6 Attendance Sheet Exports
 
-Stores import transaction details.
+Stores attendance sheet generation/download records.
 
 Includes:
 
-* Import batch ID
+* Export ID
 * Event ID
-* Imported by
-* Source filename
-* Total rows
-* Successful rows
-* Duplicate rows
-* Failed rows
-* Import timestamp
+* Exported by
+* Export format
+* Total records
+* File path, if stored
+* Export timestamp
 
 ---
 
@@ -128,26 +135,12 @@ Stores important system activity logs.
 Includes:
 
 * Audit log ID
-* User ID
+* User ID, nullable for public/system events
 * Action
 * Entity type
 * Entity ID
 * Description
 * Timestamp
-
----
-
-### D8 PSGC Reference Data
-
-Stores PSGC-related address reference data.
-
-Includes:
-
-* Regions
-* Provinces
-* Cities/Municipalities
-* Barangays
-* PSGC codes
 
 ---
 
@@ -182,57 +175,24 @@ Output:
 
 ---
 
-## 2.0 Manage Programs
+## 2.0 Manage Users, Roles, Programs, and Assignments
 
-This process handles creation, updating, viewing, and archiving of programs.
+This process handles admin users, program records, and Program Admin assignments.
 
 Input:
 
-* Program details from Super Admin
+* Admin account details
+* Program details
 * Program update requests
 * Program archive requests
+* Program Admin assignment requests
 
 Process:
 
-* Validate program details
-* Save or update program records
-* Retrieve program list
+* Validate user/program details
+* Save or update records
+* Assign Program Admins to programs
 * Apply access restrictions
-
-Data stores used:
-
-* D3 Programs
-* D2 Roles and Program Assignments
-* D7 Audit Logs
-
-Output:
-
-* Program records
-* Program list
-* Program management result
-
-Important rule:
-
-Super Admin can manage all programs. Program Admin can only view assigned programs.
-
----
-
-## 3.0 Manage Program Admin Assignments
-
-This process handles assigning Program Admins to programs.
-
-Input:
-
-* User assignment request from Super Admin
-* Selected Program Admin
-* Selected program
-
-Process:
-
-* Validate selected user
-* Validate selected program
-* Save assignment
-* Update access scope
 
 Data stores used:
 
@@ -243,16 +203,17 @@ Data stores used:
 
 Output:
 
-* Updated program assignment
-* Assignment confirmation
+* User records
+* Program records
+* Program assignment results
 
 Important rule:
 
-Only Super Admin can assign Program Admins.
+Only Super Admin can manage users and program assignments.
 
 ---
 
-## 4.0 Manage Events
+## 3.0 Manage Events
 
 This process handles event creation and management under programs.
 
@@ -272,9 +233,9 @@ Process:
 
 Data stores used:
 
+* D2 Roles and Program Assignments
 * D3 Programs
 * D4 Events
-* D2 Roles and Program Assignments
 * D7 Audit Logs
 
 Output:
@@ -289,21 +250,21 @@ Program Admin can manage events only under assigned programs.
 
 ---
 
-## 5.0 Manage Google Form Link and QR Code
+## 4.0 Generate Attendance Link and QR Code
 
-This process handles Google Form link storage and QR code generation.
+This process handles public attendance URL and QR code generation.
 
 Input:
 
-* Google Form link from admin
-* Event code
+* Event ID
 * QR generation request
 
 Process:
 
-* Validate Google Form link
-* Attach link to event
-* Generate QR code pointing to the Google Form link
+* Verify event exists
+* Check admin permission
+* Generate or retrieve public attendance URL
+* Generate QR code pointing to the public attendance URL
 * Store QR code path/data
 
 Data stores used:
@@ -313,77 +274,73 @@ Data stores used:
 
 Output:
 
+* Public attendance link
 * Generated QR code
-* Attendance link
 * Updated event record
 
 Important rule:
 
-For the MVP, the system does not automatically create Google Forms. It only stores the link and generates QR codes.
+The QR code points to the system's attendance page, not to Google Forms.
 
 ---
 
-## 6.0 Import Attendance Responses
+## 5.0 Collect Attendance Submission
 
-This process handles importing attendance responses from Google Forms or Google Sheets.
+This process handles public attendee submissions.
 
 Input:
 
-* Attendance CSV file from Super Admin or Program Admin
-* Attendance response data from Google Forms / Google Sheets
-* Selected event
+* Event code or public attendance link
+* Fixed attendance form data from External Attendee
 
 Process:
 
-* Validate selected event
-* Read imported file
-* Check required columns
-* Create import batch
-* Send rows for validation
+* Check event exists
+* Check event status is open
+* Display fixed attendance page
+* Receive submitted attendance fields
+* Send submission for validation
 
 Data stores used:
 
 * D4 Events
-* D6 Attendance Import Batches
-* D7 Audit Logs
+* D5 Attendance Records
 
 Output:
 
-* Parsed attendance rows
-* Import batch record
-* Import summary
+* Submitted attendance data
+* Validation messages
+* Submission confirmation
 
 Important rule:
 
-For the MVP, CSV import is the safest initial method.
+External Attendees do not log in.
 
 ---
 
-## 7.0 Validate and Store Attendance Records
+## 6.0 Validate and Store Attendance Records
 
-This process validates imported attendance records before storing them.
+This process validates submitted attendance records before storing them.
 
 Input:
 
-* Parsed attendance rows from import process
+* Submitted attendance data
 * Event information
-* PSGC reference data
 
 Process:
 
 * Validate required fields
-* Validate email/mobile format
-* Validate PSGC address fields
-* Check duplicate entries within the same event
+* Validate email format
+* Validate consent values
+* Check duplicate submissions within the same event
 * Store valid records
 * Flag duplicate or invalid records
 
 Data stores used:
 
+* D4 Events
 * D5 Attendance Records
-* D6 Attendance Import Batches
-* D8 PSGC Reference Data
-* D7 Audit Logs
+* D7 Audit Logs, for significant system/admin actions
 
 Output:
 
@@ -398,15 +355,16 @@ Duplicate detection in the MVP should only be within the same event.
 
 ---
 
-## 8.0 Generate Dashboard and Reports
+## 7.0 Generate Dashboard, Reports, and Attendance Sheets
 
-This process generates dashboard summaries and reports.
+This process generates dashboard summaries, reports, and template-based attendance sheets.
 
 Input:
 
 * Dashboard request
 * Event report request
 * Program report request
+* Attendance sheet generation request
 * Export request
 
 Process:
@@ -416,15 +374,16 @@ Process:
 * Retrieve attendance records
 * Apply role-based filters
 * Generate summary or report
-* Export report if requested
+* Generate attendance sheet using DICT template format
+* Record download/export if requested
 
 Data stores used:
 
+* D2 Roles and Program Assignments
 * D3 Programs
 * D4 Events
 * D5 Attendance Records
-* D6 Attendance Import Batches
-* D2 Roles and Program Assignments
+* D6 Attendance Sheet Exports
 * D7 Audit Logs
 
 Output:
@@ -432,21 +391,22 @@ Output:
 * Dashboard summary
 * Event attendance report
 * Program summary report
+* Downloadable attendance sheet
 * Exported report
 
 Important rule:
 
-Program Admin reports must be limited to assigned programs only.
+Program Admin reports and downloads must be limited to assigned programs/events only.
 
 ---
 
-## 9.0 Manage Audit Trail
+## 8.0 Manage Audit Trail
 
 This process records and retrieves audit logs.
 
 Input:
 
-* System activity from all major processes
+* System activity from major processes
 * Audit log request from Super Admin
 
 Process:
@@ -480,8 +440,8 @@ Super Admin sends:
 * Program details
 * User assignment details
 * Event details
-* Google Form links
-* Import files
+* Event status changes
+* Attendance sheet generation requests
 * Report requests
 
 Super Admin receives:
@@ -490,8 +450,9 @@ Super Admin receives:
 * Dashboard summary
 * Program records
 * Event records
-* QR codes
-* Import results
+* QR codes and public attendance links
+* Attendance records
+* Attendance sheets
 * Reports
 * Audit logs
 
@@ -503,8 +464,9 @@ Program Admin sends:
 
 * Login credentials
 * Event details for assigned programs
-* Google Form links
-* Attendance CSV files
+* Event status changes
+* QR/link generation requests
+* Attendance sheet generation requests, if allowed
 * Report requests
 
 Program Admin receives:
@@ -512,8 +474,9 @@ Program Admin receives:
 * Login result
 * Assigned programs
 * Event records
-* QR codes
-* Import results
+* QR codes and public attendance links
+* Attendance records for assigned events
+* Attendance sheets for assigned events, if allowed
 * Reports for assigned programs/events
 
 ---
@@ -522,38 +485,39 @@ Program Admin receives:
 
 External Attendee sends:
 
-* Attendance details to Google Forms
+* Attendance details to the system's public attendance page
 
 External Attendee receives:
 
-* Google Form confirmation
+* Attendance page
+* Validation messages
+* Submission confirmation
 
 ---
 
-### Google Forms / Google Sheets
+### DICT Attendance Sheet Template
 
-Google Forms / Google Sheets sends:
+The template provides:
 
-* Attendance response data
-* Exported CSV file
-* Response timestamp
-* Submitted attendee details
+* Required output layout
+* Required columns
+* Privacy notice section
 
-Google Forms / Google Sheets receives:
+The system produces:
 
-* Attendance submissions from External Attendees
+* Generated attendance sheet for selected event
 
 ---
 
 ## 6. Critical Rules Reflected in DFD Level 1
 
-1. External Attendees do not directly access the admin system.
-2. Google Forms is treated as an external system.
-3. Attendance responses enter the system through import or sync.
+1. External Attendees do not access the admin system.
+2. Attendance is collected directly through the system.
+3. Google Forms and CSV import are not part of the core MVP flow.
 4. Program Admin access must be filtered by assigned programs.
 5. Attendance records are linked to events.
 6. Events are linked to programs.
-7. Audit logs are created for important admin actions.
-8. Same-person detection across events is not part of MVP.
-9. Duplicate detection is limited to the same event.
-10. The system stores and reports attendance data after import.
+7. The attendance sheet template is a generated output format.
+8. Audit logs are created for important admin actions.
+9. Same-person detection across events is not part of MVP.
+10. Duplicate detection is limited to the same event.
