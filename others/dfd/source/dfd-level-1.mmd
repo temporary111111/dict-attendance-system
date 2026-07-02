@@ -2,7 +2,7 @@ flowchart LR
   super_admin[Super Admin]
   program_admin[Program Admin]
   attendee[External Attendee]
-  template[DICT Attendance Sheet Template]
+  note_template["Note: Attendance Sheet Generation follows fixed DICT template layout."]
 
   p1((1.0 Authenticate Admin User))
   p2((2.0 Manage Users, Programs, and Assignments))
@@ -57,7 +57,6 @@ flowchart LR
 
   super_admin -->|Dashboard/report/sheet request| p7
   program_admin -->|Assigned dashboard/report/sheet request| p7
-  template -->|Required attendance sheet format| p7
   p7 <--> d2
   p7 <--> d3
   p7 <--> d4
@@ -70,3 +69,6 @@ flowchart LR
   super_admin -->|Audit log request| p8
   p8 <--> d7
   p8 -->|Audit logs| super_admin
+
+  classDef note fill:#1f2020,stroke:#8CA6DB,color:#d4d4d4,stroke-dasharray: 5 5
+  class note_template note

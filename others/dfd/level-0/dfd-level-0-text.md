@@ -117,26 +117,6 @@ The External Attendee does not log in to the admin system.
 
 ---
 
-## 3.4 DICT Attendance Sheet Template
-
-The supervisor-provided DICT attendance sheet format is used as an output template.
-
-Data sent to the system:
-
-* Template layout requirements
-* Required attendance sheet fields
-* Privacy notice wording, if office-approved
-
-Data received from the system:
-
-* Generated downloadable attendance sheet for a selected event
-
-Important:
-
-The template is not a dynamic form builder. It is the format used for generated reports/downloads.
-
----
-
 ## 4. High-Level Data Flow Summary
 
 1. Super Admin logs in and manages users, programs, events, reports, and audit logs.
@@ -153,7 +133,19 @@ The template is not a dynamic form builder. It is the format used for generated 
 
 ---
 
-## 5. Critical Rules Reflected in DFD Level 0
+## 5. Attendance Sheet Template Note
+
+The DICT attendance sheet template is not an external entity in the MVP. It is a fixed output format that the system follows when generating downloadable attendance sheets.
+
+Implementation meaning:
+
+* Admins do not import the template during normal system use.
+* The system does not provide a template builder.
+* Developers implement the generated attendance sheet layout based on the supervisor-provided sample.
+
+---
+
+## 6. Critical Rules Reflected in DFD Level 0
 
 1. External Attendees do not have system accounts.
 2. Attendance is submitted directly to the system.
@@ -161,5 +153,5 @@ The template is not a dynamic form builder. It is the format used for generated 
 4. Program Admin access is limited to assigned programs.
 5. Attendance records are linked to events.
 6. Events are linked to programs.
-7. The attendance sheet template is an output/report format.
+7. The attendance sheet template is a fixed output/report format, not an external data source.
 8. Audit logs are created for important admin actions.

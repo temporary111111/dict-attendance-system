@@ -21,7 +21,10 @@ BASE_NODE = (
 )
 PROCESS = "ellipse;" + BASE_NODE
 EXTERNAL = "rounded=0;" + BASE_NODE
-TEMPLATE = "rounded=0;" + BASE_NODE + "strokeColor=#8CA6DB;"
+NOTE = (
+    "rounded=0;whiteSpace=wrap;html=1;strokeColor=#8CA6DB;fillColor=#1f2020;"
+    "fontColor=#d4d4d4;fontSize=13;spacing=8;dashed=1;"
+)
 STORE = (
     "shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;"
     "strokeColor=#81B1DB;fillColor=#1f2020;fontColor=#d4d4d4;fontSize=14;spacing=8;"
@@ -107,16 +110,15 @@ def main() -> None:
         1900,
         760,
         [
-            ("template", "DICT Attendance Sheet Template", 40, 260, 260, 40, TEMPLATE),
             ("super_admin", "Super Admin", 110, 365, 130, 40, EXTERNAL),
             ("system", "Program and Event Attendance Monitoring and Reporting System", 760, 115, 510, 510, PROCESS),
             ("program_admin", "Program Admin", 1710, 325, 150, 45, EXTERNAL),
             ("attendee", "External Attendee", 1710, 455, 160, 45, EXTERNAL),
+            ("note_template", "Note: Generated attendance sheet follows the fixed DICT-provided format.", 720, 650, 590, 55, NOTE),
         ],
         [
             ("super_admin", "system", "Login credentials; program/user/event/report requests"),
             ("system", "super_admin", "Dashboard; records; QR/link; attendance sheets; audit logs"),
-            ("template", "system", "Required layout, fields, and privacy notice format"),
             ("program_admin", "system", "Login credentials; assigned event/status/report requests"),
             ("system", "program_admin", "Assigned programs/events; QR/link; records; sheets/reports"),
             ("attendee", "system", "Fixed attendance details and consent responses"),
@@ -135,7 +137,7 @@ def main() -> None:
             ("super_admin", "Super Admin", 40, 600, 125, 40, EXTERNAL),
             ("program_admin", "Program Admin", 1030, 710, 130, 40, EXTERNAL),
             ("attendee", "External Attendee", 430, 1220, 160, 40, EXTERNAL),
-            ("template", "DICT Attendance Sheet Template", 980, 900, 260, 40, TEMPLATE),
+            ("note_template", "Note: Attendance Sheet Generation follows fixed DICT template layout.", 965, 900, 380, 60, NOTE),
             ("p1", "1.0 Authenticate Admin User", 1660, 70, 185, 185, PROCESS),
             ("p2", "2.0 Manage Users, Programs, and Assignments", 1600, 315, 280, 280, PROCESS),
             ("p3", "3.0 Manage Events", 1680, 720, 170, 170, PROCESS),
@@ -179,7 +181,6 @@ def main() -> None:
             ("p6", "attendee", "Validation result and confirmation"),
             ("super_admin", "p7", "Dashboard/report/sheet request"),
             ("program_admin", "p7", "Assigned dashboard/report/sheet request"),
-            ("template", "p7", "Required attendance sheet format"),
             ("p7", "d2", ""),
             ("p7", "d3", ""),
             ("p7", "d4", ""),
@@ -205,7 +206,7 @@ def main() -> None:
         2500,
         1120,
         [
-            ("template", "DICT Attendance Sheet Template", 780, 40, 260, 40, TEMPLATE),
+            ("note_template", "Note: Formatting uses fixed DICT attendance sheet layout.", 760, 40, 390, 60, NOTE),
             ("admin", "Super Admin / Program Admin", 30, 250, 170, 40, EXTERNAL),
             ("attendee", "External Attendee", 30, 750, 150, 40, EXTERNAL),
             ("p71", "7.1 Select Event for Attendance Sheet", 430, 245, 230, 230, PROCESS),
@@ -250,7 +251,6 @@ def main() -> None:
             ("p72", "d4", ""),
             ("p72", "d5", ""),
             ("p72", "p73", ""),
-            ("template", "p73", "Required columns, layout, privacy notice"),
             ("p73", "p74", ""),
             ("p74", "admin", "Downloadable attendance sheet"),
             ("p74", "d6", ""),

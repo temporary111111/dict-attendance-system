@@ -8,6 +8,8 @@ The DFDs have been updated for the current MVP direction:
 * Fixed public attendance page inside the system
 * Template-based downloadable attendance sheet/report
 
+The DICT attendance sheet template is treated as a fixed report/output format, not as an external entity and not as an imported runtime data source. In the diagrams it should appear only as a note or design constraint.
+
 ## Editable Sources
 
 Use these when modifying the diagrams visually in draw.io / diagrams.net:

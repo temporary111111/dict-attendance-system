@@ -21,9 +21,8 @@ The external entities are:
 1. Super Admin
 2. Program Admin
 3. External Attendee
-4. DICT Attendance Sheet Template
 
-The DICT Attendance Sheet Template is not a user. It represents the official output format that generated attendance sheets must follow.
+The DICT Attendance Sheet Template is not an external entity in the MVP. It is a fixed output format used by the attendance sheet generation process.
 
 ---
 
@@ -366,6 +365,7 @@ Input:
 * Program report request
 * Attendance sheet generation request
 * Export request
+* Fixed DICT attendance sheet layout, as an internal report format
 
 Process:
 
@@ -497,7 +497,9 @@ External Attendee receives:
 
 ### DICT Attendance Sheet Template
 
-The template provides:
+The template is not an external data source. It is a fixed output format implemented inside the report/attendance sheet generation logic.
+
+The format defines:
 
 * Required output layout
 * Required columns
@@ -517,7 +519,7 @@ The system produces:
 4. Program Admin access must be filtered by assigned programs.
 5. Attendance records are linked to events.
 6. Events are linked to programs.
-7. The attendance sheet template is a generated output format.
+7. The attendance sheet template is a fixed generated output format, not an external entity.
 8. Audit logs are created for important admin actions.
 9. Same-person detection across events is not part of MVP.
 10. Duplicate detection is limited to the same event.

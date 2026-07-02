@@ -58,12 +58,6 @@ The Super Admin may view all attendance records and generate/download attendance
 
 The Program Admin may view attendance records and generate/download attendance sheets only for events under assigned programs, if allowed by policy.
 
-## 3.4 DICT Attendance Sheet Template
-
-The template defines the output format for generated attendance sheets.
-
----
-
 ## 4. Data Stores
 
 ## D2 Roles and Program Assignments
@@ -378,7 +372,7 @@ Input:
 
 * Event details
 * Attendance records
-* Template layout rules
+* Fixed DICT attendance sheet layout rules
 
 Process:
 
@@ -465,7 +459,7 @@ Output:
 9. Admin selects event for attendance sheet generation.
 10. System verifies admin access.
 11. System retrieves event attendance records.
-12. System formats records using the DICT template.
+12. System formats records using the fixed DICT attendance sheet layout.
 13. System generates downloadable attendance sheet.
 14. System records export/download in audit trail.
 
@@ -483,6 +477,7 @@ Output:
 8. All attendance sheet generation/download actions must be logged.
 9. Valid attendance records must always be linked to an event.
 10. Generated attendance sheets must follow the supervisor-provided DICT template format.
+11. The DICT template is a fixed output format, not an external entity or runtime import.
 
 ---
 

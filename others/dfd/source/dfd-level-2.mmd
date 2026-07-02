@@ -1,7 +1,7 @@
 flowchart LR
   attendee[External Attendee]
   admin[Super Admin / Program Admin]
-  template[DICT Attendance Sheet Template]
+  note_template["Note: Formatting uses fixed DICT attendance sheet layout."]
 
   p51((5.1 Open Public Attendance Link))
   p52((5.2 Display Fixed Attendance Page))
@@ -47,9 +47,11 @@ flowchart LR
   p72 <--> d4
   p72 <--> d5
   p72 --> p73
-  template -->|Required columns, layout, privacy notice| p73
   p73 --> p74
   p74 --> d6
   p74 -->|Downloadable attendance sheet| admin
   p74 --> p75
   p75 --> d7
+
+  classDef note fill:#1f2020,stroke:#8CA6DB,color:#d4d4d4,stroke-dasharray: 5 5
+  class note_template note

@@ -52,13 +52,13 @@ def draw_node(node: dict) -> str:
         "external": "#e7f0ff",
         "process": "#e9f7ef",
         "store": "#fff5d6",
-        "template": "#f1e9ff",
+        "note": "#f8fafc",
     }[kind]
     stroke = {
         "external": "#4068a8",
         "process": "#2d7d54",
         "store": "#a06b00",
-        "template": "#6c4ba8",
+        "note": "#6c4ba8",
     }[kind]
     if kind == "process":
         body = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="16" fill="{fill}" stroke="{stroke}" stroke-width="2"/>'
@@ -67,6 +67,8 @@ def draw_node(node: dict) -> str:
             f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="4" fill="{fill}" stroke="{stroke}" stroke-width="2"/>'
             f'<line x1="{x + 18}" y1="{y}" x2="{x + 18}" y2="{y + h}" stroke="{stroke}" stroke-width="2"/>'
         )
+    elif kind == "note":
+        body = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" fill="{fill}" stroke="{stroke}" stroke-width="2" stroke-dasharray="7 5"/>'
     else:
         body = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" fill="{fill}" stroke="{stroke}" stroke-width="2"/>'
     return body + svg_text(x + w / 2, y + h / 2, label, w - 20, size=node.get("size", 14), weight=node.get("weight", "600"))
@@ -166,14 +168,13 @@ DIAGRAMS = {
             "super": node(70, 150, 230, 90, "Super Admin", "external"),
             "program": node(70, 520, 230, 90, "Program Admin", "external"),
             "attendee": node(1190, 150, 230, 90, "External Attendee", "external"),
-            "template": node(1190, 520, 230, 105, "DICT Attendance Sheet Template", "template"),
+            "note_template": node(1065, 535, 360, 90, "Note: Generated attendance sheet follows the fixed DICT-provided format.", "note", weight="400"),
             "system": node(560, 310, 390, 150, "Program and Event Attendance Monitoring and Reporting System", "process", size=16),
         },
         "edges": [
             ("super", "system", "Admin requests and system outputs"),
             ("program", "system", "Assigned-scope requests and outputs"),
             ("attendee", "system", "Attendance submission and confirmation"),
-            ("template", "system", "Template layout for generated attendance sheet"),
         ],
     },
     "level-1": {
@@ -183,7 +184,7 @@ DIAGRAMS = {
             "super": node(60, 120, 210, 70, "Super Admin", "external"),
             "program": node(60, 330, 210, 70, "Program Admin", "external"),
             "attendee": node(60, 660, 210, 70, "External Attendee", "external"),
-            "template": node(60, 910, 210, 85, "DICT Attendance Sheet Template", "template"),
+            "note_template": node(50, 900, 230, 100, "Note: Attendance Sheet Generation follows fixed DICT template layout.", "note", weight="400"),
             "p1": node(390, 90, 250, 85, "1.0 Authenticate Admin User"),
             "p2": node(390, 235, 270, 95, "2.0 Manage Users, Programs, and Assignments"),
             "p3": node(390, 395, 250, 85, "3.0 Manage Events"),
@@ -224,7 +225,6 @@ DIAGRAMS = {
             ("p6", "attendee", "Confirmation"),
             ("super", "p7", ""),
             ("program", "p7", ""),
-            ("template", "p7", "Template format"),
             ("p7", "d2", ""),
             ("p7", "d3", ""),
             ("p7", "d4", ""),
@@ -249,7 +249,7 @@ DIAGRAMS = {
         "nodes": {
             "attendee": node(50, 220, 210, 70, "External Attendee", "external"),
             "admin": node(50, 760, 230, 75, "Super Admin / Program Admin", "external"),
-            "template": node(50, 950, 230, 90, "DICT Attendance Sheet Template", "template"),
+            "note_template": node(45, 935, 250, 95, "Note: Formatting uses fixed DICT attendance sheet layout.", "note", weight="400"),
             "p51": node(340, 130, 235, 80, "5.1 Open Public Attendance Link"),
             "p52": node(620, 130, 235, 80, "5.2 Display Fixed Attendance Page"),
             "p53": node(900, 130, 235, 80, "5.3 Submit Attendance Details"),
@@ -289,7 +289,6 @@ DIAGRAMS = {
             ("admin", "p71", ""),
             ("p71", "p72", ""),
             ("p72", "p73", ""),
-            ("template", "p73", "Template format"),
             ("p73", "p74", ""),
             ("p74", "admin", "Download"),
             ("p74", "p75", ""),
@@ -343,7 +342,7 @@ def render_drawio(diagram: dict, out: Path) -> None:
         "external": "rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f0ff;strokeColor=#4068a8;fontStyle=1;",
         "process": "rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f7ef;strokeColor=#2d7d54;fontStyle=1;",
         "store": "rounded=1;whiteSpace=wrap;html=1;fillColor=#fff5d6;strokeColor=#a06b00;fontStyle=1;",
-        "template": "rounded=1;whiteSpace=wrap;html=1;fillColor=#f1e9ff;strokeColor=#6c4ba8;fontStyle=1;",
+        "note": "rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#6c4ba8;dashed=1;",
     }
     for cell_id, data in diagram["nodes"].items():
         add_drawio_cell(root, cell_id, esc(data["label"]), styles[data.get("kind", "process")], data["x"], data["y"], data["w"], data["h"])

@@ -2,8 +2,8 @@ flowchart LR
   super_admin[Super Admin]
   program_admin[Program Admin]
   attendee[External Attendee]
-  template[DICT Attendance Sheet Template]
   system((Program and Event Attendance Monitoring and Reporting System))
+  note_template["Note: Generated attendance sheet follows the fixed DICT-provided format."]
 
   super_admin -->|Login credentials; program/user/event/report requests| system
   system -->|Dashboard; records; QR/link; attendance sheets; audit logs| super_admin
@@ -14,6 +14,8 @@ flowchart LR
   attendee -->|Fixed attendance details and consent responses| system
   system -->|Public attendance page; validation; confirmation| attendee
 
-  template -->|Required layout, fields, and privacy notice format| system
   system -->|Generated template-based attendance sheet| super_admin
   system -->|Generated template-based attendance sheet, if allowed| program_admin
+
+  classDef note fill:#1f2020,stroke:#8CA6DB,color:#d4d4d4,stroke-dasharray: 5 5
+  class note_template note
