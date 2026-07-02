@@ -1,0 +1,72 @@
+flowchart LR
+  super_admin[Super Admin]
+  program_admin[Program Admin]
+  attendee[External Attendee]
+  template[DICT Attendance Sheet Template]
+
+  p1((1.0 Authenticate Admin User))
+  p2((2.0 Manage Users, Programs, and Assignments))
+  p3((3.0 Manage Events))
+  p4((4.0 Generate Attendance Link and QR Code))
+  p5((5.0 Collect Attendance Submission))
+  p6((6.0 Validate and Store Attendance Records))
+  p7((7.0 Generate Dashboard, Reports, and Attendance Sheets))
+  p8((8.0 Manage Audit Trail))
+
+  d1[(D1 Users)]
+  d2[(D2 Roles and Program Assignments)]
+  d3[(D3 Programs)]
+  d4[(D4 Events)]
+  d5[(D5 Attendance Records)]
+  d6[(D6 Attendance Sheet Exports)]
+  d7[(D7 Audit Logs)]
+
+  super_admin -->|Login credentials| p1
+  program_admin -->|Login credentials| p1
+  p1 <--> d1
+  p1 <--> d2
+  p1 --> d7
+
+  super_admin -->|User, program, assignment requests| p2
+  p2 <--> d1
+  p2 <--> d2
+  p2 <--> d3
+  p2 --> d7
+
+  super_admin -->|Event details/status changes| p3
+  program_admin -->|Assigned event details/status changes| p3
+  p3 <--> d2
+  p3 <--> d3
+  p3 <--> d4
+  p3 --> d7
+
+  super_admin -->|QR/link request| p4
+  program_admin -->|Assigned QR/link request| p4
+  p4 <--> d4
+  p4 --> d7
+  p4 -->|Public attendance link and QR code| super_admin
+  p4 -->|Assigned public attendance link and QR code| program_admin
+
+  attendee -->|Open link and submit attendance| p5
+  p5 <--> d4
+  p5 -->|Submitted attendance data| p6
+  p6 <--> d4
+  p6 <--> d5
+  p6 --> d7
+  p6 -->|Validation result and confirmation| attendee
+
+  super_admin -->|Dashboard/report/sheet request| p7
+  program_admin -->|Assigned dashboard/report/sheet request| p7
+  template -->|Required attendance sheet format| p7
+  p7 <--> d2
+  p7 <--> d3
+  p7 <--> d4
+  p7 <--> d5
+  p7 --> d6
+  p7 --> d7
+  p7 -->|Dashboard, reports, attendance sheets| super_admin
+  p7 -->|Assigned reports and sheets, if allowed| program_admin
+
+  super_admin -->|Audit log request| p8
+  p8 <--> d7
+  p8 -->|Audit logs| super_admin

@@ -1,0 +1,55 @@
+flowchart LR
+  attendee[External Attendee]
+  admin[Super Admin / Program Admin]
+  template[DICT Attendance Sheet Template]
+
+  p51((5.1 Open Public Attendance Link))
+  p52((5.2 Display Fixed Attendance Page))
+  p53((5.3 Submit Attendance Details))
+  p61((6.1 Validate Event Status))
+  p62((6.2 Validate Required Fields))
+  p63((6.3 Validate Contact Information))
+  p64((6.4 Check Duplicate Within Same Event))
+  p65((6.5 Store Attendance Record))
+  p66((6.6 Show Submission Result))
+  p71((7.1 Select Event for Attendance Sheet))
+  p72((7.2 Retrieve Attendance Records))
+  p73((7.3 Format Records Using DICT Template))
+  p74((7.4 Generate Downloadable File))
+  p75((7.5 Record Audit Log))
+
+  d2[(D2 Roles and Program Assignments)]
+  d4[(D4 Events)]
+  d5[(D5 Attendance Records)]
+  d6[(D6 Attendance Sheet Exports)]
+  d7[(D7 Audit Logs)]
+
+  attendee -->|Scans QR or opens public link| p51
+  p51 <--> d4
+  p51 -->|Valid open event| p52
+  p52 -->|Fixed attendance page| attendee
+  attendee -->|Submitted fixed attendance details| p53
+  p53 --> p61
+  p61 <--> d4
+  p61 --> p62
+  p62 --> p63
+  p63 --> p64
+  p64 <--> d5
+  p64 --> p65
+  p65 --> d5
+  p65 --> p66
+  p66 -->|Confirmation or validation message| attendee
+
+  admin -->|Select event and request attendance sheet| p71
+  p71 <--> d2
+  p71 <--> d4
+  p71 --> p72
+  p72 <--> d4
+  p72 <--> d5
+  p72 --> p73
+  template -->|Required columns, layout, privacy notice| p73
+  p73 --> p74
+  p74 --> d6
+  p74 -->|Downloadable attendance sheet| admin
+  p74 --> p75
+  p75 --> d7

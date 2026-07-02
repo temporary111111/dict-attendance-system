@@ -1,0 +1,19 @@
+flowchart LR
+  super_admin[Super Admin]
+  program_admin[Program Admin]
+  attendee[External Attendee]
+  template[DICT Attendance Sheet Template]
+  system((Program and Event Attendance Monitoring and Reporting System))
+
+  super_admin -->|Login credentials; program/user/event/report requests| system
+  system -->|Dashboard; records; QR/link; attendance sheets; audit logs| super_admin
+
+  program_admin -->|Login credentials; assigned event/status/report requests| system
+  system -->|Assigned programs/events; QR/link; records; sheets/reports| program_admin
+
+  attendee -->|Fixed attendance details and consent responses| system
+  system -->|Public attendance page; validation; confirmation| attendee
+
+  template -->|Required layout, fields, and privacy notice format| system
+  system -->|Generated template-based attendance sheet| super_admin
+  system -->|Generated template-based attendance sheet, if allowed| program_admin
