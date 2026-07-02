@@ -8,14 +8,14 @@ flowchart LR
   super_admin -->|Login credentials; program/user/event/report requests| system
   system -->|Dashboard; records; QR/link; attendance sheets; audit logs| super_admin
 
-  program_admin -->|Login credentials; assigned event/status/report requests| system
-  system -->|Assigned programs/events; QR/link; records; sheets/reports| program_admin
+  program_admin -->|Login credentials; event/status/report requests for assigned program| system
+  system -->|Assigned program dashboard; event tools; QR/link; records; sheets/reports| program_admin
 
   attendee -->|Fixed attendance details and consent responses| system
   system -->|Public attendance page; validation; confirmation| attendee
 
-  system -->|Generated template-based attendance sheet| super_admin
-  system -->|Generated template-based attendance sheet, if allowed| program_admin
+  system -->|Generated attendance sheet| super_admin
+  system -->|Attendance sheet for assigned program events, if permitted| program_admin
 
   classDef note fill:#1f2020,stroke:#8CA6DB,color:#d4d4d4,stroke-dasharray: 5 5
   class note_template note

@@ -83,7 +83,7 @@ Manage DICT program/event attendance by letting external attendees submit attend
 * Access assigned programs only
 * Manage events under assigned programs
 * Generate event attendance links and QR codes
-* View assigned event attendance records
+* View attendance records for events under assigned programs
 * Generate/download assigned attendance sheets, if allowed
 * Generate reports with limited scope
 

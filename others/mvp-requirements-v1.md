@@ -63,10 +63,10 @@ The Program Admin can:
 
 * View assigned programs
 * Create and manage events under assigned programs
-* Generate QR codes and public attendance links for assigned events
-* View attendance records for assigned events
-* Generate and download attendance sheets for assigned events, if allowed by policy
-* View reports for assigned programs/events
+* Generate QR codes and public attendance links for events under assigned programs
+* View attendance records for events under assigned programs
+* Generate and download attendance sheets for events under assigned programs, if allowed by policy
+* View reports for assigned programs and their events
 * Export reports, if allowed by system policy
 
 The Program Admin cannot:
@@ -590,7 +590,7 @@ The MVP is considered successful if:
 
 * Admin users can securely log in.
 * Super Admin can manage programs and Program Admins.
-* Program Admins can manage only assigned programs/events.
+* Program Admins can manage only assigned programs and events under those programs.
 * Events can be created under programs.
 * QR codes and public attendance links can be generated per event.
 * External attendees can submit attendance through the fixed public attendance page.

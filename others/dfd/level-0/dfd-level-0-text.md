@@ -68,13 +68,13 @@ Data received from the system:
 
 ## 3.2 Program Admin
 
-The Program Admin manages events and attendance records for assigned programs only.
+The Program Admin manages events and attendance records under assigned programs only.
 
 Data sent to the system:
 
 * Login credentials
-* Event details for assigned programs
-* Event status changes for assigned events
+* Event details under assigned programs
+* Event status changes for events under assigned programs
 * QR code/link generation requests
 * Attendance sheet generation requests
 * Report requests
@@ -85,8 +85,8 @@ Data received from the system:
 * Assigned program list
 * Event records
 * Generated attendance link and QR code
-* Attendance records for assigned events
-* Downloadable attendance sheets for assigned events, if allowed
+* Attendance records for events under assigned programs
+* Downloadable attendance sheets for events under assigned programs, if allowed
 * Event/program reports for assigned scope
 
 ---

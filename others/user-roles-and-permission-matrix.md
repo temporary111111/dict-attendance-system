@@ -59,11 +59,11 @@ The Program Admin has limited access based on assigned programs.
 The Program Admin is responsible for:
 
 * Managing events under assigned programs
-* Opening and closing attendance collection for assigned events
-* Generating QR codes and public attendance links for assigned events
+* Opening and closing attendance collection for events under assigned programs
+* Generating QR codes and public attendance links for events under assigned programs
 * Viewing attendance records under assigned programs
-* Generating attendance sheets for assigned events, if allowed
-* Generating reports for assigned programs/events
+* Generating attendance sheets for events under assigned programs, if allowed
+* Generating reports for assigned programs and their events
 
 The Program Admin must not access programs, events, attendance records, reports, or downloads outside their assigned programs.
 
@@ -108,17 +108,17 @@ The External Attendee:
 | Edit assigned program events             | Yes         | Yes                           | No                       |
 | Archive all events                       | Yes         | No                            | No                       |
 | Archive assigned program events          | Yes         | No, close only by default     | No                       |
-| Open/close event attendance status       | Yes         | Yes, assigned events only     | No                       |
-| Generate public attendance link          | Yes         | Yes, assigned events only     | No                       |
-| Generate QR code                         | Yes         | Yes, assigned events only     | No                       |
+| Open/close event attendance status       | Yes         | Yes, events under assigned programs only | No              |
+| Generate public attendance link          | Yes         | Yes, events under assigned programs only | No              |
+| Generate QR code                         | Yes         | Yes, events under assigned programs only | No              |
 | Submit attendance                        | No          | No                            | Yes, public page only    |
 | View all attendance records              | Yes         | No                            | No                       |
-| View assigned event attendance records   | Yes         | Yes                           | No                       |
+| View assigned program event attendance records | Yes   | Yes                           | No                       |
 | Edit attendance records                  | Restricted  | Restricted or No              | No                       |
 | Delete attendance records                | No, void only | No                          | No                       |
-| Mark attendance as void/invalid          | Yes         | Maybe, assigned events only   | No                       |
+| Mark attendance as void/invalid          | Yes         | Maybe, events under assigned programs only | No           |
 | Generate all attendance sheets           | Yes         | No                            | No                       |
-| Generate assigned event attendance sheet | Yes         | Yes, if allowed by policy     | No                       |
+| Generate assigned program event attendance sheet | Yes | Yes, if allowed by policy     | No                       |
 | Download all attendance sheets           | Yes         | No                            | No                       |
 | Download assigned attendance sheets      | Yes         | Yes, if allowed by policy     | No                       |
 | View reports for all programs            | Yes         | No                            | No                       |
@@ -186,7 +186,7 @@ Program Admins may edit events under assigned programs.
 Recommended rule:
 
 * Super Admin: can edit all events
-* Program Admin: can edit assigned events only
+* Program Admin: can edit events under assigned programs only
 
 Fields Program Admins may edit:
 
@@ -213,12 +213,12 @@ This reduces accidental hiding of important records.
 
 ## 5.6 Attendance Link and QR Code
 
-Program Admins should be allowed to generate attendance links and QR codes for assigned events.
+Program Admins should be allowed to generate attendance links and QR codes for events under assigned programs.
 
 Recommended rule:
 
 * Super Admin: can generate links and QR codes for all events
-* Program Admin: can generate links and QR codes for assigned events only
+* Program Admin: can generate links and QR codes for events under assigned programs only
 
 Important rule:
 
@@ -268,7 +268,7 @@ The downloadable attendance sheet may contain personal information, consent resp
 Recommended rule:
 
 * Super Admin: can generate and download attendance sheets for all events
-* Program Admin: can generate and download attendance sheets only for assigned events, if allowed by office policy
+* Program Admin: can generate and download attendance sheets only for events under assigned programs, if allowed by office policy
 * All downloads must be recorded in the audit trail
 
 ---
@@ -280,7 +280,7 @@ Report export should be controlled because reports may contain personal informat
 Recommended rule:
 
 * Super Admin: can export all reports
-* Program Admin: can export reports only for assigned programs/events, if allowed
+* Program Admin: can export reports only for assigned programs and their events, if allowed
 * Export actions must be recorded in the audit trail
 
 ---
@@ -322,16 +322,16 @@ A Program Admin can access only:
 
 * Programs assigned to them
 * Events under assigned programs
-* Attendance records under assigned events
-* Attendance sheets under assigned events, if allowed
-* Reports under assigned programs/events
+* Attendance records under events in assigned programs
+* Attendance sheets under events in assigned programs, if allowed
+* Reports under assigned programs and their events
 
 A Program Admin must not access:
 
 * Unassigned programs
 * Events under unassigned programs
-* Attendance records from unassigned events
-* Attendance sheets from unassigned events
+* Attendance records from events outside assigned programs
+* Attendance sheets from events outside assigned programs
 * Reports from unassigned programs
 * Admin account management
 * Full audit trail
@@ -370,7 +370,7 @@ Every protected admin action should check:
 3. What is the user's role?
 4. If Program Admin, is the program assigned to this user?
 5. If accessing an event, does the event belong to an assigned program?
-6. If accessing attendance records, do the records belong to an assigned event/program?
+6. If accessing attendance records, do the records belong to an event under an assigned program?
 7. If generating/downloading an attendance sheet, does the event belong to an assigned program?
 
 Public attendance submission should check:
@@ -454,11 +454,11 @@ Can:
 * View assigned programs
 * Create events under assigned programs
 * Edit events under assigned programs
-* Generate QR codes and attendance links for assigned events
-* Open/close assigned events
-* View attendance records for assigned events
-* Generate attendance sheets for assigned events, if allowed
-* Generate reports for assigned programs/events
+* Generate QR codes and attendance links for events under assigned programs
+* Open/close events under assigned programs
+* View attendance records for events under assigned programs
+* Generate attendance sheets for events under assigned programs, if allowed
+* Generate reports for assigned programs and their events
 * Export assigned reports, if allowed
 
 Cannot:
@@ -467,7 +467,7 @@ Cannot:
 * Archive programs
 * Manage admin users
 * Assign Program Admins
-* View unassigned programs/events
+* View unassigned programs or events outside assigned programs
 * Delete attendance records
 * View full audit logs
 * Change system settings

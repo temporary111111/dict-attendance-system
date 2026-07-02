@@ -34,18 +34,18 @@ flowchart LR
   p2 --> d7
 
   super_admin -->|Event details/status changes| p3
-  program_admin -->|Assigned event details/status changes| p3
+  program_admin -->|Create/update events under assigned program| p3
   p3 <--> d2
   p3 <--> d3
   p3 <--> d4
   p3 --> d7
 
   super_admin -->|QR/link request| p4
-  program_admin -->|Assigned QR/link request| p4
+  program_admin -->|QR/link request for program event| p4
   p4 <--> d4
   p4 --> d7
   p4 -->|Public attendance link and QR code| super_admin
-  p4 -->|Assigned public attendance link and QR code| program_admin
+  p4 -->|Public attendance link and QR code for created event| program_admin
 
   attendee -->|Open link and submit attendance| p5
   p5 <--> d4
@@ -56,7 +56,7 @@ flowchart LR
   p6 -->|Validation result and confirmation| attendee
 
   super_admin -->|Dashboard/report/sheet request| p7
-  program_admin -->|Assigned dashboard/report/sheet request| p7
+  program_admin -->|Report/sheet request for assigned program| p7
   p7 <--> d2
   p7 <--> d3
   p7 <--> d4
@@ -64,7 +64,7 @@ flowchart LR
   p7 --> d6
   p7 --> d7
   p7 -->|Dashboard, reports, attendance sheets| super_admin
-  p7 -->|Assigned reports and sheets, if allowed| program_admin
+  p7 -->|Reports and sheets for assigned program, if permitted| program_admin
 
   super_admin -->|Audit log request| p8
   p8 <--> d7

@@ -173,7 +173,7 @@ DIAGRAMS = {
         },
         "edges": [
             ("super", "system", "Admin requests and system outputs"),
-            ("program", "system", "Assigned-scope requests and outputs"),
+            ("program", "system", "Assigned program requests and outputs"),
             ("attendee", "system", "Attendance submission and confirmation"),
         ],
     },

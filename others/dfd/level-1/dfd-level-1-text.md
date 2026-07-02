@@ -396,7 +396,7 @@ Output:
 
 Important rule:
 
-Program Admin reports and downloads must be limited to assigned programs/events only.
+Program Admin reports and downloads must be limited to assigned programs and their events only.
 
 ---
 
@@ -463,7 +463,7 @@ Super Admin receives:
 Program Admin sends:
 
 * Login credentials
-* Event details for assigned programs
+* Event details under assigned programs
 * Event status changes
 * QR/link generation requests
 * Attendance sheet generation requests, if allowed
@@ -475,9 +475,9 @@ Program Admin receives:
 * Assigned programs
 * Event records
 * QR codes and public attendance links
-* Attendance records for assigned events
-* Attendance sheets for assigned events, if allowed
-* Reports for assigned programs/events
+* Attendance records for events under assigned programs
+* Attendance sheets for events under assigned programs, if allowed
+* Reports for assigned programs and their events
 
 ---
 

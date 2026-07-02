@@ -363,8 +363,8 @@ After login, the Program Admin dashboard should display only assigned program da
 
 * Assigned programs
 * Events under assigned programs
-* Attendance count per assigned event
-* Recent attendance submissions under assigned events
+* Attendance count per event under assigned programs
+* Recent attendance submissions under events in assigned programs
 
 Program Admin must not see global system totals unless filtered only to their assigned programs.
 
