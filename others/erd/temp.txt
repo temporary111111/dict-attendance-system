@@ -1,0 +1,12 @@
+users.full_name dapat hatiin pa 
+
+
+
+
+- account status ['active','inactive']
+
+- program_status [active, archived]
+
+- event_status [draft, open, closed, archived]
+
+- assignemnt status [active, revoked]
