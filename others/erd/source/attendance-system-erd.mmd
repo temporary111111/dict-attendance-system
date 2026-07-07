@@ -7,9 +7,18 @@ erDiagram
   PROGRAMS ||--o{ EVENTS : contains
   USERS ||--o{ EVENTS : creates
   EVENTS ||--o{ ATTENDANCE_RECORDS : receives
+  ATTENDANCE_RECORDS ||--o| ATTENDANCE_RECORD_ADDRESSES : has_address
   EVENTS ||--o{ ATTENDANCE_SHEET_EXPORTS : has
   USERS ||--o{ ATTENDANCE_SHEET_EXPORTS : generates
   USERS ||--o{ AUDIT_LOGS : performs
+  PSGC_REGIONS ||--o{ PSGC_PROVINCES : contains
+  PSGC_REGIONS ||--o{ PSGC_CITIES_MUNICIPALITIES : contains
+  PSGC_PROVINCES ||--o{ PSGC_CITIES_MUNICIPALITIES : contains
+  PSGC_CITIES_MUNICIPALITIES ||--o{ PSGC_BARANGAYS : contains
+  PSGC_REGIONS ||--o{ ATTENDANCE_RECORD_ADDRESSES : selected_region
+  PSGC_PROVINCES ||--o{ ATTENDANCE_RECORD_ADDRESSES : selected_province
+  PSGC_CITIES_MUNICIPALITIES ||--o{ ATTENDANCE_RECORD_ADDRESSES : selected_city_municipality
+  PSGC_BARANGAYS ||--o{ ATTENDANCE_RECORD_ADDRESSES : selected_barangay
 
   ROLES {
     BIGINT role_id PK
@@ -92,6 +101,19 @@ erDiagram
     DATETIME updated_at
   }
 
+  ATTENDANCE_RECORD_ADDRESSES {
+    BIGINT address_id PK
+    BIGINT attendance_id FK
+    VARCHAR region_code FK
+    VARCHAR province_code FK
+    VARCHAR city_municipality_code FK
+    VARCHAR barangay_code FK
+    VARCHAR street_address
+    VARCHAR postal_code
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
   ATTENDANCE_SHEET_EXPORTS {
     BIGINT export_id PK
     BIGINT event_id FK
@@ -114,4 +136,41 @@ erDiagram
     VARCHAR ip_address
     VARCHAR user_agent
     DATETIME created_at
+  }
+
+  PSGC_REGIONS {
+    VARCHAR region_code PK
+    VARCHAR region_name
+    BOOLEAN is_active
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  PSGC_PROVINCES {
+    VARCHAR province_code PK
+    VARCHAR region_code FK
+    VARCHAR province_name
+    BOOLEAN is_active
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  PSGC_CITIES_MUNICIPALITIES {
+    VARCHAR city_municipality_code PK
+    VARCHAR region_code FK
+    VARCHAR province_code FK
+    VARCHAR city_municipality_name
+    ENUM city_municipality_type
+    BOOLEAN is_active
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  PSGC_BARANGAYS {
+    VARCHAR barangay_code PK
+    VARCHAR city_municipality_code FK
+    VARCHAR barangay_name
+    BOOLEAN is_active
+    DATETIME created_at
+    DATETIME updated_at
   }

@@ -44,7 +44,7 @@ def add_edge(root: Element, edge_id: str, source: str, target: str, label: str) 
 def main() -> None:
     SOURCE_DIR.mkdir(parents=True, exist_ok=True)
     out = SOURCE_DIR / "attendance-system-erd.drawio"
-    width, height = 1650, 980
+    width, height = 2350, 1250
 
     mxfile = Element("mxfile", host="app.diagrams.net")
     diagram = SubElement(mxfile, "diagram", name="Normalized MySQL ERD - Attendance System")
@@ -143,9 +143,18 @@ def main() -> None:
             "attendance_records",
             ["attendance_id PK", "event_id FK", "first/middle/last/suffix", "school_university", "designation_category", "sex", "email", "consent fields", "signature fields", "attendance_status"],
             1345,
-            90,
+            60,
             270,
             265,
+        ),
+        (
+            "address",
+            "attendance_record_addresses",
+            ["address_id PK", "attendance_id FK", "region_code FK", "province_code FK nullable", "city_municipality_code FK", "barangay_code FK", "street_address", "postal_code"],
+            1660,
+            80,
+            300,
+            245,
         ),
         (
             "exports",
@@ -165,6 +174,42 @@ def main() -> None:
             285,
             235,
         ),
+        (
+            "psgc_regions",
+            "psgc_regions",
+            ["region_code PK", "region_name", "is_active", "created_at", "updated_at"],
+            2020,
+            65,
+            270,
+            150,
+        ),
+        (
+            "psgc_provinces",
+            "psgc_provinces",
+            ["province_code PK", "region_code FK", "province_name", "is_active", "created_at", "updated_at"],
+            2020,
+            275,
+            270,
+            170,
+        ),
+        (
+            "psgc_cities",
+            "psgc_cities_municipalities",
+            ["city_municipality_code PK", "region_code FK", "province_code FK nullable", "city_municipality_name", "city_municipality_type", "is_active"],
+            2020,
+            505,
+            270,
+            190,
+        ),
+        (
+            "psgc_barangays",
+            "psgc_barangays",
+            ["barangay_code PK", "city_municipality_code FK", "barangay_name", "is_active", "created_at", "updated_at"],
+            2020,
+            755,
+            270,
+            170,
+        ),
     ]
 
     for table in tables:
@@ -178,9 +223,18 @@ def main() -> None:
         ("programs", "events", "1:M"),
         ("users", "events", "creates"),
         ("events", "attendance", "1:M"),
+        ("attendance", "address", "0..1"),
         ("events", "exports", "1:M"),
         ("users", "exports", "generates"),
         ("users", "audit", "performs"),
+        ("psgc_regions", "psgc_provinces", "1:M"),
+        ("psgc_regions", "psgc_cities", "1:M"),
+        ("psgc_provinces", "psgc_cities", "1:M"),
+        ("psgc_cities", "psgc_barangays", "1:M"),
+        ("psgc_regions", "address", "region"),
+        ("psgc_provinces", "address", "province"),
+        ("psgc_cities", "address", "city/municipality"),
+        ("psgc_barangays", "address", "barangay"),
     ]
     for index, edge in enumerate(edges, start=1):
         add_edge(root, f"e{index}", *edge)

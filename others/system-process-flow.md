@@ -198,6 +198,7 @@ Fixed attendance fields:
 * Designation/Category
 * Sex
 * Email Address
+* Address using PSGC codes, if required by office policy
 * Consent for photo/video/audio documentation and possible DICT publication
 * Consent to be included in the organizer's database for future processing of relevant documents
 * Signature, if digital signature capture is required by the office
@@ -307,6 +308,7 @@ The attendance sheet should include the following columns:
 * Designation/Category
 * Sex: F/M
 * Email Address
+* Address using PSGC codes, if required by office policy
 * Consent for photo/video/audio documentation and possible publication
 * Consent for organizer database/future processing
 * Signature

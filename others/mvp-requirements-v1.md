@@ -208,6 +208,7 @@ Recommended fixed attendance fields:
 * Designation/Category
 * Sex
 * Email Address
+* Address using PSGC codes, if required by office policy
 * Consent for photo/video/audio documentation and possible DICT publication
 * Consent to be included in the organizer's database for future processing of relevant documents
 * Signature field, if the office requires digital signature capture
@@ -400,6 +401,7 @@ The MVP database should include:
 
 Optional only if still required by the office:
 
+* attendance_record_addresses
 * psgc_regions
 * psgc_provinces
 * psgc_cities_municipalities
@@ -407,7 +409,7 @@ Optional only if still required by the office:
 
 PSGC note:
 
-The supervisor-provided attendance sheet template does not include address fields. PSGC should not be forced into the MVP attendance flow unless the supervisor confirms that address collection is still required outside the provided template.
+The supervisor-provided attendance sheet template does not include address fields, so address data should not appear in the generated attendance sheet unless the office later changes the template. However, because PSGC code usage was mentioned as a database requirement, address support should be modeled separately through `attendance_record_addresses` and PSGC lookup tables.
 
 ---
 
@@ -572,7 +574,7 @@ Before implementation, the following should be confirmed:
 1. Should the public attendance form require digital signature capture, or should the signature column remain blank in the generated sheet?
 2. Is email required for every attendee?
 3. Should mobile number be collected even though it is not visible in the provided attendance sheet template?
-4. Is PSGC/address collection still required, or is it removed because the provided template has no address columns?
+4. Should PSGC-based address collection be required on the public attendance page, or supported in the database but hidden unless enabled by office policy?
 5. Should Program Admins be assigned to one program only or multiple programs?
 6. Who is allowed to download official attendance sheets?
 7. What output formats are required: PDF, Excel, CSV, or all?

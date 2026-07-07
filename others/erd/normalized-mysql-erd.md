@@ -10,7 +10,7 @@ The design avoids one large attendance table. Program data, event data, admin us
 
 ## 2. Core Tables
 
-The MVP database has eight main tables:
+The MVP database has eight core operational tables:
 
 1. `roles`
 2. `users`
@@ -21,7 +21,15 @@ The MVP database has eight main tables:
 7. `attendance_sheet_exports`
 8. `audit_logs`
 
-Optional lookup tables, such as address or PSGC tables, are not included because the provided DICT attendance sheet does not require address fields.
+Because the supervisor mentioned PSGC codes for address handling, the database also includes normalized PSGC/address support tables:
+
+9. `attendance_record_addresses`
+10. `psgc_regions`
+11. `psgc_provinces`
+12. `psgc_cities_municipalities`
+13. `psgc_barangays`
+
+The address tables are separated from the official attendance sheet output. The current DICT attendance sheet template does not print address columns, but the system can still store PSGC-coded address data if the office requires address collection in the public attendance page.
 
 ## 3. Table Design
 
@@ -171,6 +179,80 @@ Stores important admin and system actions.
 | `user_agent` | VARCHAR(500) NULL |  | Optional browser/client info |
 | `created_at` | DATETIME |  | Log timestamp |
 
+### 3.9 attendance_record_addresses
+
+Stores optional address data for a specific attendance submission using PSGC lookup codes. This keeps address data out of `attendance_records` and avoids repeated region/province/city/barangay names.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `address_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique address ID |
+| `attendance_id` | BIGINT UNSIGNED | FK -> `attendance_records.attendance_id` | Linked attendance submission |
+| `region_code` | VARCHAR(10) | FK -> `psgc_regions.region_code` | PSGC region code |
+| `province_code` | VARCHAR(10) NULL | FK -> `psgc_provinces.province_code` | Nullable for areas without province-level grouping |
+| `city_municipality_code` | VARCHAR(10) | FK -> `psgc_cities_municipalities.city_municipality_code` | PSGC city/municipality code |
+| `barangay_code` | VARCHAR(10) | FK -> `psgc_barangays.barangay_code` | PSGC barangay code |
+| `street_address` | VARCHAR(255) NULL |  | House no., street, subdivision, purok, etc. |
+| `postal_code` | VARCHAR(10) NULL |  | Optional postal code |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+Recommended constraint:
+
+* `UNIQUE(attendance_id)` if each attendance submission should have only one address.
+
+### 3.10 psgc_regions
+
+Stores PSGC region lookup records.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `region_code` | VARCHAR(10) | PK | Official PSGC region code |
+| `region_name` | VARCHAR(150) |  | Region name |
+| `is_active` | TINYINT(1) |  | 1 active, 0 inactive |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+### 3.11 psgc_provinces
+
+Stores PSGC province lookup records.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `province_code` | VARCHAR(10) | PK | Official PSGC province code |
+| `region_code` | VARCHAR(10) | FK -> `psgc_regions.region_code` | Parent region |
+| `province_name` | VARCHAR(150) |  | Province name |
+| `is_active` | TINYINT(1) |  | 1 active, 0 inactive |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+### 3.12 psgc_cities_municipalities
+
+Stores PSGC city/municipality lookup records.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `city_municipality_code` | VARCHAR(10) | PK | Official PSGC city/municipality code |
+| `region_code` | VARCHAR(10) | FK -> `psgc_regions.region_code` | Parent region |
+| `province_code` | VARCHAR(10) NULL | FK -> `psgc_provinces.province_code` | Nullable where applicable |
+| `city_municipality_name` | VARCHAR(150) |  | City/municipality name |
+| `city_municipality_type` | ENUM('city','municipality') |  | Local government type |
+| `is_active` | TINYINT(1) |  | 1 active, 0 inactive |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+### 3.13 psgc_barangays
+
+Stores PSGC barangay lookup records.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `barangay_code` | VARCHAR(10) | PK | Official PSGC barangay code |
+| `city_municipality_code` | VARCHAR(10) | FK -> `psgc_cities_municipalities.city_municipality_code` | Parent city/municipality |
+| `barangay_name` | VARCHAR(150) |  | Barangay name |
+| `is_active` | TINYINT(1) |  | 1 active, 0 inactive |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
 ## 4. Main Relationships
 
 * One `role` can be assigned to many `users`.
@@ -183,6 +265,12 @@ Stores important admin and system actions.
 * One `event` can have many `attendance_sheet_exports`.
 * One `user` can generate many `attendance_sheet_exports`.
 * One `user` can have many `audit_logs`.
+* One `attendance_record` can have zero or one `attendance_record_addresses` row.
+* One `psgc_region` can have many `psgc_provinces`.
+* One `psgc_region` can have many `psgc_cities_municipalities`.
+* One `psgc_province` can have many `psgc_cities_municipalities`.
+* One `psgc_city_municipality` can have many `psgc_barangays`.
+* One PSGC lookup row can be referenced by many attendance record addresses.
 
 ## 5. DICT Attendance Sheet Field Mapping
 
@@ -212,6 +300,10 @@ The supervisor-provided template is an output format. It is not imported as a da
 | Consent for organizer database/future processing | `attendance_records.consent_database_processing` | Rendered as checked if yes |
 | Signature | `signature_text` or `signature_image_path` | Optional depending on office decision |
 
+### Address Fields
+
+Address fields are not shown in the current supervisor-provided attendance sheet template. If the public attendance page collects address data, it should be stored in `attendance_record_addresses` using PSGC codes and should not be printed in the official attendance sheet unless the office later changes the template.
+
 ## 6. Normalization Explanation
 
 ### 6.1 First Normal Form
@@ -222,6 +314,7 @@ The design uses atomic fields:
 * One attendance submission is one row in `attendance_records`.
 * One event is one row in `events`.
 * Repeating groups, such as multiple Program Admin assignments, are stored in `program_admin_assignments`.
+* Address parts are stored as PSGC codes, not as repeated free-text region/province/city/barangay names.
 
 ### 6.2 Second Normal Form
 
@@ -230,6 +323,7 @@ The design avoids partial dependency by keeping each table focused on one entity
 * Program fields are stored only in `programs`.
 * Event fields are stored only in `events`.
 * Attendance submission fields are stored only in `attendance_records`.
+* Attendance address fields are stored only in `attendance_record_addresses`.
 * Program Admin assignment data is stored in its own junction table.
 
 Most tables use single-column primary keys. The important business uniqueness rules, such as `UNIQUE(program_id, user_id)` and possible `UNIQUE(event_id, email)`, are handled as separate constraints.
@@ -243,6 +337,8 @@ The design avoids transitive dependency:
 * `program_admin_assignments` does not repeat user or program details. It stores foreign keys.
 * `attendance_sheet_exports` does not duplicate attendance rows. It stores export metadata only.
 * `audit_logs` stores action metadata and references the admin user when applicable.
+* `attendance_record_addresses` does not repeat PSGC names. It stores only PSGC code foreign keys and street-level details.
+* PSGC region, province, city/municipality, and barangay names are stored only in their lookup tables.
 
 This means updates happen in one place. For example, if an event venue is corrected, it is corrected in `events`, not in every attendance row.
 
@@ -270,3 +366,12 @@ After this ERD is approved, create the MySQL SQL schema with:
   * `attendance_sheet_exports.event_id`
   * `audit_logs.user_id`
   * `audit_logs.created_at`
+  * `attendance_record_addresses.attendance_id`
+  * `attendance_record_addresses.region_code`
+  * `attendance_record_addresses.province_code`
+  * `attendance_record_addresses.city_municipality_code`
+  * `attendance_record_addresses.barangay_code`
+  * `psgc_provinces.region_code`
+  * `psgc_cities_municipalities.region_code`
+  * `psgc_cities_municipalities.province_code`
+  * `psgc_barangays.city_municipality_code`

@@ -9,6 +9,7 @@ The database design follows the current MVP direction:
 * No Google Forms tables
 * No form-builder tables
 * Fixed attendance fields based on the DICT attendance sheet format
+* PSGC-coded address support in separate normalized lookup/address tables
 * Downloadable attendance sheet generated from stored event and attendance records
 
 ## Main Files
@@ -35,4 +36,4 @@ python others\erd\source\render_erd_drawio.py
 
 ## Important Design Decision
 
-External attendees do not have user accounts in the MVP. Their submitted details are stored per event in `attendance_records`. A separate `attendees` master table is intentionally not included yet because cross-event attendee identity matching is out of scope for the MVP.
+External attendees do not have user accounts in the MVP. Their submitted attendance details are stored per event in `attendance_records`. PSGC-coded address details, if collected, are stored separately in `attendance_record_addresses` and linked to PSGC lookup tables. A separate `attendees` master table is intentionally not included yet because cross-event attendee identity matching is out of scope for the MVP.
