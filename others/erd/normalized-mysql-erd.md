@@ -1,0 +1,272 @@
+# Normalized MySQL ERD Design
+
+## Program and Event Attendance Monitoring and Reporting System for DICT
+
+## 1. Purpose
+
+This document defines the proposed MySQL database structure for the MVP. It is based on the updated DFDs and the supervisor-provided DICT attendance sheet format.
+
+The design avoids one large attendance table. Program data, event data, admin users, assignments, attendance records, exports, and audit logs are separated so the database can satisfy at least 2NF and is designed toward 3NF.
+
+## 2. Core Tables
+
+The MVP database has eight main tables:
+
+1. `roles`
+2. `users`
+3. `programs`
+4. `program_admin_assignments`
+5. `events`
+6. `attendance_records`
+7. `attendance_sheet_exports`
+8. `audit_logs`
+
+Optional lookup tables, such as address or PSGC tables, are not included because the provided DICT attendance sheet does not require address fields.
+
+## 3. Table Design
+
+### 3.1 roles
+
+Stores admin role definitions.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `role_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique role ID |
+| `role_name` | VARCHAR(50) | UNIQUE | Example: `super_admin`, `program_admin` |
+| `description` | VARCHAR(255) |  | Role description |
+| `is_active` | TINYINT(1) |  | 1 active, 0 inactive |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+### 3.2 users
+
+Stores admin login accounts. External attendees are not stored here because they do not log in.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `user_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique admin user ID |
+| `role_id` | BIGINT UNSIGNED | FK -> `roles.role_id` | User role |
+| `full_name` | VARCHAR(150) |  | Admin full name |
+| `email` | VARCHAR(150) | UNIQUE | Login email |
+| `password_hash` | VARCHAR(255) |  | Hashed password only |
+| `account_status` | ENUM('active','inactive') |  | Login status |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+### 3.3 programs
+
+Stores DICT programs. Events belong to programs.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `program_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique program ID |
+| `program_name` | VARCHAR(200) |  | Program name |
+| `description` | TEXT |  | Optional description |
+| `office_or_division` | VARCHAR(150) |  | Example: DICT Regional Office No. V - Bicol |
+| `program_status` | ENUM('active','archived') |  | Program status |
+| `created_by_user_id` | BIGINT UNSIGNED | FK -> `users.user_id` | Super Admin who created it |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+### 3.4 program_admin_assignments
+
+Stores which Program Admins are assigned to which programs. This avoids storing repeated assigned program details in the `users` table.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `assignment_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique assignment ID |
+| `program_id` | BIGINT UNSIGNED | FK -> `programs.program_id` | Assigned program |
+| `user_id` | BIGINT UNSIGNED | FK -> `users.user_id` | Assigned Program Admin |
+| `assigned_by_user_id` | BIGINT UNSIGNED | FK -> `users.user_id` | Super Admin who assigned |
+| `assignment_status` | ENUM('active','revoked') |  | Current assignment status |
+| `assigned_at` | DATETIME |  | Assignment timestamp |
+| `revoked_at` | DATETIME NULL |  | Revocation timestamp, if any |
+
+Recommended constraint:
+
+* `UNIQUE(program_id, user_id)` to avoid duplicate active assignment records for the same program and admin.
+
+### 3.5 events
+
+Stores event details. Each event belongs to exactly one program.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `event_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique event ID |
+| `program_id` | BIGINT UNSIGNED | FK -> `programs.program_id` | Parent program |
+| `created_by_user_id` | BIGINT UNSIGNED | FK -> `users.user_id` | Admin who created the event |
+| `event_title` | VARCHAR(200) |  | Event/seminar/meeting title |
+| `event_description` | TEXT |  | Optional event description |
+| `venue` | VARCHAR(255) |  | Event venue |
+| `event_date` | DATE |  | Date shown on attendance sheet |
+| `event_code` | VARCHAR(100) | UNIQUE | Public code/slug for link |
+| `public_attendance_url` | VARCHAR(500) |  | Public attendance link |
+| `qr_code_path` | VARCHAR(500) |  | Stored QR image/file path |
+| `event_status` | ENUM('draft','open','closed','archived') |  | Attendance availability |
+| `opened_at` | DATETIME NULL |  | When attendance opened |
+| `closed_at` | DATETIME NULL |  | When attendance closed |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+### 3.6 attendance_records
+
+Stores attendee submissions for a specific event. This is the main attendance data table.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `attendance_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique attendance record ID |
+| `event_id` | BIGINT UNSIGNED | FK -> `events.event_id` | Event attended |
+| `first_name` | VARCHAR(100) |  | Atomic name field |
+| `middle_name` | VARCHAR(100) NULL |  | Atomic name field |
+| `last_name` | VARCHAR(100) |  | Atomic name field |
+| `suffix` | VARCHAR(30) NULL |  | Example: Jr., III |
+| `school_university` | VARCHAR(200) |  | Template column |
+| `designation_category` | VARCHAR(150) |  | Template column |
+| `sex` | ENUM('F','M') |  | Template sex checkbox |
+| `email` | VARCHAR(150) |  | Used for duplicate check |
+| `consent_documentation_publication` | TINYINT(1) |  | Photo/video/audio and publication consent |
+| `consent_database_processing` | TINYINT(1) |  | Organizer database/future processing consent |
+| `signature_text` | VARCHAR(150) NULL |  | Optional typed signature |
+| `signature_image_path` | VARCHAR(500) NULL |  | Optional captured signature image |
+| `submitted_at` | DATETIME |  | Submission timestamp |
+| `attendance_status` | ENUM('valid','duplicate','invalid','void') |  | Record status |
+| `duplicate_flag` | TINYINT(1) |  | 1 if possible duplicate |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+Recommended constraint:
+
+* `UNIQUE(event_id, email)` if email is required for every attendee.
+* If email can be optional, use an index instead and handle duplicate review in application logic.
+
+### 3.7 attendance_sheet_exports
+
+Stores generated attendance sheet/download history. The generated file is an output; the source data remains in `events` and `attendance_records`.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `export_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique export ID |
+| `event_id` | BIGINT UNSIGNED | FK -> `events.event_id` | Exported event |
+| `exported_by_user_id` | BIGINT UNSIGNED | FK -> `users.user_id` | Admin who generated/downloaded |
+| `export_format` | ENUM('pdf','xlsx','csv') |  | MVP likely PDF |
+| `file_path` | VARCHAR(500) NULL |  | Stored generated file path, if saved |
+| `total_records` | INT UNSIGNED |  | Count of included attendance records |
+| `exported_at` | DATETIME |  | Export timestamp |
+
+### 3.8 audit_logs
+
+Stores important admin and system actions.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `audit_log_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique log ID |
+| `user_id` | BIGINT UNSIGNED NULL | FK -> `users.user_id` | Nullable for public/system events |
+| `action` | VARCHAR(100) |  | Example: `created_event`, `generated_qr` |
+| `entity_type` | VARCHAR(100) |  | Example: `event`, `attendance_record` |
+| `entity_id` | BIGINT UNSIGNED NULL |  | Affected record ID |
+| `description` | VARCHAR(500) |  | Human-readable log summary |
+| `old_values_json` | JSON NULL |  | Optional previous values |
+| `new_values_json` | JSON NULL |  | Optional new values |
+| `ip_address` | VARCHAR(45) NULL |  | IPv4/IPv6 |
+| `user_agent` | VARCHAR(500) NULL |  | Optional browser/client info |
+| `created_at` | DATETIME |  | Log timestamp |
+
+## 4. Main Relationships
+
+* One `role` can be assigned to many `users`.
+* One `user` can create many `programs`.
+* One `program` can have many `program_admin_assignments`.
+* One `user` can have many `program_admin_assignments`.
+* One `program` can have many `events`.
+* One `user` can create many `events`.
+* One `event` can have many `attendance_records`.
+* One `event` can have many `attendance_sheet_exports`.
+* One `user` can generate many `attendance_sheet_exports`.
+* One `user` can have many `audit_logs`.
+
+## 5. DICT Attendance Sheet Field Mapping
+
+The supervisor-provided template is an output format. It is not imported as a database table.
+
+### Header Fields
+
+| Attendance Sheet Field | Source Table/Column | Notes |
+| --- | --- | --- |
+| Title of Event/Seminar/Meeting | `events.event_title` | Printed in sheet header |
+| Venue | `events.venue` | Printed in sheet header |
+| Date | `events.event_date` | Printed in sheet header |
+| Office heading | `programs.office_or_division` | Example: DICT Regional Office No. V - Bicol |
+| Privacy notice | Fixed application text | Not a per-event imported template |
+
+### Attendance Table Fields
+
+| Attendance Sheet Column | Source Table/Column | Notes |
+| --- | --- | --- |
+| Row number | Generated during export | Not stored |
+| Name | Combined from `first_name`, `middle_name`, `last_name`, `suffix` | Stored separately for normalization |
+| School/University | `attendance_records.school_university` | Direct mapping |
+| Designation/Category | `attendance_records.designation_category` | Direct mapping |
+| Sex F/M | `attendance_records.sex` | Rendered as checked F or M |
+| Email Address | `attendance_records.email` | Direct mapping |
+| Consent for documentation/publication | `attendance_records.consent_documentation_publication` | Rendered as checked if yes |
+| Consent for organizer database/future processing | `attendance_records.consent_database_processing` | Rendered as checked if yes |
+| Signature | `signature_text` or `signature_image_path` | Optional depending on office decision |
+
+## 6. Normalization Explanation
+
+### 6.1 First Normal Form
+
+The design uses atomic fields:
+
+* Names are stored as `first_name`, `middle_name`, `last_name`, and `suffix`.
+* One attendance submission is one row in `attendance_records`.
+* One event is one row in `events`.
+* Repeating groups, such as multiple Program Admin assignments, are stored in `program_admin_assignments`.
+
+### 6.2 Second Normal Form
+
+The design avoids partial dependency by keeping each table focused on one entity or relationship:
+
+* Program fields are stored only in `programs`.
+* Event fields are stored only in `events`.
+* Attendance submission fields are stored only in `attendance_records`.
+* Program Admin assignment data is stored in its own junction table.
+
+Most tables use single-column primary keys. The important business uniqueness rules, such as `UNIQUE(program_id, user_id)` and possible `UNIQUE(event_id, email)`, are handled as separate constraints.
+
+### 6.3 Third Normal Form
+
+The design avoids transitive dependency:
+
+* `attendance_records` does not repeat program name, event title, venue, or event date. It stores only `event_id`.
+* `events` does not repeat Program Admin names or emails. It stores `created_by_user_id`.
+* `program_admin_assignments` does not repeat user or program details. It stores foreign keys.
+* `attendance_sheet_exports` does not duplicate attendance rows. It stores export metadata only.
+* `audit_logs` stores action metadata and references the admin user when applicable.
+
+This means updates happen in one place. For example, if an event venue is corrected, it is corrected in `events`, not in every attendance row.
+
+## 7. Why There Is No attendees Table in the MVP
+
+A separate `attendees` master table is not included in the MVP because external attendees do not have accounts and the system does not yet perform cross-event identity matching.
+
+For the MVP, each attendance record is treated as an official submission for one event. If the office later wants repeat-attendee tracking or attendee profiles, an `attendees` table can be added in Phase 2.
+
+## 8. Recommended Next Step After ERD Approval
+
+After this ERD is approved, create the MySQL SQL schema with:
+
+* `CREATE TABLE` statements
+* Primary keys
+* Foreign keys
+* Unique constraints
+* Indexes for common lookups, especially:
+  * `users.email`
+  * `program_admin_assignments(program_id, user_id)`
+  * `events.program_id`
+  * `events.event_code`
+  * `attendance_records.event_id`
+  * `attendance_records(event_id, email)`
+  * `attendance_sheet_exports.event_id`
+  * `audit_logs.user_id`
+  * `audit_logs.created_at`

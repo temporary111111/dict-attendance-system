@@ -1,0 +1,117 @@
+erDiagram
+  ROLES ||--o{ USERS : has
+  USERS ||--o{ PROGRAMS : creates
+  USERS ||--o{ PROGRAM_ADMIN_ASSIGNMENTS : assigned_admin
+  USERS ||--o{ PROGRAM_ADMIN_ASSIGNMENTS : assigned_by
+  PROGRAMS ||--o{ PROGRAM_ADMIN_ASSIGNMENTS : has
+  PROGRAMS ||--o{ EVENTS : contains
+  USERS ||--o{ EVENTS : creates
+  EVENTS ||--o{ ATTENDANCE_RECORDS : receives
+  EVENTS ||--o{ ATTENDANCE_SHEET_EXPORTS : has
+  USERS ||--o{ ATTENDANCE_SHEET_EXPORTS : generates
+  USERS ||--o{ AUDIT_LOGS : performs
+
+  ROLES {
+    BIGINT role_id PK
+    VARCHAR role_name UK
+    VARCHAR description
+    BOOLEAN is_active
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  USERS {
+    BIGINT user_id PK
+    BIGINT role_id FK
+    VARCHAR full_name
+    VARCHAR email UK
+    VARCHAR password_hash
+    ENUM account_status
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  PROGRAMS {
+    BIGINT program_id PK
+    BIGINT created_by_user_id FK
+    VARCHAR program_name
+    TEXT description
+    VARCHAR office_or_division
+    ENUM program_status
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  PROGRAM_ADMIN_ASSIGNMENTS {
+    BIGINT assignment_id PK
+    BIGINT program_id FK
+    BIGINT user_id FK
+    BIGINT assigned_by_user_id FK
+    ENUM assignment_status
+    DATETIME assigned_at
+    DATETIME revoked_at
+  }
+
+  EVENTS {
+    BIGINT event_id PK
+    BIGINT program_id FK
+    BIGINT created_by_user_id FK
+    VARCHAR event_title
+    TEXT event_description
+    VARCHAR venue
+    DATE event_date
+    VARCHAR event_code UK
+    VARCHAR public_attendance_url
+    VARCHAR qr_code_path
+    ENUM event_status
+    DATETIME opened_at
+    DATETIME closed_at
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  ATTENDANCE_RECORDS {
+    BIGINT attendance_id PK
+    BIGINT event_id FK
+    VARCHAR first_name
+    VARCHAR middle_name
+    VARCHAR last_name
+    VARCHAR suffix
+    VARCHAR school_university
+    VARCHAR designation_category
+    ENUM sex
+    VARCHAR email
+    BOOLEAN consent_documentation_publication
+    BOOLEAN consent_database_processing
+    VARCHAR signature_text
+    VARCHAR signature_image_path
+    DATETIME submitted_at
+    ENUM attendance_status
+    BOOLEAN duplicate_flag
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  ATTENDANCE_SHEET_EXPORTS {
+    BIGINT export_id PK
+    BIGINT event_id FK
+    BIGINT exported_by_user_id FK
+    ENUM export_format
+    VARCHAR file_path
+    INT total_records
+    DATETIME exported_at
+  }
+
+  AUDIT_LOGS {
+    BIGINT audit_log_id PK
+    BIGINT user_id FK
+    VARCHAR action
+    VARCHAR entity_type
+    BIGINT entity_id
+    VARCHAR description
+    JSON old_values_json
+    JSON new_values_json
+    VARCHAR ip_address
+    VARCHAR user_agent
+    DATETIME created_at
+  }
