@@ -169,7 +169,7 @@ Template fields:
 * Date
 * Privacy notice
 * Name
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex: F/M
 * Email address

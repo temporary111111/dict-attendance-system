@@ -120,7 +120,7 @@ Displayed fields:
 * Middle Name
 * Last Name
 * Suffix
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex
 * Email Address
@@ -199,7 +199,7 @@ Recommended required fields:
 
 * First Name
 * Last Name
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex
 * Email Address
@@ -379,7 +379,7 @@ Process:
 * Add event title, venue, and date
 * Add DICT heading and privacy notice
 * Combine separated name fields into the template's Name column
-* Map school/university
+* Map affiliation to the school, agency, office, or organization column
 * Map designation/category
 * Map sex into F/M columns
 * Map email address

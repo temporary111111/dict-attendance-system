@@ -98,7 +98,7 @@ The External Attendee submits attendance details through the system's fixed publ
 Data sent to the system:
 
 * Name
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex
 * Email address

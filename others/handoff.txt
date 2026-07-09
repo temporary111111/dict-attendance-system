@@ -113,7 +113,7 @@ Recommended fixed attendance fields:
 * Middle Name
 * Last Name
 * Suffix
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex
 * Email Address
@@ -233,7 +233,7 @@ Possible `attendance_records` fields:
 * middle_name
 * last_name
 * suffix
-* school_university
+* affiliation
 * designation_category
 * sex
 * email

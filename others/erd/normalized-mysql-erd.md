@@ -147,8 +147,8 @@ Stores attendee submissions for a specific event. This is the main attendance da
 | `middle_name` | VARCHAR(100) NULL |  | Atomic name field |
 | `last_name` | VARCHAR(100) |  | Atomic name field |
 | `suffix` | VARCHAR(30) NULL |  | Example: Jr., III |
-| `school_university` | VARCHAR(200) |  | Template column |
-| `designation_category` | VARCHAR(150) |  | Template column |
+| `affiliation` | VARCHAR(200) |  | School, university, agency, office, company, LGU, or organization |
+| `designation_category` | VARCHAR(150) |  | Attendee role/category, such as student, government official, employee, speaker, or guest |
 | `sex` | ENUM('F','M') |  | Template sex checkbox |
 | `email` | VARCHAR(150) |  | Used for duplicate check |
 | `consent_documentation_publication` | TINYINT(1) |  | Photo/video/audio and publication consent |
@@ -314,7 +314,7 @@ The supervisor-provided template is an output format. It is not imported as a da
 | --- | --- | --- |
 | Row number | Generated during export | Not stored |
 | Name | Combined from `first_name`, `middle_name`, `last_name`, `suffix` | Stored separately for normalization |
-| School/University | `attendance_records.school_university` | Direct mapping |
+| Affiliation | `attendance_records.affiliation` | Covers school, university, agency, office, LGU, company, or organization; can still be printed in the old template column if the PDF label is unchanged |
 | Designation/Category | `attendance_records.designation_category` | Direct mapping |
 | Sex F/M | `attendance_records.sex` | Rendered as checked F or M |
 | Email Address | `attendance_records.email` | Direct mapping |

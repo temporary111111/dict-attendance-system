@@ -100,7 +100,7 @@ Includes:
 * Attendance record ID
 * Event ID
 * Name fields
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex
 * Email address

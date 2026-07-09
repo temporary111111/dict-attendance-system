@@ -204,7 +204,7 @@ Recommended fixed attendance fields:
 * Middle Name
 * Last Name
 * Suffix
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex
 * Email Address
@@ -235,7 +235,7 @@ Functional requirements:
 Duplicate checking for MVP:
 
 * Same event + same email = duplicate or possible duplicate
-* If email is missing by policy exception, same event + same normalized name + same school/university may be flagged for manual review
+* If email is missing by policy exception, same event + same normalized name + same affiliation may be flagged for manual review
 
 Name-only matching shall not be used as the primary duplicate check because it is unreliable.
 
@@ -249,7 +249,7 @@ Functional requirements:
 
 * The system shall store attendance records linked to a specific event.
 * The system shall store separated name fields: first name, middle name, last name, and suffix.
-* The system shall store school/university, designation/category, sex, email, consent fields, submission timestamp, and attendance status.
+* The system shall store affiliation, designation/category, sex, email, consent fields, submission timestamp, and attendance status.
 * The system shall store optional signature data if digital signature capture is required.
 * The system shall allow authorized users to view attendance records by event.
 * The system shall allow authorized users to search and filter attendance records.
@@ -275,7 +275,7 @@ Functional requirements:
 * The attendance table shall follow the provided template columns:
   * row number
   * name
-  * school/university
+  * affiliation
   * designation/category
   * sex: F/M
   * email address
@@ -488,7 +488,7 @@ The supervisor-provided attendance sheet template does not include address field
 * middle_name
 * last_name
 * suffix
-* school_university
+* affiliation
 * designation_category
 * sex
 * email

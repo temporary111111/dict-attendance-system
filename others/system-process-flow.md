@@ -194,7 +194,7 @@ Fixed attendance fields:
 * Middle Name
 * Last Name
 * Suffix
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex
 * Email Address
@@ -304,7 +304,7 @@ The attendance sheet should include the following columns:
 
 * Row number
 * Name
-* School/University
+* Affiliation (school, university, agency, office, company, LGU, or organization)
 * Designation/Category
 * Sex: F/M
 * Email Address

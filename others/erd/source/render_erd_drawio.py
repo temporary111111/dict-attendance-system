@@ -150,7 +150,7 @@ def main() -> None:
         (
             "attendance",
             "attendance_records",
-            ["attendance_id PK", "event_id FK", "first/middle/last/suffix", "school_university", "designation_category", "sex", "email", "consent fields", "signature fields", "attendance_status"],
+            ["attendance_id PK", "event_id FK", "first/middle/last/suffix", "affiliation", "designation_category", "sex", "email", "consent fields", "signature fields", "attendance_status"],
             1345,
             60,
             270,
