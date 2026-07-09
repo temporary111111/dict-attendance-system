@@ -61,7 +61,7 @@ The basic workflow is:
 4. Super Admin enters program details:
    * Program name
    * Description
-   * Office/division
+   * Owning organizational unit
    * Status
 5. System validates required fields.
 6. System saves the program to the database.
@@ -330,7 +330,7 @@ The downloaded attendance sheet is the template-based output. It is not a dynami
 The program report should include:
 
 * Program name
-* Office/division
+* Owning organizational unit
 * Number of events
 * Attendance count per event
 * Total attendance records

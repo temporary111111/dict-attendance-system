@@ -149,7 +149,7 @@ Functional requirements:
 * The system shall allow authorized users to create programs.
 * The system shall allow authorized users to edit program details.
 * The system shall allow authorized users to archive programs.
-* The system shall store program name, description, office/division, status, creator, and timestamps.
+* The system shall store program name, description, owning organizational unit, status, creator, and timestamps.
 * The system shall allow viewing of events under each program.
 * The system shall allow Super Admins to assign Program Admins to programs.
 
@@ -271,7 +271,7 @@ The system shall generate downloadable attendance sheets using the DICT template
 Functional requirements:
 
 * The system shall generate an attendance sheet for a selected event.
-* The attendance sheet shall include the event title, venue, date, office heading, privacy notice, and attendance table.
+* The attendance sheet shall include the event title, venue, date, office heading from the program's owning organizational unit, privacy notice, and attendance table.
 * The attendance table shall follow the provided template columns:
   * row number
   * name
@@ -392,6 +392,7 @@ The MVP database should include:
 
 * users
 * roles
+* organizational_units
 * programs
 * program_admin_assignments
 * events
@@ -419,6 +420,7 @@ The supervisor-provided attendance sheet template does not include address field
 
 * id
 * role_id
+* org_unit_id optional
 * full_name
 * email
 * password_hash
@@ -432,12 +434,23 @@ The supervisor-provided attendance sheet template does not include address field
 * role_name
 * description
 
+### organizational_units
+
+* id
+* parent_unit_id optional
+* unit_name
+* unit_type
+* unit_code optional
+* is_active
+* created_at
+* updated_at
+
 ### programs
 
 * id
 * program_name
 * description
-* office_or_division
+* owning_unit_id
 * status
 * created_by
 * created_at

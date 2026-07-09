@@ -1,5 +1,8 @@
 erDiagram
   ROLES ||--o{ USERS : has
+  ORGANIZATIONAL_UNITS ||--o{ ORGANIZATIONAL_UNITS : contains
+  ORGANIZATIONAL_UNITS ||--o{ USERS : assigned_users
+  ORGANIZATIONAL_UNITS ||--o{ PROGRAMS : owns
   USERS ||--o{ PROGRAMS : creates
   USERS ||--o{ PROGRAM_ADMIN_ASSIGNMENTS : assigned_admin
   USERS ||--o{ PROGRAM_ADMIN_ASSIGNMENTS : assigned_by
@@ -32,6 +35,7 @@ erDiagram
   USERS {
     BIGINT user_id PK
     BIGINT role_id FK
+    BIGINT org_unit_id FK
     VARCHAR full_name
     VARCHAR email UK
     VARCHAR password_hash
@@ -40,12 +44,23 @@ erDiagram
     DATETIME updated_at
   }
 
+  ORGANIZATIONAL_UNITS {
+    BIGINT org_unit_id PK
+    BIGINT parent_unit_id FK
+    VARCHAR unit_name
+    VARCHAR unit_type
+    VARCHAR unit_code UK
+    BOOLEAN is_active
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
   PROGRAMS {
     BIGINT program_id PK
+    BIGINT owning_unit_id FK
     BIGINT created_by_user_id FK
     VARCHAR program_name
     TEXT description
-    VARCHAR office_or_division
     ENUM program_status
     DATETIME created_at
     DATETIME updated_at

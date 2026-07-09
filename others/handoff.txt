@@ -153,6 +153,7 @@ Recommended MVP database tables:
 
 * users
 * roles
+* organizational_units
 * programs
 * program_admin_assignments
 * events
@@ -164,6 +165,7 @@ Possible `users` fields:
 
 * id
 * role_id
+* org_unit_id optional
 * full_name
 * email
 * password_hash
@@ -177,12 +179,23 @@ Possible `roles` fields:
 * role_name
 * description
 
+Possible `organizational_units` fields:
+
+* id
+* parent_unit_id optional
+* unit_name
+* unit_type
+* unit_code optional
+* is_active
+* created_at
+* updated_at
+
 Possible `programs` fields:
 
 * id
 * program_name
 * description
-* office_or_division
+* owning_unit_id
 * status
 * created_by
 * created_at

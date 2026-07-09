@@ -44,7 +44,7 @@ def add_edge(root: Element, edge_id: str, source: str, target: str, label: str) 
 def main() -> None:
     SOURCE_DIR.mkdir(parents=True, exist_ok=True)
     out = SOURCE_DIR / "attendance-system-erd.drawio"
-    width, height = 2350, 1250
+    width, height = 2350, 1300
 
     mxfile = Element("mxfile", host="app.diagrams.net")
     diagram = SubElement(mxfile, "diagram", name="Normalized MySQL ERD - Attendance System")
@@ -105,11 +105,20 @@ def main() -> None:
         (
             "users",
             "users",
-            ["user_id PK", "role_id FK", "full_name", "email UK", "password_hash", "account_status", "created_at", "updated_at"],
+            ["user_id PK", "role_id FK", "org_unit_id FK nullable", "full_name", "email UK", "password_hash", "account_status", "created_at", "updated_at"],
             330,
             220,
             250,
-            215,
+            235,
+        ),
+        (
+            "org_units",
+            "organizational_units",
+            ["org_unit_id PK", "parent_unit_id FK nullable", "unit_name", "unit_type", "unit_code UK nullable", "is_active", "created_at", "updated_at"],
+            40,
+            475,
+            255,
+            225,
         ),
         (
             "assignments",
@@ -123,7 +132,7 @@ def main() -> None:
         (
             "programs",
             "programs",
-            ["program_id PK", "created_by_user_id FK", "program_name", "description", "office_or_division", "program_status", "created_at", "updated_at"],
+            ["program_id PK", "owning_unit_id FK", "created_by_user_id FK", "program_name", "description", "program_status", "created_at", "updated_at"],
             645,
             355,
             285,
@@ -217,6 +226,9 @@ def main() -> None:
 
     edges = [
         ("roles", "users", "1:M"),
+        ("org_units", "org_units", "parent"),
+        ("org_units", "users", "assigned"),
+        ("org_units", "programs", "owns"),
         ("users", "programs", "creates"),
         ("users", "assignments", "assigned/admin/by"),
         ("programs", "assignments", "1:M"),

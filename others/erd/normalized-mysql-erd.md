@@ -10,24 +10,27 @@ The design avoids one large attendance table. Program data, event data, admin us
 
 ## 2. Core Tables
 
-The MVP database has eight core operational tables:
+The MVP database has nine core operational/admin tables:
 
 1. `roles`
-2. `users`
-3. `programs`
-4. `program_admin_assignments`
-5. `events`
-6. `attendance_records`
-7. `attendance_sheet_exports`
-8. `audit_logs`
+2. `organizational_units`
+3. `users`
+4. `programs`
+5. `program_admin_assignments`
+6. `events`
+7. `attendance_records`
+8. `attendance_sheet_exports`
+9. `audit_logs`
+
+The `organizational_units` table stores DICT offices, divisions, sections, units, or similar internal groups in one hierarchy. This is cleaner than storing a free-text office/division value directly in `programs`.
 
 Because the supervisor mentioned PSGC codes for address handling, the database also includes normalized PSGC/address support tables:
 
-9. `attendance_record_addresses`
-10. `psgc_regions`
-11. `psgc_provinces`
-12. `psgc_cities_municipalities`
-13. `psgc_barangays`
+10. `attendance_record_addresses`
+11. `psgc_regions`
+12. `psgc_provinces`
+13. `psgc_cities_municipalities`
+14. `psgc_barangays`
 
 The address tables are separated from the official attendance sheet output. The current DICT attendance sheet template does not print address columns, but the system can still store PSGC-coded address data if the office requires address collection in the public attendance page.
 
@@ -54,6 +57,7 @@ Stores admin login accounts. External attendees are not stored here because they
 | --- | --- | --- | --- |
 | `user_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique admin user ID |
 | `role_id` | BIGINT UNSIGNED | FK -> `roles.role_id` | User role |
+| `org_unit_id` | BIGINT UNSIGNED NULL | FK -> `organizational_units.org_unit_id` | Employee's assigned DICT office/division/unit, if tracked |
 | `full_name` | VARCHAR(150) |  | Admin full name |
 | `email` | VARCHAR(150) | UNIQUE | Login email |
 | `password_hash` | VARCHAR(255) |  | Hashed password only |
@@ -61,22 +65,37 @@ Stores admin login accounts. External attendees are not stored here because they
 | `created_at` | DATETIME |  | Creation timestamp |
 | `updated_at` | DATETIME |  | Last update timestamp |
 
-### 3.3 programs
+### 3.3 organizational_units
+
+Stores DICT offices, divisions, sections, units, or similar organizational groups. A parent-child relationship allows the system to represent hierarchy without hardcoding separate office and division columns.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `org_unit_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique organizational unit ID |
+| `parent_unit_id` | BIGINT UNSIGNED NULL | FK -> `organizational_units.org_unit_id` | Parent office/division/unit, if applicable |
+| `unit_name` | VARCHAR(200) |  | Example: DICT Regional Office No. V - Bicol |
+| `unit_type` | VARCHAR(50) |  | Example: office, division, section, unit, regional_office |
+| `unit_code` | VARCHAR(50) NULL | UNIQUE | Optional internal DICT code, if available |
+| `is_active` | TINYINT(1) |  | 1 active, 0 inactive |
+| `created_at` | DATETIME |  | Creation timestamp |
+| `updated_at` | DATETIME |  | Last update timestamp |
+
+### 3.4 programs
 
 Stores DICT programs. Events belong to programs.
 
 | Column | Suggested MySQL Type | Key | Notes |
 | --- | --- | --- | --- |
 | `program_id` | BIGINT UNSIGNED AUTO_INCREMENT | PK | Unique program ID |
+| `owning_unit_id` | BIGINT UNSIGNED | FK -> `organizational_units.org_unit_id` | DICT organizational unit responsible for the program |
 | `program_name` | VARCHAR(200) |  | Program name |
 | `description` | TEXT |  | Optional description |
-| `office_or_division` | VARCHAR(150) |  | Example: DICT Regional Office No. V - Bicol |
 | `program_status` | ENUM('active','archived') |  | Program status |
 | `created_by_user_id` | BIGINT UNSIGNED | FK -> `users.user_id` | Super Admin who created it |
 | `created_at` | DATETIME |  | Creation timestamp |
 | `updated_at` | DATETIME |  | Last update timestamp |
 
-### 3.4 program_admin_assignments
+### 3.5 program_admin_assignments
 
 Stores which Program Admins are assigned to which programs. This avoids storing repeated assigned program details in the `users` table.
 
@@ -94,7 +113,7 @@ Recommended constraint:
 
 * `UNIQUE(program_id, user_id)` to avoid duplicate active assignment records for the same program and admin.
 
-### 3.5 events
+### 3.6 events
 
 Stores event details. Each event belongs to exactly one program.
 
@@ -116,7 +135,7 @@ Stores event details. Each event belongs to exactly one program.
 | `created_at` | DATETIME |  | Creation timestamp |
 | `updated_at` | DATETIME |  | Last update timestamp |
 
-### 3.6 attendance_records
+### 3.7 attendance_records
 
 Stores attendee submissions for a specific event. This is the main attendance data table.
 
@@ -147,7 +166,7 @@ Recommended constraint:
 * `UNIQUE(event_id, email)` if email is required for every attendee.
 * If email can be optional, use an index instead and handle duplicate review in application logic.
 
-### 3.7 attendance_sheet_exports
+### 3.8 attendance_sheet_exports
 
 Stores generated attendance sheet/download history. The generated file is an output; the source data remains in `events` and `attendance_records`.
 
@@ -161,7 +180,7 @@ Stores generated attendance sheet/download history. The generated file is an out
 | `total_records` | INT UNSIGNED |  | Count of included attendance records |
 | `exported_at` | DATETIME |  | Export timestamp |
 
-### 3.8 audit_logs
+### 3.9 audit_logs
 
 Stores important admin and system actions.
 
@@ -179,7 +198,7 @@ Stores important admin and system actions.
 | `user_agent` | VARCHAR(500) NULL |  | Optional browser/client info |
 | `created_at` | DATETIME |  | Log timestamp |
 
-### 3.9 attendance_record_addresses
+### 3.10 attendance_record_addresses
 
 Stores optional address data for a specific attendance submission using PSGC lookup codes. This keeps address data out of `attendance_records` and avoids repeated region/province/city/barangay names.
 
@@ -200,7 +219,7 @@ Recommended constraint:
 
 * `UNIQUE(attendance_id)` if each attendance submission should have only one address.
 
-### 3.10 psgc_regions
+### 3.11 psgc_regions
 
 Stores PSGC region lookup records.
 
@@ -212,7 +231,7 @@ Stores PSGC region lookup records.
 | `created_at` | DATETIME |  | Creation timestamp |
 | `updated_at` | DATETIME |  | Last update timestamp |
 
-### 3.11 psgc_provinces
+### 3.12 psgc_provinces
 
 Stores PSGC province lookup records.
 
@@ -225,7 +244,7 @@ Stores PSGC province lookup records.
 | `created_at` | DATETIME |  | Creation timestamp |
 | `updated_at` | DATETIME |  | Last update timestamp |
 
-### 3.12 psgc_cities_municipalities
+### 3.13 psgc_cities_municipalities
 
 Stores PSGC city/municipality lookup records.
 
@@ -240,7 +259,7 @@ Stores PSGC city/municipality lookup records.
 | `created_at` | DATETIME |  | Creation timestamp |
 | `updated_at` | DATETIME |  | Last update timestamp |
 
-### 3.13 psgc_barangays
+### 3.14 psgc_barangays
 
 Stores PSGC barangay lookup records.
 
@@ -256,6 +275,9 @@ Stores PSGC barangay lookup records.
 ## 4. Main Relationships
 
 * One `role` can be assigned to many `users`.
+* One `organizational_unit` can contain many child `organizational_units`.
+* One `organizational_unit` can be assigned to many `users`.
+* One `organizational_unit` can own or handle many `programs`.
 * One `user` can create many `programs`.
 * One `program` can have many `program_admin_assignments`.
 * One `user` can have many `program_admin_assignments`.
@@ -283,7 +305,7 @@ The supervisor-provided template is an output format. It is not imported as a da
 | Title of Event/Seminar/Meeting | `events.event_title` | Printed in sheet header |
 | Venue | `events.venue` | Printed in sheet header |
 | Date | `events.event_date` | Printed in sheet header |
-| Office heading | `programs.office_or_division` | Example: DICT Regional Office No. V - Bicol |
+| Office heading | `organizational_units.unit_name` through `programs.owning_unit_id` | Example: DICT Regional Office No. V - Bicol |
 | Privacy notice | Fixed application text | Not a per-event imported template |
 
 ### Attendance Table Fields
@@ -321,6 +343,7 @@ The design uses atomic fields:
 The design avoids partial dependency by keeping each table focused on one entity or relationship:
 
 * Program fields are stored only in `programs`.
+* Organizational unit names and hierarchy are stored only in `organizational_units`.
 * Event fields are stored only in `events`.
 * Attendance submission fields are stored only in `attendance_records`.
 * Attendance address fields are stored only in `attendance_record_addresses`.
@@ -334,6 +357,8 @@ The design avoids transitive dependency:
 
 * `attendance_records` does not repeat program name, event title, venue, or event date. It stores only `event_id`.
 * `events` does not repeat Program Admin names or emails. It stores `created_by_user_id`.
+* `programs` does not repeat office/division/unit names. It stores `owning_unit_id`.
+* `users` does not repeat office/division/unit names. It stores `org_unit_id` when employee assignment is tracked.
 * `program_admin_assignments` does not repeat user or program details. It stores foreign keys.
 * `attendance_sheet_exports` does not duplicate attendance rows. It stores export metadata only.
 * `audit_logs` stores action metadata and references the admin user when applicable.
@@ -358,6 +383,10 @@ After this ERD is approved, create the MySQL SQL schema with:
 * Unique constraints
 * Indexes for common lookups, especially:
   * `users.email`
+  * `users.org_unit_id`
+  * `organizational_units.parent_unit_id`
+  * `organizational_units.unit_code`
+  * `programs.owning_unit_id`
   * `program_admin_assignments(program_id, user_id)`
   * `events.program_id`
   * `events.event_code`
