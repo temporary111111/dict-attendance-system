@@ -8,6 +8,7 @@ This folder contains the MySQL database deliverables derived from the approved E
 | --- | --- |
 | `schema.sql` | Main MySQL `CREATE TABLE` schema with primary keys, foreign keys, unique constraints, and indexes. |
 | `seed-core.sql` | Starter seed data for roles and the root DICT organizational unit. |
+| `smoke-test.sql` | Sample inserts and verification queries for testing the schema relationships. |
 | `data-dictionary.md` | Explanation of every table and field in beginner-friendly terms. |
 | `psgc-import-plan.md` | Plan for importing official PSA PSGC data into local MySQL lookup tables. |
 
@@ -16,13 +17,23 @@ This folder contains the MySQL database deliverables derived from the approved E
 1. Create the MySQL database.
 2. Run `schema.sql`.
 3. Run `seed-core.sql`.
-4. Import PSGC data later using the process in `psgc-import-plan.md`.
+4. Run `smoke-test.sql` to verify that the schema works.
+5. Import PSGC data later using the process in `psgc-import-plan.md`.
 
-Example:
+PowerShell example:
 
 ```powershell
+Get-Content .\others\database\schema.sql | mysql -u root -p attendance_system
+Get-Content .\others\database\seed-core.sql | mysql -u root -p attendance_system
+Get-Content .\others\database\smoke-test.sql | mysql -u root -p attendance_system
+```
+
+`cmd.exe` example:
+
+```cmd
 mysql -u root -p attendance_system < others\database\schema.sql
 mysql -u root -p attendance_system < others\database\seed-core.sql
+mysql -u root -p attendance_system < others\database\smoke-test.sql
 ```
 
 ## Important Notes
