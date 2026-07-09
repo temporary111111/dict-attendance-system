@@ -1,0 +1,64 @@
+# DICT Attendance System Backend
+
+FastAPI API-only backend for the DICT Program and Event Attendance Monitoring and Reporting System.
+
+## Stack
+
+* Python 3.11.x
+* FastAPI
+* Uvicorn
+* SQLAlchemy 2.0
+* PyMySQL
+* MySQL 8.0+
+* Pytest
+
+## Setup
+
+Run from this `backend` folder:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Edit `.env` and set `DATABASE_URL` to your local MySQL database:
+
+```text
+DATABASE_URL=mysql+pymysql://root:your_password@localhost:3306/dict_attendance_system?charset=utf8mb4
+```
+
+## Run
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/api/health
+http://127.0.0.1:8000/api/health/db
+```
+
+## Test
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pytest -v
+```
+
+## Frontend Hosting
+
+The frontend is separate from this FastAPI backend. The frontend should call the backend using a configurable API base URL such as:
+
+```text
+http://127.0.0.1:8000/api
+```
+
+When the frontend runs on a different host or port, add that frontend origin to `CORS_ORIGINS` in `.env`.
+
