@@ -5,8 +5,8 @@ This folder contains backend planning documents for the DICT Program and Event A
 ## Documents
 
 * [Backend API Plan](backend-api-plan.md) - REST-style API guide based on the current DFD, ERD, permissions matrix, and MySQL schema.
+* [FastAPI Stack Decision](fastapi-stack-decision.md) - selected backend stack and frontend-backend hosting approach.
 
 ## Current Scope
 
-These documents are framework-neutral. They define the backend behavior before choosing or implementing a specific backend stack such as Laravel, Express, Spring Boot, or another framework.
-
+The selected backend framework is FastAPI. The backend is designed as an API-only service so the vanilla HTML, CSS, and JavaScript frontend can be hosted separately or deployed together later without changing the API design.

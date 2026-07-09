@@ -15,6 +15,10 @@ This document describes the planned backend API behavior for the MVP. It is base
 * Program Admin access must always be checked through `program_admin_assignments`.
 * Official attendance sheet exports should include `attendance_records` with `attendance_status = 'valid'` by default.
 * PSGC dropdown data should be read from local MySQL PSGC lookup tables, not from live PSA API calls during attendee submission.
+* The selected backend stack is Python FastAPI with MySQL.
+* The FastAPI backend will be API-only. It must not assume that frontend files are stored inside the backend project.
+* The vanilla HTML, CSS, and JavaScript frontend may be hosted separately or deployed together with the backend later.
+* CORS origins must be configurable because the frontend and backend may run on different hosts.
 
 ## 2. Standard Response Shape
 
@@ -355,7 +359,6 @@ Public attendance validation:
 
 These decisions are not finalized by the current docs:
 
-* Backend framework and language.
 * Session-based auth or token-based auth.
 * Password reset process.
 * QR code generation library.
