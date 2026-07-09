@@ -373,9 +373,9 @@ A separate `attendees` master table is not included in the MVP because external 
 
 For the MVP, each attendance record is treated as an official submission for one event. If the office later wants repeat-attendee tracking or attendee profiles, an `attendees` table can be added in Phase 2.
 
-## 8. Recommended Next Step After ERD Approval
+## 8. MySQL Schema Implementation
 
-After this ERD is approved, create the MySQL SQL schema with:
+The MySQL SQL schema has been drafted in `others/database/schema.sql` with:
 
 * `CREATE TABLE` statements
 * Primary keys
@@ -404,3 +404,9 @@ After this ERD is approved, create the MySQL SQL schema with:
   * `psgc_cities_municipalities.region_code`
   * `psgc_cities_municipalities.province_code`
   * `psgc_barangays.city_municipality_code`
+
+Supporting database files are also available:
+
+* `others/database/data-dictionary.md`
+* `others/database/seed-core.sql`
+* `others/database/psgc-import-plan.md`

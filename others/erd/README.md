@@ -38,3 +38,12 @@ python others\erd\source\render_erd_drawio.py
 ## Important Design Decision
 
 External attendees do not have user accounts in the MVP. Their submitted attendance details are stored per event in `attendance_records`. DICT office/division/unit data is stored in `organizational_units`, then referenced by `programs.owning_unit_id` and optionally by `users.org_unit_id`. PSGC-coded address details, if collected, are stored separately in `attendance_record_addresses` and linked to PSGC lookup tables. A separate `attendees` master table is intentionally not included yet because cross-event attendee identity matching is out of scope for the MVP.
+
+## SQL Implementation
+
+The MySQL schema and database supporting documents are in `others/database/`:
+
+* `schema.sql`
+* `seed-core.sql`
+* `data-dictionary.md`
+* `psgc-import-plan.md`
