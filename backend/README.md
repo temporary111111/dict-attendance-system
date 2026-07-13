@@ -151,6 +151,41 @@ QR_CODE_URL_PREFIX=/media/qr-codes
 `PUBLIC_ATTENDANCE_URL_TEMPLATE` must contain `{event_code}`. Refreshing an
 attendance link rotates the code and replaces the locally stored QR PNG.
 
+## Public Attendance
+
+Attendees do not need an admin account. The fixed attendance page uses these
+public endpoints:
+
+```text
+GET /api/public/events/{eventCode}
+POST /api/public/events/{eventCode}/attendance
+GET /api/psgc/regions
+GET /api/psgc/provinces?regionCode={regionCode}
+GET /api/psgc/cities-municipalities?regionCode={regionCode}&provinceCode={provinceCode}
+GET /api/psgc/barangays?cityMunicipalityCode={cityMunicipalityCode}
+```
+
+The submission endpoint accepts `multipart/form-data` with `first_name`,
+optional `middle_name`, `last_name`, optional `suffix`, `affiliation`,
+`designation_category`, `sex`, `email`, both consent fields, and either
+`signature_text` or a PNG/JPEG `signature_image`.
+
+Address fields are optional. Once any address field is provided,
+`region_code`, `city_municipality_code`, and `barangay_code` are required.
+`province_code` stays optional for PSGC areas that are not province-based;
+`street_address` and `postal_code` are optional. Submitted codes must form an
+active hierarchy in the local PSGC tables.
+
+The event must be open. A normalized email can be submitted only once per
+event. Uploaded signatures are verified, re-encoded as PNG, and saved under
+the private directory configured below. The backend does not expose this
+directory as static media.
+
+```text
+SIGNATURE_DIRECTORY=storage/signatures
+SIGNATURE_MAX_BYTES=5242880
+```
+
 ## Create Local Super Admin
 
 After running `others/database/schema.sql` and `others/database/seed-core.sql`,

@@ -179,21 +179,21 @@ Suggested event statuses:
 | `GET` | `/api/public/events/{eventCode}` | Public | Load public event details for the attendance page. | `events`, `programs` |
 | `POST` | `/api/public/events/{eventCode}/attendance` | Public | Submit fixed attendance details. | `attendance_records`, `attendance_record_addresses`, PSGC tables |
 
-Required attendance fields:
+Fixed attendance inputs:
 
 | Input | Main Table Field |
 | --- | --- |
 | First name | `attendance_records.first_name` |
-| Middle name | `attendance_records.middle_name` |
+| Middle name (optional) | `attendance_records.middle_name` |
 | Last name | `attendance_records.last_name` |
-| Suffix | `attendance_records.suffix` |
+| Suffix (optional) | `attendance_records.suffix` |
 | Sex | `attendance_records.sex` |
 | Email | `attendance_records.email` |
 | Affiliation | `attendance_records.affiliation` |
 | Designation or category | `attendance_records.designation_category` |
 | Documentation and publication consent | `attendance_records.consent_documentation_publication` |
 | Database processing consent | `attendance_records.consent_database_processing` |
-| Signature text or image path | `attendance_records.signature_text`, `attendance_records.signature_image_path` |
+| Typed signature or PNG/JPEG image | `attendance_records.signature_text`, `attendance_records.signature_image_path` |
 
 Optional address fields:
 
@@ -203,16 +203,21 @@ Optional address fields:
 | Province | `attendance_record_addresses.province_code` |
 | City or municipality | `attendance_record_addresses.city_municipality_code` |
 | Barangay | `attendance_record_addresses.barangay_code` |
-| Address line | `attendance_record_addresses.address_line` |
-| ZIP code | `attendance_record_addresses.zip_code` |
+| Street address | `attendance_record_addresses.street_address` |
+| Postal code | `attendance_record_addresses.postal_code` |
 
 Important rules:
 
 * The public attendance page must be fixed, not dynamically built by admins.
+* Submission uses `multipart/form-data` so text fields and an optional signature image can be sent together.
 * The event must exist and must be open.
 * `attendance_records.event_id + email` must be unique.
 * If the same email submits again for the same event, the API should return `409 DUPLICATE_ATTENDANCE` and should not create another attendance row under the current schema.
-* Address PSGC codes should be validated against local PSGC tables when address fields are submitted.
+* The whole address section is optional. If any address value is submitted, region, city or municipality, and barangay are required; province remains optional for non-province PSGC areas.
+* Submitted PSGC codes must exist, be active, and form a matching hierarchy in the local PSGC tables.
+* Database processing consent must be accepted. Documentation/publication consent may be declined.
+* Either a typed signature or uploaded PNG/JPEG signature is required.
+* Uploaded signatures are verified, re-encoded as PNG, and stored in a private directory that is not exposed as static media.
 * The confirmation message should not expose private admin data.
 
 Suggested duplicate response:
@@ -368,15 +373,18 @@ Public attendance validation:
 
 These decisions are not finalized by the current docs:
 
-* Session-based auth or token-based auth.
 * Password reset process.
-* QR code generation library.
 * PDF or spreadsheet export library.
-* Exact file storage location for generated exports and signature images.
 * Whether Program Admins are allowed to generate and download attendance sheets in the MVP.
-* Whether typed signature, uploaded image signature, or drawn signature will be used in the first implementation.
-* Whether optional address fields are shown in the first public attendance form version.
 * Whether contact number should be added to `attendance_records`; it is not in the current tested schema.
+
+Decisions already implemented:
+
+* Admin authentication uses stateless JWT access tokens for the MVP.
+* QR codes are generated locally using the Python `qrcode` package.
+* Signature images use configurable private local storage.
+* The first submission API accepts either typed or uploaded image signatures.
+* Address fields are optional but are validated as one PSGC hierarchy when supplied.
 
 ## 19. MVP Non-Goals
 

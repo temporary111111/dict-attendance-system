@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     )
     qr_code_directory: Path = Path("storage/qr_codes")
     qr_code_url_prefix: str = "/media/qr-codes"
+    signature_directory: Path = Path("storage/signatures")
+    signature_max_bytes: int = 5 * 1024 * 1024
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
