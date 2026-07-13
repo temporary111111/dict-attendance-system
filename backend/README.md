@@ -79,6 +79,16 @@ GET /api/organizational-units
 These endpoints return active records for admin account creation and require a
 Super Admin Bearer token.
 
+Create an admin account:
+
+```text
+POST /api/users
+```
+
+The endpoint accepts `full_name`, `email`, `password`, `role_id`, and optional
+`org_unit_id`. It requires a Super Admin token and never returns the password
+or password hash.
+
 ## Create Local Super Admin
 
 After running `others/database/schema.sql` and `others/database/seed-core.sql`,

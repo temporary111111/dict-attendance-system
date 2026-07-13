@@ -84,7 +84,7 @@ def make_client(session: FakeSession, *, authorized=True) -> TestClient:
 def valid_payload() -> dict:
     return {
         "full_name": "  Juan Dela Cruz  ",
-        "email": "JUAN.DELA.CRUZ@EXAMPLE.TEST",
+        "email": "JUAN.DELA.CRUZ@EXAMPLE.COM",
         "password": "secure-password",
         "role_id": 2,
         "org_unit_id": 1,
@@ -102,7 +102,7 @@ def test_create_user_hashes_password_and_returns_safe_account_data():
         "data": {
             "user_id": 3,
             "full_name": "Juan Dela Cruz",
-            "email": "juan.dela.cruz@example.test",
+            "email": "juan.dela.cruz@example.com",
             "account_status": "active",
             "role": {
                 "role_id": 2,
