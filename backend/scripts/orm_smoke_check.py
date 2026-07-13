@@ -1,3 +1,8 @@
+"""Manual ORM smoke check.
+
+Run this kapag gusto mong siguraduhin na ang models ay gumagana sa real MySQL DB.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,6 +31,7 @@ from app.models import (
 
 
 COUNT_CHECKS: tuple[tuple[str, type[Any]], ...] = (
+    # Core table counts muna; mabilis itong signal kung may missing/import issue.
     ("roles", Role),
     ("organizational_units", OrganizationalUnit),
     ("users", User),
@@ -45,6 +51,8 @@ COUNT_CHECKS: tuple[tuple[str, type[Any]], ...] = (
 
 @dataclass(frozen=True)
 class LatestAttendanceRow:
+    """Simplified row para readable ang latest attendance output sa terminal."""
+
     attendance_id: int
     attendee_name: str
     event_code: str
@@ -57,17 +65,21 @@ class LatestAttendanceRow:
 
 @dataclass(frozen=True)
 class ORMSmokeCheckResult:
+    """Result object ng smoke check bago siya gawing text report."""
+
     table_counts: dict[str, int]
     latest_attendance: list[LatestAttendanceRow]
 
 
 def run_orm_smoke_check(session: Session) -> ORMSmokeCheckResult:
+    """Queries core tables and latest attendance rows using ORM relationships."""
     table_counts = {
         table_name: int(session.scalar(select(func.count()).select_from(model)) or 0)
         for table_name, model in COUNT_CHECKS
     }
 
     latest_attendance_rows = session.execute(
+        # Join path: attendance -> event -> address -> PSGC tables.
         select(
             AttendanceRecord.attendance_id,
             AttendanceRecord.first_name,
@@ -110,6 +122,7 @@ def run_orm_smoke_check(session: Session) -> ORMSmokeCheckResult:
 
 
 def format_smoke_check_report(result: ORMSmokeCheckResult) -> str:
+    """Ginagawang readable terminal output ang smoke check result."""
     lines = ["ORM smoke check", "", "Table counts:"]
 
     for table_name, total_rows in result.table_counts.items():
@@ -134,6 +147,7 @@ def format_smoke_check_report(result: ORMSmokeCheckResult) -> str:
 
 
 def main() -> None:
+    """CLI entry point kapag ni-run via python -m scripts.orm_smoke_check."""
     with SessionLocal() as session:
         result = run_orm_smoke_check(session)
 

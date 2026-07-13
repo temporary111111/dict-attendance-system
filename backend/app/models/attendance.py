@@ -1,3 +1,5 @@
+"""Models para sa public attendance submissions, addresses, at report exports."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -20,8 +22,11 @@ from app.models.mixins import TimestampMixin
 
 
 class AttendanceRecord(Base, TimestampMixin):
+    """Isang attendance submission ng attendee para sa isang event."""
+
     __tablename__ = "attendance_records"
     __table_args__ = (
+        # Bawal maulit ang same email sa same event para mabawasan ang duplicates.
         UniqueConstraint(
             "event_id",
             "email",
@@ -60,6 +65,7 @@ class AttendanceRecord(Base, TimestampMixin):
     middle_name: Mapped[str | None] = mapped_column(String(100))
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     suffix: Mapped[str | None] = mapped_column(String(30))
+    # General term ito para pwede students, government officials, employees, etc.
     affiliation: Mapped[str] = mapped_column(String(200), nullable=False)
     designation_category: Mapped[str] = mapped_column(String(150), nullable=False)
     sex: Mapped[str] = mapped_column(Enum("F", "M", name="sex"), nullable=False)
@@ -96,6 +102,7 @@ class AttendanceRecord(Base, TimestampMixin):
         "Event",
         back_populates="attendance_records",
     )
+    # One-to-one shortcut: attendance.address returns the separate address row.
     address: Mapped["AttendanceRecordAddress | None"] = relationship(
         "AttendanceRecordAddress",
         back_populates="attendance",
@@ -105,6 +112,8 @@ class AttendanceRecord(Base, TimestampMixin):
 
 
 class AttendanceSheetExport(Base):
+    """History ng generated/downloaded attendance sheet after or during an event."""
+
     __tablename__ = "attendance_sheet_exports"
     __table_args__ = (
         Index("idx_attendance_sheet_exports_event_id", "event_id"),
@@ -158,8 +167,11 @@ class AttendanceSheetExport(Base):
 
 
 class AttendanceRecordAddress(Base, TimestampMixin):
+    """Address details ng attendee, separated para normalized ang attendance data."""
+
     __tablename__ = "attendance_record_addresses"
     __table_args__ = (
+        # One address row lang per attendance record.
         UniqueConstraint(
             "attendance_id",
             name="uq_attendance_record_addresses_attendance_id",

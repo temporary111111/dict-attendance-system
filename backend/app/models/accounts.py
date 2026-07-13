@@ -1,3 +1,5 @@
+"""Models para sa admin accounts, roles, at DICT organizational units."""
+
 from __future__ import annotations
 
 from sqlalchemy import CheckConstraint, Enum, ForeignKey, Index, String, UniqueConstraint, text
@@ -9,6 +11,8 @@ from app.models.mixins import TimestampMixin
 
 
 class Role(Base, TimestampMixin):
+    """Role ng system user, tulad ng Super Admin or Program Admin."""
+
     __tablename__ = "roles"
     __table_args__ = (
         UniqueConstraint("role_name", name="uq_roles_role_name"),
@@ -32,6 +36,8 @@ class Role(Base, TimestampMixin):
 
 
 class OrganizationalUnit(Base, TimestampMixin):
+    """DICT office/division/unit na pwedeng paglagyan ng users at programs."""
+
     __tablename__ = "organizational_units"
     __table_args__ = (
         UniqueConstraint("unit_code", name="uq_organizational_units_unit_code"),
@@ -70,6 +76,7 @@ class OrganizationalUnit(Base, TimestampMixin):
         back_populates="children",
         remote_side=[org_unit_id],
     )
+    # Self-relationship ito: isang unit pwedeng may parent at child units.
     children: Mapped[list["OrganizationalUnit"]] = relationship(
         "OrganizationalUnit",
         back_populates="parent",
@@ -85,6 +92,8 @@ class OrganizationalUnit(Base, TimestampMixin):
 
 
 class User(Base, TimestampMixin):
+    """Admin account na pwedeng mag-login at gumawa ng actions sa system."""
+
     __tablename__ = "users"
     __table_args__ = (
         UniqueConstraint("email", name="uq_users_email"),
@@ -136,6 +145,7 @@ class User(Base, TimestampMixin):
             back_populates="user",
         )
     )
+    # Separate relationship ito dahil user din ang nag-aassign ng Program Admin.
     assigned_program_admin_assignments: Mapped[
         list["ProgramAdminAssignment"]
     ] = relationship(

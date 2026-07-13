@@ -1,3 +1,5 @@
+"""Audit log model para sa important admin/system actions."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -11,6 +13,8 @@ from app.models.base import Base
 
 
 class AuditLog(Base):
+    """Records who did what, when, and which entity was affected."""
+
     __tablename__ = "audit_logs"
     __table_args__ = (
         Index("idx_audit_logs_user_id", "user_id"),
@@ -30,6 +34,7 @@ class AuditLog(Base):
     )
     action: Mapped[str] = mapped_column(String(100), nullable=False)
     entity_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    # entity_type + entity_id points to the affected record, e.g. events + 5.
     entity_id: Mapped[int | None] = mapped_column(mysql.BIGINT(unsigned=True))
     description: Mapped[str] = mapped_column(String(500), nullable=False)
     old_values_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)

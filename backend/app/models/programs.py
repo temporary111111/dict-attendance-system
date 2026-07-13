@@ -1,3 +1,5 @@
+"""Models para sa DICT programs, Program Admin assignments, at events."""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -22,6 +24,8 @@ from app.models.mixins import TimestampMixin
 
 
 class Program(Base, TimestampMixin):
+    """DICT program/service tulad ng Free Wi-Fi for All or eGov Super App."""
+
     __tablename__ = "programs"
     __table_args__ = (
         UniqueConstraint(
@@ -77,8 +81,11 @@ class Program(Base, TimestampMixin):
 
 
 class ProgramAdminAssignment(Base):
+    """Connects a Program Admin user to the program na hawak niya."""
+
     __tablename__ = "program_admin_assignments"
     __table_args__ = (
+        # Bawal doble ang same user sa same program assignment.
         UniqueConstraint(
             "program_id",
             "user_id",
@@ -94,6 +101,7 @@ class ProgramAdminAssignment(Base):
             "assignment_status",
         ),
         CheckConstraint(
+            # Kapag revoked na ang assignment, kailangan may revoked_at timestamp.
             "("
             "assignment_status = 'active' AND revoked_at IS NULL"
             ") OR ("
@@ -152,8 +160,11 @@ class ProgramAdminAssignment(Base):
 
 
 class Event(Base, TimestampMixin):
+    """Specific activity under a program, created by an assigned Program Admin."""
+
     __tablename__ = "events"
     __table_args__ = (
+        # Event code ang stable identifier para sa public attendance link/QR.
         UniqueConstraint("event_code", name="uq_events_event_code"),
         Index("idx_events_program_id", "program_id"),
         Index("idx_events_created_by_user_id", "created_by_user_id"),

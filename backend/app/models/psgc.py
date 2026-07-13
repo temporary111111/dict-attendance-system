@@ -1,3 +1,5 @@
+"""PSGC reference models para sa normalized Philippine address data."""
+
 from __future__ import annotations
 
 from sqlalchemy import CheckConstraint, Enum, ForeignKey, Index, String, text
@@ -9,6 +11,8 @@ from app.models.mixins import TimestampMixin
 
 
 class PSGCRegion(Base, TimestampMixin):
+    """Region reference table galing sa PSGC data."""
+
     __tablename__ = "psgc_regions"
     __table_args__ = (
         Index("idx_psgc_regions_is_active", "is_active"),
@@ -40,6 +44,8 @@ class PSGCRegion(Base, TimestampMixin):
 
 
 class PSGCProvince(Base, TimestampMixin):
+    """Province reference table connected to a PSGC region."""
+
     __tablename__ = "psgc_provinces"
     __table_args__ = (
         Index("idx_psgc_provinces_region_code", "region_code"),
@@ -77,6 +83,8 @@ class PSGCProvince(Base, TimestampMixin):
 
 
 class PSGCCityMunicipality(Base, TimestampMixin):
+    """City/municipality reference table used by attendance addresses."""
+
     __tablename__ = "psgc_cities_municipalities"
     __table_args__ = (
         Index("idx_psgc_cities_municipalities_region_code", "region_code"),
@@ -105,6 +113,7 @@ class PSGCCityMunicipality(Base, TimestampMixin):
             ondelete="RESTRICT",
         ),
     )
+    # Nullable ang province_code dahil may areas sa PSGC na hindi province-based.
     city_municipality_name: Mapped[str] = mapped_column(String(150), nullable=False)
     city_municipality_type: Mapped[str] = mapped_column(
         Enum("city", "municipality", name="city_municipality_type"),
@@ -137,6 +146,8 @@ class PSGCCityMunicipality(Base, TimestampMixin):
 
 
 class PSGCBarangay(Base, TimestampMixin):
+    """Barangay reference table connected to a city or municipality."""
+
     __tablename__ = "psgc_barangays"
     __table_args__ = (
         Index("idx_psgc_barangays_city_municipality_code", "city_municipality_code"),
