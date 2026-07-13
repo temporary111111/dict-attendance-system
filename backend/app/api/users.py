@@ -15,14 +15,18 @@ from app.schemas.users import (
     CreateUserResponse,
     UpdateUserRequest,
     UpdateUserResponse,
+    UpdateUserStatusRequest,
+    UpdateUserStatusResponse,
     UserDetailResponse,
     UserListResponse,
 )
 from app.services.user_service import (
     AdminUserResult,
+    CannotDeactivateOwnAccountError,
     InvalidUserReferenceError,
     UserEmailAlreadyExistsError,
     UserNotFoundError,
+    change_admin_user_status,
     create_admin_user,
     update_admin_user,
 )
@@ -88,6 +92,15 @@ def _raise_user_write_error(exc: Exception) -> None:
             detail=error_response(
                 "USER_NOT_FOUND",
                 "Admin user not found.",
+            ),
+        )
+
+    if isinstance(exc, CannotDeactivateOwnAccountError):
+        raise HTTPException(
+            status_code=409,
+            detail=error_response(
+                "CANNOT_DEACTIVATE_OWN_ACCOUNT",
+                "You cannot deactivate your own current account.",
             ),
         )
 
@@ -165,6 +178,34 @@ def update_user(
     return success_response(
         _admin_user_data(updated.user, updated.role, updated.org_unit),
         "Admin user updated.",
+    )
+
+
+@router.patch("/{user_id}/status", response_model=UpdateUserStatusResponse)
+def change_user_status(
+    user_id: Annotated[int, Path(gt=0)],
+    payload: UpdateUserStatusRequest,
+    db: Annotated[Session, Depends(get_db)],
+    current_super_admin: Annotated[User, Depends(require_super_admin)],
+) -> dict[str, Any]:
+    """Ina-activate o dine-deactivate ang admin account nang hindi dine-delete."""
+    try:
+        updated = change_admin_user_status(
+            db,
+            user_id,
+            current_super_admin.user_id,
+            payload,
+        )
+    except (
+        CannotDeactivateOwnAccountError,
+        InvalidUserReferenceError,
+        UserNotFoundError,
+    ) as exc:
+        _raise_user_write_error(exc)
+
+    return success_response(
+        _admin_user_data(updated.user, updated.role, updated.org_unit),
+        "Admin user status updated.",
     )
 
 

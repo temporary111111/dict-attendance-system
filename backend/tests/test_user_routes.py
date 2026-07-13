@@ -83,7 +83,12 @@ def make_org_unit(*, is_active=True):
     )
 
 
-def make_client(session: FakeSession, *, authorized=True) -> TestClient:
+def make_client(
+    session: FakeSession,
+    *,
+    authorized=True,
+    current_user_id=1,
+) -> TestClient:
     app = create_app(make_settings())
 
     def override_get_db():
@@ -92,7 +97,7 @@ def make_client(session: FakeSession, *, authorized=True) -> TestClient:
     app.dependency_overrides[get_db] = override_get_db
     if authorized:
         app.dependency_overrides[require_super_admin] = lambda: SimpleNamespace(
-            user_id=1
+            user_id=current_user_id
         )
     return TestClient(app)
 
@@ -449,6 +454,112 @@ def test_update_user_requires_authentication():
     )
 
     response = client.patch("/api/users/2", json={"full_name": "New Name"})
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"
+
+
+def test_change_user_status_deactivates_another_account():
+    user = make_existing_user()
+    session = FakeSession(user_to_update=user)
+    client = make_client(session, current_user_id=1)
+
+    response = client.patch(
+        "/api/users/2/status",
+        json={"account_status": "inactive"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["account_status"] == "inactive"
+    assert response.json()["message"] == "Admin user status updated."
+    assert user.account_status == "inactive"
+    assert session.committed is True
+
+
+def test_change_user_status_reactivates_account_with_active_role():
+    user = make_existing_user()
+    user.account_status = "inactive"
+    session = FakeSession(user_to_update=user)
+    client = make_client(session)
+
+    response = client.patch(
+        "/api/users/2/status",
+        json={"account_status": "active"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["account_status"] == "active"
+    assert user.account_status == "active"
+
+
+def test_change_user_status_prevents_self_deactivation():
+    user = make_existing_user()
+    user.user_id = 1
+    session = FakeSession(user_to_update=user)
+    client = make_client(session, current_user_id=1)
+
+    response = client.patch(
+        "/api/users/1/status",
+        json={"account_status": "inactive"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "CANNOT_DEACTIVATE_OWN_ACCOUNT"
+    assert user.account_status == "active"
+    assert session.committed is False
+
+
+def test_change_user_status_returns_not_found_for_unknown_id():
+    client = make_client(FakeSession(user_to_update=None))
+
+    response = client.patch(
+        "/api/users/999/status",
+        json={"account_status": "inactive"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "USER_NOT_FOUND"
+
+
+def test_change_user_status_rejects_invalid_status():
+    client = make_client(FakeSession(user_to_update=make_existing_user()))
+
+    response = client.patch(
+        "/api/users/2/status",
+        json={"account_status": "deleted"},
+    )
+
+    assert response.status_code == 422
+    assert "account_status" in response.json()["error"]["fields"]
+
+
+def test_change_user_status_rejects_reactivation_with_inactive_role():
+    user = make_existing_user()
+    user.account_status = "inactive"
+    user.role = make_role(is_active=False)
+    session = FakeSession(user_to_update=user)
+    client = make_client(session)
+
+    response = client.patch(
+        "/api/users/2/status",
+        json={"account_status": "active"},
+    )
+
+    assert response.status_code == 422
+    assert "role_id" in response.json()["error"]["fields"]
+    assert user.account_status == "inactive"
+
+
+def test_change_user_status_requires_authentication():
+    client = make_client(
+        FakeSession(user_to_update=make_existing_user()),
+        authorized=False,
+    )
+
+    response = client.patch(
+        "/api/users/2/status",
+        json={"account_status": "inactive"},
+    )
 
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"

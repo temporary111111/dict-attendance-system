@@ -86,6 +86,7 @@ GET /api/users
 GET /api/users/{userId}
 POST /api/users
 PATCH /api/users/{userId}
+PATCH /api/users/{userId}/status
 ```
 
 `GET /api/users` lists active and inactive admin accounts, while
@@ -94,6 +95,8 @@ PATCH /api/users/{userId}
 endpoints require a Super Admin token and never return the password or password
 hash. `PATCH /api/users/{userId}` partially updates `full_name`, `email`,
 `role_id`, or `org_unit_id`; it does not change passwords or account status.
+`PATCH /api/users/{userId}/status` accepts `active` or `inactive`. A Super Admin
+cannot deactivate their own current account.
 
 ## Create Local Super Admin
 

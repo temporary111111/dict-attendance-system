@@ -1,6 +1,6 @@
 """Request at response schemas para sa admin user management."""
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -59,6 +59,12 @@ class UpdateUserRequest(BaseModel):
         return self
 
 
+class UpdateUserStatusRequest(BaseModel):
+    """Allowed account states para sa activate/deactivate action."""
+
+    account_status: Literal["active", "inactive"]
+
+
 class UserRoleData(BaseModel):
     role_id: int
     role_name: str
@@ -94,5 +100,10 @@ class UserDetailResponse(BaseModel):
 
 
 class UpdateUserResponse(BaseModel):
+    data: CreatedUserData
+    message: str
+
+
+class UpdateUserStatusResponse(BaseModel):
     data: CreatedUserData
     message: str

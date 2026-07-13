@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
 from app.models import OrganizationalUnit, Role, User
-from app.schemas.users import CreateUserRequest, UpdateUserRequest
+from app.schemas.users import (
+    CreateUserRequest,
+    UpdateUserRequest,
+    UpdateUserStatusRequest,
+)
 from app.services.auth_service import ADMIN_ROLE_NAMES
 
 
@@ -27,6 +31,10 @@ class InvalidUserReferenceError(Exception):
 
 class UserNotFoundError(Exception):
     """Raised kapag walang admin user para sa requested ID."""
+
+
+class CannotDeactivateOwnAccountError(Exception):
+    """Raised para hindi ma-lock out ng Super Admin ang sariling account."""
 
 
 @dataclass(frozen=True)
@@ -159,3 +167,32 @@ def update_admin_user(
     _commit_user(db)
     db.refresh(user)
     return AdminUserResult(user=user, role=role, org_unit=org_unit)
+
+
+def change_admin_user_status(
+    db: Session,
+    user_id: int,
+    actor_user_id: int,
+    payload: UpdateUserStatusRequest,
+) -> AdminUserResult:
+    """Ina-activate o dine-deactivate ang user habang iniiwasan ang self-lockout."""
+    user = db.get(User, user_id)
+    if user is None:
+        raise UserNotFoundError
+
+    if user_id == actor_user_id and payload.account_status == "inactive":
+        raise CannotDeactivateOwnAccountError
+
+    role = user.role
+    if payload.account_status == "active" and (
+        not role.is_active or role.role_name not in ADMIN_ROLE_NAMES
+    ):
+        raise InvalidUserReferenceError(
+            "role_id",
+            "Assign an active admin role before reactivating this account.",
+        )
+
+    user.account_status = payload.account_status
+    db.commit()
+    db.refresh(user)
+    return AdminUserResult(user=user, role=role, org_unit=user.org_unit)

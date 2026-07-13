@@ -34,10 +34,9 @@
 - Consumes: `CreateUserRequest`, SQLAlchemy `Session`, active roles and units.
 - Produces: `POST /api/users` with `201`, `409`, and standardized `422` responses.
 
-- [ ] Add endpoint tests for success, auth, duplicate email, invalid references, and request validation.
-- [ ] Run the focused tests and confirm they fail with `404` before implementation.
-- [ ] Add and install the email validation dependency.
-- [ ] Add request and response schemas plus standard validation-error handling.
-- [ ] Add the tested creation service and route, then register the router.
-- [ ] Run focused tests and the complete backend test suite.
-
+- [x] Add endpoint tests for success, auth, duplicate email, invalid references, and request validation.
+- [x] Run the focused tests and confirm they fail with `404` before implementation.
+- [x] Add and install the email validation dependency.
+- [x] Add request and response schemas plus standard validation-error handling.
+- [x] Add the tested creation service and route, then register the router.
+- [x] Run focused tests and the complete backend test suite.
