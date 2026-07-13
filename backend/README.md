@@ -207,6 +207,24 @@ cannot freely edit submitted attendee fields or hard delete attendance rows.
 Signature images remain private and are served only by the authenticated
 signature endpoint.
 
+## Attendance Sheet PDF Export
+
+Authenticated admins can generate one PDF for one selected event:
+
+```text
+POST /api/events/{eventId}/attendance-sheet-exports
+```
+
+The PDF contains all `valid` attendees of that event, ordered by submission
+time. It follows the fixed DICT layout with the event header, privacy notice,
+affiliation, designation/category, sex, email, consent, and signature columns.
+Generation is allowed for every event status. Super Admins can export any
+event, while Program Admins need an active assignment to the event's program.
+
+Each request returns a private, non-cacheable PDF attachment. The server does
+not retain the generated file: `attendance_sheet_exports.file_path` remains
+`NULL`, while the export summary and audit log are saved in one transaction.
+
 ## Create Local Super Admin
 
 After running `others/database/schema.sql` and `others/database/seed-core.sql`,
