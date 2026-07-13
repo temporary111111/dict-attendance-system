@@ -4,7 +4,7 @@ from typing import Annotated
 
 import jwt
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
@@ -14,7 +14,7 @@ from app.db.session import get_db
 from app.models import User
 from app.services.auth_service import ADMIN_ROLE_NAMES
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def _raise_auth_error(status_code: int, code: str, message: str) -> None:
@@ -25,12 +25,15 @@ def _raise_auth_error(status_code: int, code: str, message: str) -> None:
 
 
 def get_current_user(
-    token: Annotated[str | None, Depends(oauth2_scheme)],
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
     db: Annotated[Session, Depends(get_db)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> User:
     """Binabasa ang Bearer token at hinahanap ang active admin user sa DB."""
-    if not token:
+    if credentials is None:
         _raise_auth_error(
             401,
             "NOT_AUTHENTICATED",
@@ -38,7 +41,7 @@ def get_current_user(
         )
 
     try:
-        payload = decode_access_token(token, settings)
+        payload = decode_access_token(credentials.credentials, settings)
     except jwt.ExpiredSignatureError:
         _raise_auth_error(401, "TOKEN_EXPIRED", "Authentication token has expired.")
     except jwt.InvalidTokenError:

@@ -62,6 +62,22 @@ def make_settings() -> Settings:
     )
 
 
+def test_openapi_uses_http_bearer_for_protected_routes():
+    app = create_app(make_settings())
+
+    schema = app.openapi()
+
+    assert schema["components"]["securitySchemes"] == {
+        "HTTPBearer": {
+            "type": "http",
+            "scheme": "bearer",
+        }
+    }
+    assert schema["paths"]["/api/auth/me"]["get"]["security"] == [
+        {"HTTPBearer": []}
+    ]
+
+
 def test_login_returns_access_token_for_valid_admin():
     settings = make_settings()
     app = make_test_app(make_user(), settings)

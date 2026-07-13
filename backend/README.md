@@ -69,6 +69,16 @@ POST /api/auth/logout
 `/api/auth/logout` is stateless in this MVP setup. It returns success, then the
 frontend should remove the stored token.
 
+Super Admin reference-data endpoints:
+
+```text
+GET /api/roles
+GET /api/organizational-units
+```
+
+These endpoints return active records for admin account creation and require a
+Super Admin Bearer token.
+
 ## Create Local Super Admin
 
 After running `others/database/schema.sql` and `others/database/seed-core.sql`,
