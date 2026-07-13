@@ -28,6 +28,9 @@ Edit `.env` and set `DATABASE_URL` to your local MySQL database:
 
 ```text
 DATABASE_URL=mysql+pymysql://root:your_password@localhost:3306/dict_attendance_system?charset=utf8mb4
+JWT_SECRET_KEY=replace-with-a-long-random-secret-key
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=480
 ```
 
 ## Run
@@ -44,6 +47,27 @@ http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/api/health
 http://127.0.0.1:8000/api/health/db
 ```
+
+## Auth
+
+Admin authentication uses a JWT access token only for now. The token is not
+stored in the database. The frontend stores the token and sends it through the
+`Authorization` header:
+
+```text
+Authorization: Bearer <access_token>
+```
+
+Available auth endpoints:
+
+```text
+POST /api/auth/login
+GET /api/auth/me
+POST /api/auth/logout
+```
+
+`/api/auth/logout` is stateless in this MVP setup. It returns success, then the
+frontend should remove the stored token.
 
 ## Test
 

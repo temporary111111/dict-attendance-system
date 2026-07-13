@@ -3,11 +3,12 @@
 Nandito ang app factory para madaling gumawa ng app sa tests at sa real server.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from app.api.router import api_router
 from app.core.config import Settings, get_settings
 from app.core.cors import configure_cors
+from app.core.exceptions import api_http_exception_handler
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -17,6 +18,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title=current_settings.app_name,
         version=current_settings.app_version,
     )
+
+    app.add_exception_handler(HTTPException, api_http_exception_handler)
 
     # Separate ang frontend sa backend, kaya kailangan configurable ang CORS.
     configure_cors(app, current_settings)

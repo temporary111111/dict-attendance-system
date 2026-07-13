@@ -20,6 +20,9 @@ class Settings(BaseSettings):
         "mysql+pymysql://root:password@localhost:3306/"
         "dict_attendance_system?charset=utf8mb4"
     )
+    jwt_secret_key: str = "change-this-development-secret"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 480
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
