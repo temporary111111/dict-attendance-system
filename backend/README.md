@@ -69,6 +69,19 @@ POST /api/auth/logout
 `/api/auth/logout` is stateless in this MVP setup. It returns success, then the
 frontend should remove the stored token.
 
+## Create Local Super Admin
+
+After running `others/database/schema.sql` and `others/database/seed-core.sql`,
+create or update a local Super Admin from the `backend` folder:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m scripts.create_admin_user --email admin@example.test --full-name "System Super Admin"
+```
+
+The script asks for the password using a hidden terminal prompt. The plain
+password is not stored in SQL files or printed in the terminal.
+
 ## Test
 
 ```powershell
