@@ -255,3 +255,8 @@ Existing visual PNG diagrams may need regeneration if they still show Google For
 ---
 
 ## End of Document
+# Historical Document Notice
+
+This handoff preserves earlier planning context. Some clarification items were
+resolved during implementation. Follow `others/README.md` and the current
+requirements, API plan, schema, code, and tests when guidance differs.

@@ -330,3 +330,8 @@ Need help next with:
 
 Preferred help style:
 Be direct and critical. Do not just validate ideas. Help simplify the scope, avoid bad architecture, and make the system professional but realistic for actual DICT use.
+HISTORICAL NOTE
+===============
+This is an earlier handoff snapshot. Open questions in this file may already
+be resolved. Use others/README.md and the current requirements, API plan,
+schema, code, and tests as the source of truth.

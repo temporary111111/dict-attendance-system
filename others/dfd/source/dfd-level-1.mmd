@@ -9,7 +9,7 @@ flowchart LR
   p3((3.0 Manage Events))
   p4((4.0 Generate Attendance Link and QR Code))
   p5((5.0 Collect Attendance Submission))
-  p6((6.0 Validate and Store Attendance Records))
+  p6((6.0 Validate, Store, and Review Attendance Records))
   p7((7.0 Generate Dashboard, Reports, and Attendance Sheets))
   p8((8.0 Manage Audit Trail))
 
@@ -52,8 +52,13 @@ flowchart LR
   p5 -->|Submitted attendance data| p6
   p6 <--> d4
   p6 <--> d5
+  p6 <--> d2
   p6 --> d7
   p6 -->|Validation result and confirmation| attendee
+  super_admin -->|Attendance list, detail, and status review| p6
+  program_admin -->|Review attendance under assigned program| p6
+  p6 -->|Attendance records and status result| super_admin
+  p6 -->|Assigned-program records and status result| program_admin
 
   super_admin -->|Dashboard/report/sheet request| p7
   program_admin -->|Report/sheet request for assigned program| p7

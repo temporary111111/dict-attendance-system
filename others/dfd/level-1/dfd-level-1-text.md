@@ -105,8 +105,10 @@ Includes:
 * Sex
 * Email address
 * Consent responses
-* Optional signature data
+* Typed signature or private signature image reference
+* Optional PSGC-based address
 * Attendance status
+* Duplicate review flag
 * Submission timestamp
 
 ---
@@ -317,14 +319,18 @@ External Attendees do not log in.
 
 ---
 
-## 6.0 Validate and Store Attendance Records
+## 6.0 Validate, Store, and Review Attendance Records
 
-This process validates submitted attendance records before storing them.
+This process validates public submissions, stores accepted records, and lets
+authorized admins review the resulting attendance records.
 
 Input:
 
 * Submitted attendance data
 * Event information
+* Attendance list, search, filter, or detail request
+* Requested attendance status and required reason
+* Current admin role and program assignment
 
 Process:
 
@@ -333,24 +339,31 @@ Process:
 * Validate consent values
 * Check duplicate submissions within the same event
 * Store valid records
-* Flag duplicate or invalid records
+* Return paginated attendance lists and record details
+* Verify Super Admin or active Program Admin access
+* Update a record to valid, duplicate, invalid, or void
+* Record an actual status change and its reason in the audit trail
 
 Data stores used:
 
+* D2 Roles and Program Assignments
 * D4 Events
 * D5 Attendance Records
-* D7 Audit Logs, for significant system/admin actions
+* D7 Audit Logs
 
 Output:
 
 * Stored attendance records
-* Duplicate records
-* Invalid records
 * Validation result
+* Paginated attendance records and record detail
+* Status update or access-denied result
 
 Important rule:
 
-Duplicate detection in the MVP should only be within the same event.
+Exact same-event email duplicates are rejected during public submission. A
+Program Admin may review status only while actively assigned to the record's
+program. Every actual status change requires a reason and its audit log must be
+saved in the same database transaction.
 
 ---
 
@@ -441,6 +454,8 @@ Super Admin sends:
 * User assignment details
 * Event details
 * Event status changes
+* Attendance list/detail requests
+* Attendance status changes with reasons
 * Attendance sheet generation requests
 * Report requests
 
@@ -466,6 +481,8 @@ Program Admin sends:
 * Event details under assigned programs
 * Event status changes
 * QR/link generation requests
+* Attendance list/detail requests for assigned programs
+* Attendance status changes with reasons for assigned programs
 * Attendance sheet generation requests, if allowed
 * Report requests
 
@@ -523,3 +540,6 @@ The system produces:
 8. Audit logs are created for important admin actions.
 9. Same-person detection across events is not part of MVP.
 10. Duplicate detection is limited to the same event.
+11. Both admin roles may review attendance, but Program Admin access requires an active program assignment.
+12. Attendance status changes require a reason and an audit log in the same transaction.
+13. Uploaded signature files are private and are not exposed through raw file paths.

@@ -1,12 +1,13 @@
 # DFD Level 2
 
-## Processes 5.0, 6.0, and 7.0: Attendance Submission, Validation, Storage, and Sheet Generation
+## Processes 5.0, 6.0, and 7.0: Attendance Submission, Review, and Sheet Generation
 
 ### Program and Event Attendance Monitoring and Reporting System for DICT
 
 ## 1. Purpose
 
-This DFD Level 2 explains the detailed flow of attendance submission, validation, storage, and attendance sheet generation.
+This DFD Level 2 explains the detailed flow of attendance submission,
+validation, storage, admin review, and attendance sheet generation.
 
 In the MVP, attendance is collected through the system's fixed public attendance page. The system no longer depends on Google Forms, Google Sheets, or CSV import for the core attendance flow.
 
@@ -20,7 +21,9 @@ This process covers:
 * Checking consent responses
 * Detecting duplicate submissions within the same event
 * Storing valid attendance records
-* Flagging invalid or duplicate records
+* Rejecting invalid or exact duplicate public submissions
+* Searching and viewing stored attendance records
+* Reviewing attendance status with a required reason
 * Generating the official attendance sheet using the DICT template
 * Recording export/download activity in the audit trail
 
@@ -34,9 +37,10 @@ This Level 2 DFD expands the following DFD Level 1 processes:
 
 Handles public attendance page access and fixed attendance submission.
 
-### 6.0 Validate and Store Attendance Records
+### 6.0 Validate, Store, and Review Attendance Records
 
-Handles submission validation, duplicate checking, and database storage.
+Handles submission validation, duplicate checking, database storage, and
+authorized admin attendance review.
 
 ### 7.0 Generate Dashboard, Reports, and Attendance Sheets
 
@@ -52,17 +56,21 @@ The External Attendee submits attendance through the public event attendance pag
 
 ## 3.2 Super Admin
 
-The Super Admin may view all attendance records and generate/download attendance sheets for any event.
+The Super Admin may view all attendance records, update their status, and
+generate/download attendance sheets for any event.
 
 ## 3.3 Program Admin
 
-The Program Admin may view attendance records and generate/download attendance sheets only for events under assigned programs, if allowed by policy.
+The Program Admin may view and update attendance status only for events under
+actively assigned programs. Attendance sheet download remains subject to office
+policy.
 
 ## 4. Data Stores
 
 ## D2 Roles and Program Assignments
 
-Used to verify whether a Program Admin is allowed to view or generate records for the selected event.
+Used to verify whether a Program Admin is actively assigned before viewing,
+reviewing, or generating records for the selected event.
 
 ## D4 Events
 
@@ -78,7 +86,8 @@ Stores attendance sheet generation/download details.
 
 ## D7 Audit Logs
 
-Stores attendance, report, and export-related activity logs.
+Stores attendance status changes, report actions, and export-related activity
+logs.
 
 ---
 
@@ -126,7 +135,8 @@ Displayed fields:
 * Email Address
 * Consent for photo/video/audio documentation and possible DICT publication
 * Consent to be included in the organizer's database for future processing of relevant documents
-* Signature, if required
+* Optional PSGC-based address
+* Either typed signature or uploaded signature image
 
 Output:
 
@@ -204,6 +214,7 @@ Recommended required fields:
 * Sex
 * Email Address
 * Consent responses
+* Either typed signature or uploaded signature image
 
 Output:
 
@@ -249,7 +260,7 @@ Input:
 Process:
 
 * Search D5 Attendance Records for an existing record with the same event and same email
-* If match is found, mark submission as duplicate or possible duplicate based on policy
+* If a match is found, reject the repeated public submission
 
 Data store used:
 
@@ -258,8 +269,7 @@ Data store used:
 Output:
 
 * Unique submission
-* Duplicate submission
-* Possible duplicate submission
+* Duplicate rejection
 
 Important rule:
 
@@ -280,7 +290,8 @@ Process:
 
 * Save attendance record to D5 Attendance Records
 * Link attendance record to selected event
-* Set status to valid, duplicate, invalid, or void as applicable
+* Set a newly accepted record's status to valid
+* Keep the separate duplicate review flag available for later admin review
 * Store submitted timestamp
 
 Data store used:
@@ -307,6 +318,51 @@ Output shown:
 Important rule:
 
 Do not expose other attendees' data in public messages.
+
+---
+
+## 6.7 Review Attendance Record Status
+
+An authorized admin searches, views, and reviews stored attendance records.
+
+Input:
+
+* Event ID or attendance record ID
+* Optional search text and attendance status filter
+* Requested new status and required reason for a change
+* Current admin user and role
+
+Process:
+
+* Verify that the event and attendance record exist
+* Allow Super Admin access to any record
+* For Program Admin, verify an active assignment to the record's program
+* Return a paginated list or complete record detail
+* Return a signature image only through the protected endpoint
+* Update the status to valid, duplicate, invalid, or void when requested
+* Create an audit log containing the old status, new status, and reason
+* Commit the status and audit log in one database transaction
+
+Data stores used:
+
+* D2 Roles and Program Assignments
+* D4 Events
+* D5 Attendance Records
+* D7 Audit Logs
+
+Output:
+
+* Paginated attendance records
+* Attendance record detail
+* Status update result
+* Access-denied or not-found result
+
+Important rules:
+
+* A Program Admin must have an active assignment to the related program.
+* Repeating the current status does not create another audit log.
+* Status review does not freely edit attendee-submitted fields and does not hard delete the record.
+* The separate `duplicate_flag` is not automatically changed by a status update.
 
 ---
 
@@ -456,19 +512,22 @@ Output:
 6. System checks duplicates within the same event.
 7. System stores valid attendance record.
 8. System shows submission result.
-9. Admin selects event for attendance sheet generation.
-10. System verifies admin access.
-11. System retrieves event attendance records.
-12. System formats records using the fixed DICT attendance sheet layout.
-13. System generates downloadable attendance sheet.
-14. System records export/download in audit trail.
+9. Admin searches or opens stored attendance records.
+10. System verifies role and active program assignment.
+11. Admin may submit a new attendance status with a reason.
+12. System saves the actual status change and audit log together.
+13. Admin selects event for attendance sheet generation.
+14. System verifies admin access and retrieves event attendance records.
+15. System formats records using the fixed DICT attendance sheet layout.
+16. System generates the downloadable attendance sheet.
+17. System records export/download in the audit trail.
 
 ---
 
 ## 7. Critical Rules
 
 1. Public attendance submission is allowed only for open events.
-2. Program Admin can only view/generate attendance sheets for assigned program events.
+2. Program Admin can only view or review records for actively assigned program events.
 3. External attendees do not log in.
 4. The attendance form is fixed, not dynamically built per event.
 5. Invalid submissions should not be silently saved as valid records.
@@ -478,15 +537,20 @@ Output:
 9. Valid attendance records must always be linked to an event.
 10. Generated attendance sheets must follow the supervisor-provided DICT template format.
 11. The DICT template is a fixed output format, not an external entity or runtime import.
+12. An actual attendance status change requires a reason and an audit log in the same transaction.
+13. Submitted attendee details are not freely edited or hard deleted in the MVP.
+14. Uploaded signature images are private and require authenticated, role-based access.
 
 ---
 
-## 8. Recommended Clarifications
+## 8. Resolved Attendance Decisions
 
-Before implementation, confirm:
+The current attendance workflow uses these approved decisions:
 
-* Should digital signature be captured, or should the signature column remain blank?
-* Should email be strictly required?
-* Should mobile number be collected even though it is not in the template?
-* Is PSGC/address collection still required even though the template has no address columns?
-* Should Program Admins be allowed to download official attendance sheets?
+* Email is required.
+* Either a typed signature or uploaded signature image is required.
+* Mobile number is not collected in the MVP.
+* PSGC address collection is optional, but supplied address codes must form a valid hierarchy.
+* Super Admin can review all records.
+* Program Admin can review records only under actively assigned programs.
+* Attendance sheet download permission for Program Admin remains an export-policy decision.

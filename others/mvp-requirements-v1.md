@@ -65,6 +65,7 @@ The Program Admin can:
 * Create and manage events under assigned programs
 * Generate QR codes and public attendance links for events under assigned programs
 * View attendance records for events under assigned programs
+* Review and update attendance record status for events under actively assigned programs
 * Generate and download attendance sheets for events under assigned programs, if allowed by policy
 * View reports for assigned programs and their events
 * Export reports, if allowed by system policy
@@ -208,10 +209,10 @@ Recommended fixed attendance fields:
 * Designation/Category
 * Sex
 * Email Address
-* Address using PSGC codes, if required by office policy
+* Optional address using PSGC codes
 * Consent for photo/video/audio documentation and possible DICT publication
 * Consent to be included in the organizer's database for future processing of relevant documents
-* Signature field, if the office requires digital signature capture
+* Either a typed signature or an uploaded signature image
 
 Important note:
 
@@ -234,8 +235,8 @@ Functional requirements:
 
 Duplicate checking for MVP:
 
-* Same event + same email = duplicate or possible duplicate
-* If email is missing by policy exception, same event + same normalized name + same affiliation may be flagged for manual review
+* Same event + same email = reject the repeated public submission
+* Other suspicious records may be marked with `duplicate_flag` for admin review
 
 Name-only matching shall not be used as the primary duplicate check because it is unreliable.
 
@@ -250,9 +251,16 @@ Functional requirements:
 * The system shall store attendance records linked to a specific event.
 * The system shall store separated name fields: first name, middle name, last name, and suffix.
 * The system shall store affiliation, designation/category, sex, email, consent fields, submission timestamp, and attendance status.
-* The system shall store optional signature data if digital signature capture is required.
-* The system shall allow authorized users to view attendance records by event.
-* The system shall allow authorized users to search and filter attendance records.
+* The system shall require and store either a typed signature or a private signature image.
+* The system shall allow authorized users to view paginated attendance records by event.
+* The system shall allow authorized users to search records and filter them by attendance status.
+* The system shall provide attendance record details without exposing private file paths.
+* The system shall serve uploaded signature images only through an authenticated and authorized endpoint.
+* The system shall allow the Super Admin to update any attendance record status.
+* The system shall allow a Program Admin to update status only for events under an actively assigned program.
+* Every actual status change shall require a reason and shall create an audit log in the same database transaction.
+* Repeating the current status shall not create another audit entry.
+* The system shall not provide free editing of submitted attendee details in the MVP.
 * The system shall avoid hard deletion of attendance records.
 
 Recommended record statuses:
@@ -553,9 +561,7 @@ The following features should not be included in the MVP unless specifically req
 
 Possible future improvements:
 
-* Digital signature capture if not included in MVP
 * Editable report template settings, if the office later approves controlled customization
-* PSGC-based address collection, if the office confirms that address is required
 * Attendee profile management
 * Same-person detection across events
 * Unique attendee analytics
@@ -577,25 +583,25 @@ Possible future improvements:
 * The downloadable event attendance sheet will follow the supervisor-provided DICT template.
 * The system will not provide a general-purpose form builder.
 * Duplicate detection will only be handled within the same event during MVP.
+* Email is required for every public attendance submission.
+* Address collection is optional, but a supplied address must follow a valid PSGC hierarchy.
+* Either a typed signature or an uploaded signature image is required.
+* Mobile number is not collected in the MVP.
+* Attendance submission is accepted only while the event is open.
+* Program Admins may review attendance only under actively assigned programs.
+* Submitted attendee details cannot be freely corrected or hard deleted in the MVP.
 
 ---
 
-## 10. Clarifications Needed from Supervisor
+## 10. Remaining Supervisor Decisions
 
-Before implementation, the following should be confirmed:
+The implemented attendance workflow is already defined above. These remaining
+questions affect future export, reporting, and governance work:
 
-1. Should the public attendance form require digital signature capture, or should the signature column remain blank in the generated sheet?
-2. Is email required for every attendee?
-3. Should mobile number be collected even though it is not visible in the provided attendance sheet template?
-4. Should PSGC-based address collection be required on the public attendance page, or supported in the database but hidden unless enabled by office policy?
-5. Should Program Admins be assigned to one program only or multiple programs?
-6. Who is allowed to download official attendance sheets?
-7. What output formats are required: PDF, Excel, CSV, or all?
-8. Should attendance submission be allowed only while event status is open?
-9. Should admins be allowed to manually add/correct attendance records after the event closes?
-10. What is the official data retention period and privacy wording to use?
-11. Should Program Admins be allowed to view audit logs?
-12. Should archived programs/events still be included in reports?
+1. Should Program Admins be allowed to download official attendance sheets, or should this remain Super Admin-only?
+2. Which final export formats are required: PDF, Excel, CSV, or a selected combination?
+3. What official data retention period and final privacy wording should the system use?
+4. Should archived programs and events still be included in summary reports?
 
 ---
 
@@ -611,7 +617,8 @@ The MVP is considered successful if:
 * External attendees can submit attendance through the fixed public attendance page.
 * Attendance records are saved directly to MySQL.
 * Duplicate or invalid submissions can be flagged.
-* Attendance records can be viewed per event.
+* Attendance records can be searched, filtered, and viewed per event with role-based access.
+* Super Admins and assigned Program Admins can review record status with a required reason and audit trail.
 * Event attendance sheets can be generated and downloaded using the supervisor-provided DICT template.
 * Reports can be generated per event and per program.
 * Important admin actions are recorded in the audit trail.

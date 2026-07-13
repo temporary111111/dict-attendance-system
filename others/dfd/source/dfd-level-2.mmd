@@ -12,6 +12,7 @@ flowchart LR
   p64((6.4 Check Duplicate Within Same Event))
   p65((6.5 Store Attendance Record))
   p66((6.6 Show Submission Result))
+  p67((6.7 Review Attendance Record Status))
   p71((7.1 Select Event for Attendance Sheet))
   p72((7.2 Retrieve Attendance Records))
   p73((7.3 Format Records Using DICT Template))
@@ -39,6 +40,13 @@ flowchart LR
   p65 --> d5
   p65 --> p66
   p66 -->|Confirmation or validation message| attendee
+
+  admin -->|Search, view, or submit status with reason| p67
+  p67 <--> d2
+  p67 <--> d4
+  p67 <--> d5
+  p67 --> d7
+  p67 -->|Paginated records, detail, or status result| admin
 
   admin -->|Select event and request attendance sheet| p71
   p71 <--> d2

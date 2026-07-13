@@ -142,15 +142,21 @@ Stores one attendance submission for one event.
 | `email` | Email address. Used for duplicate checking within the same event. |
 | `consent_documentation_publication` | Consent for photo/video/audio documentation and possible publication. |
 | `consent_database_processing` | Consent for organizer database/future document processing. |
-| `signature_text` | Optional typed/e-signature name. |
-| `signature_image_path` | Optional captured/uploaded signature image path. |
+| `signature_text` | Typed/e-signature name. Nullable when an image signature is used. |
+| `signature_image_path` | Private captured/uploaded signature image path. Nullable when a typed signature is used. |
 | `submitted_at` | When the attendance was submitted. |
 | `attendance_status` | `valid`, `duplicate`, `invalid`, or `void`. |
 | `duplicate_flag` | Marks possible duplicate/spam records for review. |
 | `created_at` | When the record was created. |
 | `updated_at` | When the record was last updated. |
 
-Important rule: official attendance sheet exports should include `valid` records only unless the office decides otherwise.
+Important rules:
+
+* The public submission must provide at least one of `signature_text` or `signature_image_path`. Each column is nullable because they are alternatives.
+* Raw signature image paths must not be exposed to clients. Images are served through an authenticated and authorized endpoint.
+* `duplicate_flag` is a separate review signal. Changing `attendance_status` does not automatically change this flag.
+* An actual `attendance_status` change requires a reason and an audit log in the same transaction.
+* Official attendance sheet exports should include `valid` records only unless the office decides otherwise.
 
 ## `attendance_record_addresses`
 

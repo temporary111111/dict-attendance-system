@@ -198,10 +198,10 @@ Fixed attendance fields:
 * Designation/Category
 * Sex
 * Email Address
-* Address using PSGC codes, if required by office policy
+* Optional address using PSGC codes
 * Consent for photo/video/audio documentation and possible DICT publication
 * Consent to be included in the organizer's database for future processing of relevant documents
-* Signature, if digital signature capture is required by the office
+* Either typed signature or uploaded signature image
 
 Important rule:
 
@@ -218,8 +218,8 @@ External attendees do not log in to the system.
 5. System checks consent responses.
 6. System checks duplicate submissions within the same event.
 7. System saves valid attendance record to MySQL.
-8. System flags possible duplicate records if needed.
-9. System shows a confirmation message.
+8. System rejects an exact same-event email duplicate without creating another record.
+9. System shows a confirmation or validation message.
 
 Important rule:
 
@@ -236,11 +236,14 @@ During attendance submission, the system should check:
 * Sex field has a valid value.
 * Consent values are recorded.
 * Event status is open.
-* Duplicate entries within the same event are flagged.
+* Exact duplicate email entries within the same event are rejected.
 
 Duplicate checking for MVP:
 
-* Same event + same email = duplicate or possible duplicate.
+* Same event + same email = reject the repeated public submission.
+
+The separate `duplicate_flag` remains available as a review signal for other
+suspicious records; it is not another attendance status.
 
 Name-only matching should not be used as the main duplicate check because different people can have the same or similar names.
 
@@ -255,9 +258,10 @@ Cross-event same-person detection should be Phase 2, not MVP.
 1. Admin opens a program.
 2. Admin selects an event.
 3. System displays attendance records for that event.
-4. Admin can search or filter records.
+4. System paginates records and allows search or status filtering.
 5. Program Admin can only view records under assigned programs.
 6. Super Admin can view all attendance records.
+7. Admin may open a record detail and retrieve an image signature through the protected endpoint.
 
 ---
 
@@ -265,14 +269,22 @@ Cross-event same-person detection should be Phase 2, not MVP.
 
 Recommended MVP behavior:
 
-1. System flags duplicate or invalid records during submission.
-2. Admin reviews flagged records.
+1. System rejects exact same-event email duplicates during public submission.
+2. Admin reviews records that need an operational classification change.
 3. Admin may mark a record as:
    * Valid
    * Duplicate
    * Invalid
    * Void
-4. System records any status change in the audit trail.
+4. Admin provides a required reason for an actual status change.
+5. System verifies that a Program Admin still has an active program assignment.
+6. System saves the status and audit entry in one transaction.
+
+Permission rule:
+
+* Super Admin may update any attendance status.
+* Program Admin may update status only under actively assigned programs.
+* Neither role may freely edit submitted attendee fields in the MVP.
 
 Important rule:
 
@@ -308,7 +320,6 @@ The attendance sheet should include the following columns:
 * Designation/Category
 * Sex: F/M
 * Email Address
-* Address using PSGC codes, if required by office policy
 * Consent for photo/video/audio documentation and possible publication
 * Consent for organizer database/future processing
 * Signature
@@ -393,7 +404,7 @@ Actions to log:
 * Submit attendance, as a system event
 * Generate/download attendance sheet
 * Export report
-* Mark attendance as invalid/duplicate/void
+* Mark attendance as valid/invalid/duplicate/void, including the reason
 * Activate/deactivate admin account
 
 Each audit log should contain:

@@ -9,6 +9,7 @@ from app.services.signature_service import (
     remove_signature_image,
     save_signature_image,
 )
+import app.services.signature_service as signature_service
 
 
 def make_upload(
@@ -78,3 +79,30 @@ def test_remove_signature_does_not_delete_outside_private_directory(tmp_path):
     remove_signature_image(private_directory, "../outside.png")
 
     assert outside_file.read_bytes() == b"outside"
+
+
+def test_resolve_signature_image_returns_only_private_png(tmp_path):
+    private_file = tmp_path / "event-5" / "signature.png"
+    private_file.parent.mkdir()
+    private_file.write_bytes(b"png")
+
+    result = signature_service.resolve_signature_image(
+        tmp_path,
+        "event-5/signature.png",
+    )
+
+    assert result == private_file.resolve()
+
+
+def test_resolve_signature_image_rejects_path_outside_directory(tmp_path):
+    private_directory = tmp_path / "private"
+    private_directory.mkdir()
+    outside_file = tmp_path / "outside.png"
+    outside_file.write_bytes(b"outside")
+
+    result = signature_service.resolve_signature_image(
+        private_directory,
+        "../outside.png",
+    )
+
+    assert result is None

@@ -186,6 +186,27 @@ SIGNATURE_DIRECTORY=storage/signatures
 SIGNATURE_MAX_BYTES=5242880
 ```
 
+## Attendance Record Management
+
+Authenticated admins can review event attendance through:
+
+```text
+GET /api/events/{eventId}/attendance-records
+GET /api/attendance-records/{attendanceId}
+GET /api/attendance-records/{attendanceId}/signature
+PATCH /api/attendance-records/{attendanceId}/status
+```
+
+The event list supports `page`, `pageSize`, optional `status`, and optional
+`search`. Super Admins can access all records. Program Admins can access and
+change status only for events under actively assigned programs.
+
+Status changes accept `valid`, `duplicate`, `invalid`, or `void` plus a
+required reason. The status and audit row are saved in one transaction. Admins
+cannot freely edit submitted attendee fields or hard delete attendance rows.
+Signature images remain private and are served only by the authenticated
+signature endpoint.
+
 ## Create Local Super Admin
 
 After running `others/database/schema.sql` and `others/database/seed-core.sql`,

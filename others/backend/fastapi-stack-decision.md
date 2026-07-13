@@ -83,12 +83,16 @@ FastAPI is a practical fit because:
 * it keeps the backend independent from frontend hosting decisions;
 * it avoids adding Node.js as a required backend skill for this project.
 
-## Current Non-Decisions
+## Current Decisions Added During Implementation
 
-These are still open:
+* Admin authentication uses stateless JWT Bearer access tokens.
+* Uploaded signature images use configurable private local storage.
+* QR code images use configurable public local storage.
+* The frontend remains separately hostable and calls the backend through its
+  configurable API base URL.
 
-* Whether admin authentication will use bearer tokens or HTTP-only cookies.
+## Remaining Non-Decisions
+
 * Which PDF or spreadsheet library will generate the official attendance sheet.
-* Where generated exports and uploaded signature images will be stored.
+* Where generated attendance-sheet exports will be stored.
 * Whether the first frontend version will run from a static server or a simple deployed static host.
-

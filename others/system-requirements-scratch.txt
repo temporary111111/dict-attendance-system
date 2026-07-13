@@ -68,3 +68,7 @@ Important:
 - No CSV import as main attendance flow.
 - No form builder for MVP.
 - Template is output/report format, not input form builder.
+HISTORICAL NOTE
+===============
+This scratch file preserves early requirement notes. It is not authoritative;
+use others/README.md and the current requirements, schema, code, and tests.

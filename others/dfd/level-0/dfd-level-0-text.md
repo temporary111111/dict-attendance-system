@@ -103,7 +103,7 @@ Data sent to the system:
 * Sex
 * Email address
 * Consent responses
-* Signature, if required
+* Either typed signature or uploaded signature image
 
 Data received from the system:
 

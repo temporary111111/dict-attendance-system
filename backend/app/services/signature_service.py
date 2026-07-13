@@ -12,6 +12,24 @@ class InvalidSignatureImageError(Exception):
     """Raised kapag unsupported, oversized, o invalid ang uploaded image."""
 
 
+def resolve_signature_image(
+    directory: Path,
+    relative_path: str | None,
+) -> Path | None:
+    """Nagbabalik lang ng existing PNG na nasa private signature directory."""
+    if not relative_path:
+        return None
+    base_directory = directory.resolve()
+    candidate = (base_directory / relative_path).resolve()
+    try:
+        candidate.relative_to(base_directory)
+    except ValueError:
+        return None
+    if candidate.suffix.lower() != ".png" or not candidate.is_file():
+        return None
+    return candidate
+
+
 def save_signature_image(
     upload: UploadFile,
     directory: Path,

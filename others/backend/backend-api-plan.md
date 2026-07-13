@@ -235,17 +235,29 @@ Suggested duplicate response:
 
 | Method | Endpoint | Auth | Purpose | Tables |
 | --- | --- | --- | --- | --- |
-| `GET` | `/api/events/{eventId}/attendance-records` | Admin | List attendance records for a visible event. | `attendance_records`, `attendance_record_addresses`, PSGC tables |
+| `GET` | `/api/events/{eventId}/attendance-records` | Admin | Paginated list for an accessible event. | `attendance_records`, `events`, `program_admin_assignments` |
 | `GET` | `/api/attendance-records/{attendanceId}` | Admin | View one attendance record. | `attendance_records`, `attendance_record_addresses`, PSGC tables |
-| `PATCH` | `/api/attendance-records/{attendanceId}` | Super Admin | Correct limited attendance fields if allowed. | `attendance_records`, `attendance_record_addresses` |
-| `PATCH` | `/api/attendance-records/{attendanceId}/status` | Super Admin | Mark record as valid, duplicate, invalid, or void. | `attendance_records` |
+| `GET` | `/api/attendance-records/{attendanceId}/signature` | Admin | Retrieve one authorized private signature PNG. | `attendance_records` |
+| `PATCH` | `/api/attendance-records/{attendanceId}/status` | Admin | Mark record as valid, duplicate, invalid, or void with a reason. | `attendance_records`, `audit_logs` |
 
 Important rules:
 
 * Super Admin can view all attendance records.
-* Program Admin can view only records from events under assigned programs.
+* Program Admin can view and change status only for records from events under actively assigned programs.
+* The event list supports `page`, `pageSize`, `status`, and `search`; page size is limited to 100.
+* Status changes require a reason and create an audit row in the same transaction.
+* Admins cannot freely edit attendee identity, consent, address, email, or signature fields in the MVP.
+* Signature storage paths are private and never returned in JSON.
 * MVP should avoid hard deleting attendance records. Use `attendance_status = 'void'` or `invalid` instead.
-* Program Admin record editing should be restricted unless the office explicitly allows it.
+
+Status request:
+
+```json
+{
+  "attendance_status": "void",
+  "reason": "Submitted using the wrong attendee email."
+}
+```
 
 ## 11. Attendance Sheet Export API
 

@@ -256,7 +256,7 @@ def main() -> None:
     diagrams = [
         ("level-0", SOURCE_DIR / "dfd-level-0.mmd", "DFD Level 0 - Context Diagram"),
         ("level-1", SOURCE_DIR / "dfd-level-1.mmd", "DFD Level 1 - Main System Processes"),
-        ("level-2", SOURCE_DIR / "dfd-level-2.mmd", "DFD Level 2 - Attendance Submission and Sheet Generation"),
+        ("level-2", SOURCE_DIR / "dfd-level-2.mmd", "DFD Level 2 - Attendance Submission, Review, and Sheet Generation"),
     ]
 
     for level, source_path, title in diagrams:

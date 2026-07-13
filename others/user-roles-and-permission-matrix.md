@@ -116,7 +116,7 @@ The External Attendee:
 | View assigned program event attendance records | Yes   | Yes                           | No                       |
 | Edit attendance records                  | Restricted  | Restricted or No              | No                       |
 | Delete attendance records                | No, void only | No                          | No                       |
-| Mark attendance as void/invalid          | Yes         | Maybe, events under assigned programs only | No           |
+| Mark attendance as valid/duplicate/invalid/void | Yes   | Yes, events under assigned programs only | No           |
 | Generate all attendance sheets           | Yes         | No                            | No                       |
 | Generate assigned program event attendance sheet | Yes | Yes, if allowed by policy     | No                       |
 | Download all attendance sheets           | Yes         | No                            | No                       |
@@ -241,11 +241,13 @@ Recommended MVP rule:
 * If correction is needed, the record should be marked as void/invalid or corrected through a controlled process.
 * Any correction must be logged in the audit trail.
 
-Recommended permission:
+Approved MVP permission:
 
-* Super Admin: can mark records as void/invalid
-* Program Admin: can request or flag issues, or mark records only if allowed by policy
+* Super Admin: can mark any record as valid, duplicate, invalid, or void.
+* Program Admin: can mark records only for events under actively assigned programs.
 * External Attendee: no access after submission
+* Every status change requires a reason and must be saved in the audit trail.
+* Neither admin role can freely edit submitted attendee fields in the MVP.
 
 ---
 
@@ -494,11 +496,11 @@ The system should log the following actions:
 | Update event                        | Yes                    | Yes                      |
 | Open event attendance               | Yes                    | Yes                      |
 | Close event attendance              | Yes                    | Yes                      |
-| Archive event                       | Yes                    | If allowed               |
+| Archive event                       | Yes                    | No                       |
 | Generate attendance link / QR code  | Yes                    | Yes                      |
 | Generate/download attendance sheet  | Yes                    | Yes, if allowed          |
 | Export report                       | Yes                    | Yes, if allowed          |
-| Mark attendance invalid/void        | Yes                    | If allowed               |
+| Mark attendance status              | Yes                    | Yes, assigned programs only |
 
 Public attendee submissions may also be logged as system events, but audit logs should not expose unnecessary personal data.
 

@@ -23,17 +23,17 @@ This folder contains the MySQL database deliverables derived from the approved E
 PowerShell example:
 
 ```powershell
-Get-Content .\others\database\schema.sql | mysql -u root -p attendance_system
-Get-Content .\others\database\seed-core.sql | mysql -u root -p attendance_system
-Get-Content .\others\database\smoke-test.sql | mysql -u root -p attendance_system
+Get-Content .\others\database\schema.sql | mysql -u root -p dict_attendance_system
+Get-Content .\others\database\seed-core.sql | mysql -u root -p dict_attendance_system
+Get-Content .\others\database\smoke-test.sql | mysql -u root -p dict_attendance_system
 ```
 
 `cmd.exe` example:
 
 ```cmd
-mysql -u root -p attendance_system < others\database\schema.sql
-mysql -u root -p attendance_system < others\database\seed-core.sql
-mysql -u root -p attendance_system < others\database\smoke-test.sql
+mysql -u root -p dict_attendance_system < others\database\schema.sql
+mysql -u root -p dict_attendance_system < others\database\seed-core.sql
+mysql -u root -p dict_attendance_system < others\database\smoke-test.sql
 ```
 
 ## Important Notes
