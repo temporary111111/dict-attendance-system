@@ -74,10 +74,13 @@ Super Admin reference-data endpoints:
 ```text
 GET /api/roles
 GET /api/organizational-units
+POST /api/organizational-units
 ```
 
-These endpoints return active records for admin account creation and require a
-Super Admin Bearer token.
+The GET endpoints return active records for admin account creation.
+`POST /api/organizational-units` accepts `unit_name`, `unit_type`, optional
+`unit_code`, and optional `parent_unit_id`. These endpoints require a Super
+Admin Bearer token.
 
 Create an admin account:
 
