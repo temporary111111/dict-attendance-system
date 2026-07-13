@@ -85,13 +85,15 @@ Create an admin account:
 GET /api/users
 GET /api/users/{userId}
 POST /api/users
+PATCH /api/users/{userId}
 ```
 
 `GET /api/users` lists active and inactive admin accounts, while
 `GET /api/users/{userId}` returns one account. `POST /api/users` accepts
 `full_name`, `email`, `password`, `role_id`, and optional `org_unit_id`. These
 endpoints require a Super Admin token and never return the password or password
-hash.
+hash. `PATCH /api/users/{userId}` partially updates `full_name`, `email`,
+`role_id`, or `org_unit_id`; it does not change passwords or account status.
 
 ## Create Local Super Admin
 

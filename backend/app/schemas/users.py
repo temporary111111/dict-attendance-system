@@ -8,6 +8,7 @@ from pydantic import (
     Field,
     StringConstraints,
     field_validator,
+    model_validator,
 )
 
 TrimmedFullName = Annotated[
@@ -32,6 +33,30 @@ class CreateUserRequest(BaseModel):
         if len(password.encode("utf-8")) > 72:
             raise ValueError("Password must not exceed 72 UTF-8 bytes.")
         return password
+
+
+class UpdateUserRequest(BaseModel):
+    """Optional profile fields; supplied null is allowed only for org unit."""
+
+    full_name: TrimmedFullName | None = None
+    email: EmailStr | None = Field(default=None, max_length=150)
+    role_id: int | None = Field(default=None, gt=0)
+    org_unit_id: int | None = Field(default=None, gt=0)
+
+    @field_validator("full_name", "email", "role_id")
+    @classmethod
+    def reject_null_required_values(cls, value, info):
+        """Kapag sinama ang field, hindi pwedeng null ang required profile value."""
+        if value is None:
+            raise ValueError(f"{info.field_name} cannot be null.")
+        return value
+
+    @model_validator(mode="after")
+    def require_at_least_one_field(self):
+        """Pinipigilan ang PATCH request na walang kahit anong update."""
+        if not self.model_fields_set:
+            raise ValueError("Provide at least one field to update.")
+        return self
 
 
 class UserRoleData(BaseModel):
@@ -64,5 +89,10 @@ class UserListResponse(BaseModel):
 
 
 class UserDetailResponse(BaseModel):
+    data: CreatedUserData
+    message: str
+
+
+class UpdateUserResponse(BaseModel):
     data: CreatedUserData
     message: str

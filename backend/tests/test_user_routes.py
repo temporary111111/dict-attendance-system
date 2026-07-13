@@ -18,12 +18,14 @@ class FakeSession:
         org_unit=None,
         listed_users=None,
         detail_user=None,
+        user_to_update=None,
     ):
         self.existing_user_id = existing_user_id
         self.role = role
         self.org_unit = org_unit
         self.listed_users = listed_users or []
         self.detail_user = detail_user
+        self.user_to_update = user_to_update
         self.added_user = None
         self.committed = False
 
@@ -36,6 +38,10 @@ class FakeSession:
         return SimpleNamespace(all=lambda: self.listed_users)
 
     def get(self, model, key):
+        if model.__name__ == "User":
+            if self.user_to_update and self.user_to_update.user_id == key:
+                return self.user_to_update
+            return None
         if model.__name__ == "Role":
             return self.role if self.role and self.role.role_id == key else None
         if model.__name__ == "OrganizationalUnit":
@@ -50,7 +56,8 @@ class FakeSession:
         self.committed = True
 
     def refresh(self, user):
-        user.user_id = 3
+        if getattr(user, "user_id", None) is None:
+            user.user_id = 3
 
     def rollback(self):
         self.committed = False
@@ -326,6 +333,122 @@ def test_get_user_requires_authentication():
     client = make_client(FakeSession(), authorized=False)
 
     response = client.get("/api/users/2")
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"
+
+
+def make_existing_user():
+    return SimpleNamespace(
+        user_id=2,
+        role_id=2,
+        org_unit_id=1,
+        full_name="Ana Reyes",
+        email="ana.reyes@example.com",
+        password_hash="existing-password-hash",
+        account_status="active",
+        role=make_role(),
+        org_unit=make_org_unit(),
+    )
+
+
+def test_update_user_changes_profile_and_can_clear_org_unit():
+    user = make_existing_user()
+    new_role = SimpleNamespace(
+        role_id=1,
+        role_name="super_admin",
+        is_active=True,
+    )
+    session = FakeSession(user_to_update=user, role=new_role)
+    client = make_client(session)
+
+    response = client.patch(
+        "/api/users/2",
+        json={
+            "full_name": "  Ana Updated  ",
+            "email": "ANA.UPDATED@EXAMPLE.COM",
+            "role_id": 1,
+            "org_unit_id": None,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "data": {
+            "user_id": 2,
+            "full_name": "Ana Updated",
+            "email": "ana.updated@example.com",
+            "account_status": "active",
+            "role": {"role_id": 1, "role_name": "super_admin"},
+            "org_unit": None,
+        },
+        "message": "Admin user updated.",
+    }
+    assert user.password_hash == "existing-password-hash"
+    assert session.committed is True
+
+
+def test_update_user_rejects_duplicate_email():
+    session = FakeSession(
+        existing_user_id=9,
+        user_to_update=make_existing_user(),
+    )
+    client = make_client(session)
+
+    response = client.patch(
+        "/api/users/2",
+        json={"email": "existing@example.com"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "EMAIL_ALREADY_EXISTS"
+
+
+def test_update_user_returns_not_found_for_unknown_id():
+    client = make_client(FakeSession(user_to_update=None))
+
+    response = client.patch("/api/users/999", json={"full_name": "New Name"})
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "USER_NOT_FOUND"
+
+
+def test_update_user_rejects_invalid_role():
+    session = FakeSession(user_to_update=make_existing_user(), role=None)
+    client = make_client(session)
+
+    response = client.patch("/api/users/2", json={"role_id": 999})
+
+    assert response.status_code == 422
+    assert "role_id" in response.json()["error"]["fields"]
+
+
+def test_update_user_rejects_invalid_org_unit():
+    session = FakeSession(user_to_update=make_existing_user(), org_unit=None)
+    client = make_client(session)
+
+    response = client.patch("/api/users/2", json={"org_unit_id": 999})
+
+    assert response.status_code == 422
+    assert "org_unit_id" in response.json()["error"]["fields"]
+
+
+def test_update_user_rejects_empty_payload():
+    client = make_client(FakeSession(user_to_update=make_existing_user()))
+
+    response = client.patch("/api/users/2", json={})
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_update_user_requires_authentication():
+    client = make_client(
+        FakeSession(user_to_update=make_existing_user()),
+        authorized=False,
+    )
+
+    response = client.patch("/api/users/2", json={"full_name": "New Name"})
 
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"
