@@ -17,15 +17,19 @@ class FakeSession:
         role=None,
         org_unit=None,
         listed_users=None,
+        detail_user=None,
     ):
         self.existing_user_id = existing_user_id
         self.role = role
         self.org_unit = org_unit
         self.listed_users = listed_users or []
+        self.detail_user = detail_user
         self.added_user = None
         self.committed = False
 
     def scalar(self, statement):
+        if self.detail_user is not None:
+            return self.detail_user
         return self.existing_user_id
 
     def scalars(self, statement):
@@ -264,6 +268,64 @@ def test_list_users_requires_authentication():
     client = make_client(FakeSession(), authorized=False)
 
     response = client.get("/api/users")
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"
+
+
+def test_get_user_returns_safe_account_data():
+    user = SimpleNamespace(
+        user_id=2,
+        full_name="Ana Reyes",
+        email="ana.reyes@example.com",
+        password_hash="must-not-be-returned",
+        account_status="active",
+        role=make_role(),
+        org_unit=make_org_unit(),
+    )
+    client = make_client(FakeSession(detail_user=user))
+
+    response = client.get("/api/users/2")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "data": {
+            "user_id": 2,
+            "full_name": "Ana Reyes",
+            "email": "ana.reyes@example.com",
+            "account_status": "active",
+            "role": {
+                "role_id": 2,
+                "role_name": "program_admin",
+            },
+            "org_unit": {
+                "org_unit_id": 1,
+                "unit_name": "DICT Regional Office",
+            },
+        },
+        "message": "Admin user retrieved.",
+    }
+
+
+def test_get_user_returns_not_found_for_unknown_id():
+    client = make_client(FakeSession(detail_user=None))
+
+    response = client.get("/api/users/999")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "error": {
+            "code": "USER_NOT_FOUND",
+            "message": "Admin user not found.",
+            "fields": {},
+        }
+    }
+
+
+def test_get_user_requires_authentication():
+    client = make_client(FakeSession(), authorized=False)
+
+    response = client.get("/api/users/2")
 
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"

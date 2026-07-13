@@ -83,13 +83,15 @@ Create an admin account:
 
 ```text
 GET /api/users
+GET /api/users/{userId}
 POST /api/users
 ```
 
-`GET /api/users` lists active and inactive admin accounts. `POST /api/users`
-accepts `full_name`, `email`, `password`, `role_id`, and optional
-`org_unit_id`. Both require a Super Admin token and never return the password
-or password hash.
+`GET /api/users` lists active and inactive admin accounts, while
+`GET /api/users/{userId}` returns one account. `POST /api/users` accepts
+`full_name`, `email`, `password`, `role_id`, and optional `org_unit_id`. These
+endpoints require a Super Admin token and never return the password or password
+hash.
 
 ## Create Local Super Admin
 

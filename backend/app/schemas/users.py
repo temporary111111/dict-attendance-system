@@ -61,3 +61,8 @@ class CreateUserResponse(BaseModel):
 class UserListResponse(BaseModel):
     data: list[CreatedUserData]
     message: str
+
+
+class UserDetailResponse(BaseModel):
+    data: CreatedUserData
+    message: str

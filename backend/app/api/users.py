@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -13,6 +13,7 @@ from app.models import User
 from app.schemas.users import (
     CreateUserRequest,
     CreateUserResponse,
+    UserDetailResponse,
     UserListResponse,
 )
 from app.services.user_service import (
@@ -75,6 +76,35 @@ def list_users(
             for user in users
         ],
         "Admin users retrieved.",
+    )
+
+
+@router.get("/{user_id}", response_model=UserDetailResponse)
+def get_user(
+    user_id: Annotated[int, Path(gt=0)],
+    db: Annotated[Session, Depends(get_db)],
+) -> dict[str, Any]:
+    """Kinukuha ang isang admin account gamit ang user ID."""
+    user = db.scalar(
+        select(User)
+        .options(
+            joinedload(User.role),
+            joinedload(User.org_unit),
+        )
+        .where(User.user_id == user_id)
+    )
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail=error_response(
+                "USER_NOT_FOUND",
+                "Admin user not found.",
+            ),
+        )
+
+    return success_response(
+        _admin_user_data(user, user.role, user.org_unit),
+        "Admin user retrieved.",
     )
 
 
