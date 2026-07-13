@@ -3,12 +3,18 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload
 
 from app.api.dependencies.auth import require_super_admin
 from app.core.responses import error_response, success_response
 from app.db.session import get_db
-from app.schemas.users import CreateUserRequest, CreateUserResponse
+from app.models import User
+from app.schemas.users import (
+    CreateUserRequest,
+    CreateUserResponse,
+    UserListResponse,
+)
 from app.services.user_service import (
     CreatedAdminUser,
     InvalidUserReferenceError,
@@ -23,26 +29,53 @@ router = APIRouter(
 )
 
 
-def _created_user_data(created: CreatedAdminUser) -> dict[str, Any]:
+def _admin_user_data(
+    user: User,
+    role: Any,
+    org_unit_record: Any | None,
+) -> dict[str, Any]:
     """Inaalis ang password hash at binabalik lang ang safe account fields."""
     org_unit = None
-    if created.org_unit is not None:
+    if org_unit_record is not None:
         org_unit = {
-            "org_unit_id": created.org_unit.org_unit_id,
-            "unit_name": created.org_unit.unit_name,
+            "org_unit_id": org_unit_record.org_unit_id,
+            "unit_name": org_unit_record.unit_name,
         }
 
     return {
-        "user_id": created.user.user_id,
-        "full_name": created.user.full_name,
-        "email": created.user.email,
-        "account_status": created.user.account_status,
+        "user_id": user.user_id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "account_status": user.account_status,
         "role": {
-            "role_id": created.role.role_id,
-            "role_name": created.role.role_name,
+            "role_id": role.role_id,
+            "role_name": role.role_name,
         },
         "org_unit": org_unit,
     }
+
+
+@router.get("", response_model=UserListResponse)
+def list_users(
+    db: Annotated[Session, Depends(get_db)],
+) -> dict[str, Any]:
+    """Nililista ang active at inactive admin accounts para ma-manage sila."""
+    users = db.scalars(
+        select(User)
+        .options(
+            joinedload(User.role),
+            joinedload(User.org_unit),
+        )
+        .order_by(User.full_name, User.user_id)
+    ).all()
+
+    return success_response(
+        [
+            _admin_user_data(user, user.role, user.org_unit)
+            for user in users
+        ],
+        "Admin users retrieved.",
+    )
 
 
 @router.post("", response_model=CreateUserResponse, status_code=status.HTTP_201_CREATED)
@@ -73,7 +106,6 @@ def create_user(
         )
 
     return success_response(
-        _created_user_data(created),
+        _admin_user_data(created.user, created.role, created.org_unit),
         "Admin user created.",
     )
-

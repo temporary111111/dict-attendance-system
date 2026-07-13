@@ -82,11 +82,13 @@ Super Admin Bearer token.
 Create an admin account:
 
 ```text
+GET /api/users
 POST /api/users
 ```
 
-The endpoint accepts `full_name`, `email`, `password`, `role_id`, and optional
-`org_unit_id`. It requires a Super Admin token and never returns the password
+`GET /api/users` lists active and inactive admin accounts. `POST /api/users`
+accepts `full_name`, `email`, `password`, `role_id`, and optional
+`org_unit_id`. Both require a Super Admin token and never return the password
 or password hash.
 
 ## Create Local Super Admin

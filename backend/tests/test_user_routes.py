@@ -16,15 +16,20 @@ class FakeSession:
         existing_user_id=None,
         role=None,
         org_unit=None,
+        listed_users=None,
     ):
         self.existing_user_id = existing_user_id
         self.role = role
         self.org_unit = org_unit
+        self.listed_users = listed_users or []
         self.added_user = None
         self.committed = False
 
     def scalar(self, statement):
         return self.existing_user_id
+
+    def scalars(self, statement):
+        return SimpleNamespace(all=lambda: self.listed_users)
 
     def get(self, model, key):
         if model.__name__ == "Role":
@@ -183,6 +188,82 @@ def test_create_user_requires_authentication():
     client = make_client(session, authorized=False)
 
     response = client.post("/api/users", json=valid_payload())
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"
+
+
+def test_list_users_returns_safe_active_and_inactive_accounts():
+    program_admin_role = make_role()
+    super_admin_role = SimpleNamespace(
+        role_id=1,
+        role_name="super_admin",
+        is_active=True,
+    )
+    org_unit = make_org_unit()
+    session = FakeSession(
+        listed_users=[
+            SimpleNamespace(
+                user_id=2,
+                full_name="Ana Reyes",
+                email="ana.reyes@example.com",
+                password_hash="must-not-be-returned",
+                account_status="active",
+                role=program_admin_role,
+                org_unit=org_unit,
+            ),
+            SimpleNamespace(
+                user_id=1,
+                full_name="System Admin",
+                email="admin@example.com",
+                password_hash="must-not-be-returned",
+                account_status="inactive",
+                role=super_admin_role,
+                org_unit=None,
+            ),
+        ]
+    )
+    client = make_client(session)
+
+    response = client.get("/api/users")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "data": [
+            {
+                "user_id": 2,
+                "full_name": "Ana Reyes",
+                "email": "ana.reyes@example.com",
+                "account_status": "active",
+                "role": {
+                    "role_id": 2,
+                    "role_name": "program_admin",
+                },
+                "org_unit": {
+                    "org_unit_id": 1,
+                    "unit_name": "DICT Regional Office",
+                },
+            },
+            {
+                "user_id": 1,
+                "full_name": "System Admin",
+                "email": "admin@example.com",
+                "account_status": "inactive",
+                "role": {
+                    "role_id": 1,
+                    "role_name": "super_admin",
+                },
+                "org_unit": None,
+            },
+        ],
+        "message": "Admin users retrieved.",
+    }
+
+
+def test_list_users_requires_authentication():
+    client = make_client(FakeSession(), authorized=False)
+
+    response = client.get("/api/users")
 
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"
