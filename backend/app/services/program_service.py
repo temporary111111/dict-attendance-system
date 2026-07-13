@@ -6,7 +6,13 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import OrganizationalUnit, Program, ProgramAdminAssignment, User
+from app.models import (
+    Event,
+    OrganizationalUnit,
+    Program,
+    ProgramAdminAssignment,
+    User,
+)
 from app.schemas.programs import (
     ChangeProgramStatusRequest,
     CreateProgramRequest,
@@ -28,6 +34,10 @@ class InvalidOwningUnitError(Exception):
 
 class ProgramNameAlreadyExistsError(Exception):
     """Raised kapag duplicate ang program name sa same owning unit."""
+
+
+class ProgramHasOpenEventsError(Exception):
+    """Raised kapag ina-archive ang program na may open attendance event."""
 
 
 @dataclass
@@ -184,6 +194,17 @@ def change_program_status(
     owning_unit = program.owning_unit
     if payload.program_status == "active":
         owning_unit = _get_active_owning_unit(db, program.owning_unit_id)
+    elif program.program_status != "archived":
+        open_event_id = db.scalar(
+            select(Event.event_id)
+            .where(
+                Event.program_id == program_id,
+                Event.event_status == "open",
+            )
+            .limit(1)
+        )
+        if open_event_id is not None:
+            raise ProgramHasOpenEventsError
 
     program.program_status = payload.program_status
     _commit_program_write(db)

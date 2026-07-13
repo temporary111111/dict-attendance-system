@@ -17,12 +17,14 @@ class FakeSession:
         org_units=None,
         duplicate_program_id=None,
         assignment_visibility_id=None,
+        open_event_id=None,
     ):
         self.listed_programs = listed_programs or []
         self.programs = programs or {}
         self.org_units = org_units or {}
         self.duplicate_program_id = duplicate_program_id
         self.assignment_visibility_id = assignment_visibility_id
+        self.open_event_id = open_event_id
         self.scalar_statements = []
         self.scalars_statements = []
         self.added_program = None
@@ -37,6 +39,8 @@ class FakeSession:
         self.scalar_statements.append(statement_text)
         if "program_admin_assignments.assignment_id" in statement_text:
             return self.assignment_visibility_id
+        if "events.event_id" in statement_text:
+            return self.open_event_id
         return self.duplicate_program_id
 
     def get(self, model, key):
@@ -319,6 +323,23 @@ def test_restore_program_rejects_inactive_owning_unit():
 
     assert response.status_code == 422
     assert "owning_unit_id" in response.json()["error"]["fields"]
+
+
+def test_archive_program_rejects_open_event():
+    program = make_program()
+    session = FakeSession(
+        programs={3: program},
+        open_event_id=5,
+    )
+    client = make_client(session, current_user=make_user())
+
+    response = client.patch(
+        "/api/programs/3/archive",
+        json={"program_status": "archived"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "PROGRAM_HAS_OPEN_EVENTS"
 
 
 def test_program_write_requires_super_admin():

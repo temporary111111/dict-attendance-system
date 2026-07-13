@@ -157,6 +157,11 @@ Important rules:
 * `events.event_code` must be unique.
 * `events.public_attendance_url` is the public URL used by the QR code.
 * Public attendance should accept submissions only when the event is open.
+* Attendance-link refresh rotates the event code and replaces the QR PNG.
+* Opening requires a generated attendance link and QR code.
+* Closed events may be reopened; open and close actions are idempotent.
+* Open events must be closed before the event or parent program is archived.
+* Archived programs cannot accept event writes or be reopened.
 
 Suggested event statuses:
 

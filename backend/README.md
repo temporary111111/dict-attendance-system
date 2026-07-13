@@ -122,6 +122,35 @@ list or view programs where they have an active assignment. Programs use
 remain in the database; assigning the same Program Admin again reactivates the
 existing unique assignment row.
 
+Event management endpoints:
+
+```text
+GET /api/events
+POST /api/programs/{programId}/events
+GET /api/events/{eventId}
+PATCH /api/events/{eventId}
+POST /api/events/{eventId}/attendance-link
+POST /api/events/{eventId}/open
+POST /api/events/{eventId}/close
+PATCH /api/events/{eventId}/archive
+```
+
+Super Admins manage events under any active program. Program Admins can manage
+events only under programs where they have an active assignment. Generate the
+attendance link and QR before opening collection. Open events must be closed
+before their event or parent program can be archived.
+
+QR generation uses these environment settings:
+
+```text
+PUBLIC_ATTENDANCE_URL_TEMPLATE=http://127.0.0.1:5500/attendance.html?event={event_code}
+QR_CODE_DIRECTORY=storage/qr_codes
+QR_CODE_URL_PREFIX=/media/qr-codes
+```
+
+`PUBLIC_ATTENDANCE_URL_TEMPLATE` must contain `{event_code}`. Refreshing an
+attendance link rotates the code and replaces the locally stored QR PNG.
+
 ## Create Local Super Admin
 
 After running `others/database/schema.sql` and `others/database/seed-core.sql`,

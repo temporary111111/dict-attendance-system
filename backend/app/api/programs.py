@@ -20,6 +20,7 @@ from app.services.program_service import (
     InvalidOwningUnitError,
     ProgramAccessDeniedError,
     ProgramNameAlreadyExistsError,
+    ProgramHasOpenEventsError,
     ProgramNotFoundError,
     change_program_status,
     create_program,
@@ -71,6 +72,14 @@ def _raise_program_write_error(exc: Exception) -> None:
                 "VALIDATION_ERROR",
                 "Some fields are invalid.",
                 {"owning_unit_id": "Select an active organizational unit."},
+            ),
+        )
+    if isinstance(exc, ProgramHasOpenEventsError):
+        raise HTTPException(
+            status_code=409,
+            detail=error_response(
+                "PROGRAM_HAS_OPEN_EVENTS",
+                "Close all open events before archiving the program.",
             ),
         )
 
@@ -154,7 +163,11 @@ def archive_or_restore_program(
 ) -> dict[str, Any]:
     try:
         updated = change_program_status(db, program_id, payload)
-    except (InvalidOwningUnitError, ProgramNotFoundError) as exc:
+    except (
+        InvalidOwningUnitError,
+        ProgramHasOpenEventsError,
+        ProgramNotFoundError,
+    ) as exc:
         _raise_program_write_error(exc)
     return success_response(
         _program_data(updated.program, updated.owning_unit),
