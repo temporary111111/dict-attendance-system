@@ -52,6 +52,17 @@ http://127.0.0.1:8000/api/health/db
 python -m pytest -v
 ```
 
+## ORM Smoke Check
+
+After importing `others/database/schema.sql` and setting `DATABASE_URL` in `.env`,
+run this from the `backend` folder to verify that the SQLAlchemy models can query
+your actual MySQL database:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m scripts.orm_smoke_check
+```
+
 ## Frontend Hosting
 
 The frontend is separate from this FastAPI backend. The frontend should call the backend using a configurable API base URL such as:
@@ -61,4 +72,3 @@ http://127.0.0.1:8000/api
 ```
 
 When the frontend runs on a different host or port, add that frontend origin to `CORS_ORIGINS` in `.env`.
-
