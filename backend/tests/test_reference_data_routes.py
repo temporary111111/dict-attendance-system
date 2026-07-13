@@ -16,10 +16,16 @@ class FakeSession:
         *,
         existing_unit_id=None,
         parent_unit=None,
+        units_by_id=None,
+        active_child_id=None,
     ):
         self.records = records or []
         self.existing_unit_id = existing_unit_id
         self.parent_unit = parent_unit
+        self.units_by_id = dict(units_by_id or {})
+        if parent_unit is not None:
+            self.units_by_id[parent_unit.org_unit_id] = parent_unit
+        self.active_child_id = active_child_id
         self.added_unit = None
         self.committed = False
 
@@ -27,12 +33,16 @@ class FakeSession:
         return SimpleNamespace(all=lambda: self.records)
 
     def scalar(self, statement):
+        statement_text = str(statement)
+        if (
+            "organizational_units.parent_unit_id" in statement_text
+            and "organizational_units.is_active" in statement_text
+        ):
+            return self.active_child_id
         return self.existing_unit_id
 
     def get(self, model, key):
-        if self.parent_unit and self.parent_unit.org_unit_id == key:
-            return self.parent_unit
-        return None
+        return self.units_by_id.get(key)
 
     def add(self, unit):
         self.added_unit = unit
@@ -44,7 +54,8 @@ class FakeSession:
         self.committed = False
 
     def refresh(self, unit):
-        unit.org_unit_id = 4
+        if unit.org_unit_id is None:
+            unit.org_unit_id = 4
 
 
 def make_settings() -> Settings:
@@ -232,6 +243,175 @@ def test_create_organizational_unit_requires_authentication():
     client = TestClient(create_app(make_settings()))
 
     response = client.post("/api/organizational-units", json=valid_unit_payload())
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"
+
+
+def make_unit(
+    org_unit_id=4,
+    *,
+    parent_unit_id=1,
+    unit_name="Old Unit Name",
+    unit_type="office",
+    unit_code="OLD",
+    is_active=True,
+):
+    return SimpleNamespace(
+        org_unit_id=org_unit_id,
+        parent_unit_id=parent_unit_id,
+        unit_name=unit_name,
+        unit_type=unit_type,
+        unit_code=unit_code,
+        is_active=is_active,
+    )
+
+
+def test_update_organizational_unit_normalizes_fields_and_reparents():
+    target = make_unit()
+    root = make_unit(
+        1,
+        parent_unit_id=None,
+        unit_name="DICT",
+        unit_type="department",
+        unit_code="DICT",
+    )
+    new_parent = make_unit(
+        2,
+        parent_unit_id=1,
+        unit_name="Regional Office",
+        unit_code="RO",
+    )
+    session = FakeSession(units_by_id={1: root, 2: new_parent, 4: target})
+    client = make_client(session=session)
+
+    response = client.patch(
+        "/api/organizational-units/4",
+        json={
+            "unit_name": "  Regional Operations Division  ",
+            "unit_type": "  Division  ",
+            "unit_code": "  rod  ",
+            "parent_unit_id": 2,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "data": {
+            "org_unit_id": 4,
+            "parent_unit_id": 2,
+            "unit_name": "Regional Operations Division",
+            "unit_type": "division",
+            "unit_code": "ROD",
+            "is_active": True,
+        },
+        "message": "Organizational unit updated.",
+    }
+    assert session.committed is True
+
+
+def test_update_organizational_unit_can_clear_code_and_parent():
+    target = make_unit()
+    session = FakeSession(units_by_id={4: target})
+    client = make_client(session=session)
+
+    response = client.patch(
+        "/api/organizational-units/4",
+        json={"unit_code": None, "parent_unit_id": None},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["unit_code"] is None
+    assert response.json()["data"]["parent_unit_id"] is None
+
+
+def test_update_organizational_unit_rejects_unknown_target():
+    client = make_client(session=FakeSession())
+
+    response = client.patch(
+        "/api/organizational-units/999",
+        json={"unit_name": "Unknown"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "ORGANIZATIONAL_UNIT_NOT_FOUND"
+
+
+def test_update_organizational_unit_rejects_duplicate_code():
+    target = make_unit()
+    session = FakeSession(existing_unit_id=8, units_by_id={4: target})
+    client = make_client(session=session)
+
+    response = client.patch(
+        "/api/organizational-units/4",
+        json={"unit_code": "used"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "UNIT_CODE_ALREADY_EXISTS"
+
+
+def test_update_organizational_unit_rejects_circular_parent():
+    target = make_unit()
+    descendant = make_unit(5, parent_unit_id=4, unit_name="Child")
+    session = FakeSession(units_by_id={4: target, 5: descendant})
+    client = make_client(session=session)
+
+    response = client.patch(
+        "/api/organizational-units/4",
+        json={"parent_unit_id": 5},
+    )
+
+    assert response.status_code == 422
+    assert "parent_unit_id" in response.json()["error"]["fields"]
+
+
+def test_update_organizational_unit_rejects_deactivation_with_active_child():
+    target = make_unit()
+    session = FakeSession(active_child_id=5, units_by_id={4: target})
+    client = make_client(session=session)
+
+    response = client.patch(
+        "/api/organizational-units/4",
+        json={"is_active": False},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "UNIT_HAS_ACTIVE_CHILDREN"
+
+
+def test_update_organizational_unit_deactivates_unit_without_active_child():
+    target = make_unit()
+    session = FakeSession(units_by_id={4: target})
+    client = make_client(session=session)
+
+    response = client.patch(
+        "/api/organizational-units/4",
+        json={"is_active": False},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["is_active"] is False
+    assert target.is_active is False
+
+
+def test_update_organizational_unit_rejects_empty_payload():
+    target = make_unit()
+    client = make_client(session=FakeSession(units_by_id={4: target}))
+
+    response = client.patch("/api/organizational-units/4", json={})
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_update_organizational_unit_requires_authentication():
+    client = TestClient(create_app(make_settings()))
+
+    response = client.patch(
+        "/api/organizational-units/4",
+        json={"unit_name": "Updated Unit"},
+    )
 
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "NOT_AUTHENTICATED"

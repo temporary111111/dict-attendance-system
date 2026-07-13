@@ -75,12 +75,14 @@ Super Admin reference-data endpoints:
 GET /api/roles
 GET /api/organizational-units
 POST /api/organizational-units
+PATCH /api/organizational-units/{orgUnitId}
 ```
 
 The GET endpoints return active records for admin account creation.
 `POST /api/organizational-units` accepts `unit_name`, `unit_type`, optional
-`unit_code`, and optional `parent_unit_id`. These endpoints require a Super
-Admin Bearer token.
+`unit_code`, and optional `parent_unit_id`. The PATCH endpoint supports partial
+field updates, soft activation/deactivation, and safe hierarchy changes. These
+endpoints require a Super Admin Bearer token.
 
 Create an admin account:
 
@@ -100,6 +102,25 @@ hash. `PATCH /api/users/{userId}` partially updates `full_name`, `email`,
 `role_id`, or `org_unit_id`; it does not change passwords or account status.
 `PATCH /api/users/{userId}/status` accepts `active` or `inactive`. A Super Admin
 cannot deactivate their own current account.
+
+Program management endpoints:
+
+```text
+GET /api/programs
+POST /api/programs
+GET /api/programs/{programId}
+PATCH /api/programs/{programId}
+PATCH /api/programs/{programId}/archive
+GET /api/programs/{programId}/admins
+POST /api/programs/{programId}/admins
+PATCH /api/program-admin-assignments/{assignmentId}/revoke
+```
+
+Super Admins can manage every program and assignment. Program Admins can only
+list or view programs where they have an active assignment. Programs use
+`active` or `archived` status without deleting rows. Revoked assignments also
+remain in the database; assigning the same Program Admin again reactivates the
+existing unique assignment row.
 
 ## Create Local Super Admin
 

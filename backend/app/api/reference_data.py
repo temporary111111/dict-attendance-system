@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -15,11 +15,17 @@ from app.schemas.reference_data import (
     CreateOrganizationalUnitResponse,
     OrganizationalUnitListResponse,
     RoleListResponse,
+    UpdateOrganizationalUnitRequest,
+    UpdateOrganizationalUnitResponse,
 )
 from app.services.organizational_unit_service import (
+    CircularUnitHierarchyError,
     InvalidParentUnitError,
+    OrganizationalUnitNotFoundError,
     UnitCodeAlreadyExistsError,
+    UnitHasActiveChildrenError,
     create_organizational_unit,
+    update_organizational_unit,
 )
 
 router = APIRouter(
@@ -94,3 +100,57 @@ def create_unit(
         )
 
     return success_response(unit, "Organizational unit created.")
+
+
+@router.patch(
+    "/organizational-units/{org_unit_id}",
+    response_model=UpdateOrganizationalUnitResponse,
+)
+def update_unit(
+    org_unit_id: Annotated[int, Path(gt=0)],
+    payload: UpdateOrganizationalUnitRequest,
+    db: Annotated[Session, Depends(get_db)],
+) -> dict[str, Any]:
+    """Ina-update ang supplied unit fields nang pinoprotektahan ang hierarchy."""
+    try:
+        unit = update_organizational_unit(db, org_unit_id, payload)
+    except OrganizationalUnitNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=error_response(
+                "ORGANIZATIONAL_UNIT_NOT_FOUND",
+                "Organizational unit was not found.",
+            ),
+        )
+    except UnitCodeAlreadyExistsError:
+        raise HTTPException(
+            status_code=409,
+            detail=error_response(
+                "UNIT_CODE_ALREADY_EXISTS",
+                "An organizational unit with this code already exists.",
+                {"unit_code": "Unit code is already in use."},
+            ),
+        )
+    except UnitHasActiveChildrenError:
+        raise HTTPException(
+            status_code=409,
+            detail=error_response(
+                "UNIT_HAS_ACTIVE_CHILDREN",
+                "Deactivate the active child units first.",
+            ),
+        )
+    except (InvalidParentUnitError, CircularUnitHierarchyError):
+        raise HTTPException(
+            status_code=422,
+            detail=error_response(
+                "VALIDATION_ERROR",
+                "Some fields are invalid.",
+                {
+                    "parent_unit_id": (
+                        "Select an active parent outside this unit's children."
+                    )
+                },
+            ),
+        )
+
+    return success_response(unit, "Organizational unit updated.")

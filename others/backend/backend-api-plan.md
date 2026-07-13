@@ -117,6 +117,8 @@ Important rules:
 * Programs are DICT initiatives or services, such as Free Wi-Fi for All, eGov Super App, and National Broadband Plan.
 * Program Admins can view only assigned programs.
 * Program Admins should not create or edit core program records in the MVP.
+* Program names are unique inside the same owning organizational unit.
+* Program archive and restore are status changes; the program row is not deleted.
 
 ## 7. Program Admin Assignment API
 
@@ -131,6 +133,8 @@ Important rules:
 * `program_admin_assignments.program_id + user_id` must be unique.
 * The assigned user must have the Program Admin role.
 * Super Admin assigns Program Admins to programs, not to individual events.
+* Assigning a previously revoked user-program pair reactivates the existing row.
+* Revocation keeps the assignment row for history and records `revoked_at`.
 
 ## 8. Event API
 
