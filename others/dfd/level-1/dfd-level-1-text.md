@@ -71,9 +71,9 @@ Includes:
 
 ---
 
-### D4 Events
+### D4 Event Configuration
 
-Stores event records under programs.
+Stores event records under programs and each event's fixed-field requirement snapshot.
 
 Includes:
 
@@ -84,6 +84,7 @@ Includes:
 * Venue
 * Event date
 * Event code
+* Required/optional setting for each fixed attendance field
 * Public attendance URL
 * QR code path/data
 * Status
@@ -214,7 +215,7 @@ Only Super Admin can manage users and program assignments.
 
 ---
 
-## 3.0 Manage Events
+## 3.0 Manage Events and Field Requirements
 
 This process handles event creation and management under programs.
 
@@ -223,12 +224,15 @@ Input:
 * Event details from Super Admin or Program Admin
 * Event update requests
 * Event status changes
+* Fixed attendance field requirement changes
 
 Process:
 
 * Validate event details
 * Check program access
 * Save event record
+* Create the default field-requirement snapshot for a new event
+* Validate and save configurable field requirement changes
 * Update event status
 * Retrieve event list
 
@@ -247,7 +251,9 @@ Output:
 
 Important rule:
 
-Program Admin can manage events only under assigned programs.
+Program Admin can manage events only under assigned programs. Requirement
+changes are allowed only while an event is draft or open, and they cannot turn
+the fixed attendance page into a form builder.
 
 ---
 
@@ -298,7 +304,8 @@ Process:
 
 * Check event exists
 * Check event status is open
-* Display fixed attendance page
+* Load the event's field requirements
+* Display the fixed attendance page with required/optional indicators
 * Receive submitted attendance fields
 * Send submission for validation
 

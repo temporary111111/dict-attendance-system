@@ -21,11 +21,13 @@ from app.schemas.public_attendance import (
     PublicEventResponse,
 )
 from app.services.public_attendance_service import (
+    AttendanceFieldValidationError,
     DuplicateAttendanceError,
     EventNotOpenError,
     InvalidPSGCAddressError,
     PublicEventNotFoundError,
     SignatureRequiredError,
+    attendance_field_requirements,
     get_public_event,
     submit_attendance,
 )
@@ -43,6 +45,7 @@ def _public_event_data(event) -> dict[str, Any]:
         "event_date": event.event_date,
         "event_status": event.event_status,
         "accepting_attendance": event.event_status == "open",
+        "attendance_field_requirements": attendance_field_requirements(event),
         "program": {
             "program_id": event.program.program_id,
             "program_name": event.program.program_name,
@@ -130,6 +133,15 @@ def submit_public_attendance(
             detail=error_response(
                 "INVALID_PSGC_ADDRESS",
                 "Select a valid and active PSGC address hierarchy.",
+            ),
+        )
+    except AttendanceFieldValidationError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=error_response(
+                "VALIDATION_ERROR",
+                "Some fields are invalid.",
+                exc.fields,
             ),
         )
     except SignatureRequiredError:

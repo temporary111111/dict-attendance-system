@@ -16,9 +16,9 @@ class AttendanceRecordSummaryData(BaseModel):
     attendance_id: int
     attendee_name: str
     email: EmailStr
-    affiliation: str
-    designation_category: str
-    sex: Literal["F", "M"]
+    affiliation: str | None
+    designation_category: str | None
+    sex: Literal["F", "M"] | None
     attendance_status: AttendanceStatus
     duplicate_flag: bool
     submitted_at: datetime
@@ -86,9 +86,9 @@ class AttendanceRecordDetailData(BaseModel):
     last_name: str
     suffix: str | None
     email: EmailStr
-    affiliation: str
-    designation_category: str
-    sex: Literal["F", "M"]
+    affiliation: str | None
+    designation_category: str | None
+    sex: Literal["F", "M"] | None
     consent_documentation_publication: bool
     consent_database_processing: bool
     attendance_status: AttendanceStatus

@@ -8,6 +8,24 @@ from app.db.session import get_db
 from app.main import create_app
 
 
+PUBLIC_REQUIREMENTS = {
+    "first_name": True,
+    "middle_name": False,
+    "last_name": True,
+    "suffix": False,
+    "affiliation": True,
+    "designation_category": True,
+    "sex": True,
+    "email": True,
+    "consent_documentation_publication": True,
+    "consent_database_processing": True,
+    "signature": False,
+    "psgc_address": False,
+    "street_address": False,
+    "postal_code": False,
+}
+
+
 class FakeSession:
     def __init__(self, *, event=None, records=None):
         self.event = event
@@ -46,6 +64,10 @@ def make_public_event(status="open"):
         venue="DICT Regional Office",
         event_date=date(2026, 8, 15),
         event_status=status,
+        attendance_field_settings=[
+            SimpleNamespace(field_key=key, is_required=value)
+            for key, value in PUBLIC_REQUIREMENTS.items()
+        ],
         program=SimpleNamespace(
             program_id=3,
             program_name="Free Wi-Fi for All",
@@ -69,6 +91,7 @@ def test_get_public_event_returns_safe_open_event_details_without_auth():
             "event_date": "2026-08-15",
             "event_status": "open",
             "accepting_attendance": True,
+            "attendance_field_requirements": PUBLIC_REQUIREMENTS,
             "program": {
                 "program_id": 3,
                 "program_name": "Free Wi-Fi for All",

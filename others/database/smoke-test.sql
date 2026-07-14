@@ -185,6 +185,15 @@ ON DUPLICATE KEY UPDATE
   closed_at = NULL,
   updated_at = CURRENT_TIMESTAMP;
 
+-- Snapshot ng fixed field defaults para sa sample event.
+INSERT INTO event_attendance_field_settings (event_id, field_key, is_required)
+SELECT e.event_id, f.field_key, f.default_is_required
+FROM events e
+CROSS JOIN attendance_form_fields f
+WHERE e.event_code = 'SMOKE-TEST-ORIENTATION'
+ON DUPLICATE KEY UPDATE
+  is_required = event_attendance_field_settings.is_required;
+
 -- 6. Insert minimal PSGC sample rows so address foreign keys can be tested.
 INSERT INTO psgc_regions (region_code, region_name, is_active)
 VALUES ('0300000000', 'Region III (Central Luzon)', 1)
@@ -371,10 +380,19 @@ SELECT 'users' AS check_name, COUNT(*) AS total_rows FROM users;
 SELECT 'programs' AS check_name, COUNT(*) AS total_rows FROM programs;
 SELECT 'program_admin_assignments' AS check_name, COUNT(*) AS total_rows FROM program_admin_assignments;
 SELECT 'events' AS check_name, COUNT(*) AS total_rows FROM events;
+SELECT 'attendance_form_fields' AS check_name, COUNT(*) AS total_rows FROM attendance_form_fields;
+SELECT 'event_attendance_field_settings' AS check_name, COUNT(*) AS total_rows FROM event_attendance_field_settings;
 SELECT 'attendance_records' AS check_name, COUNT(*) AS total_rows FROM attendance_records;
 SELECT 'attendance_record_addresses' AS check_name, COUNT(*) AS total_rows FROM attendance_record_addresses;
 SELECT 'attendance_sheet_exports' AS check_name, COUNT(*) AS total_rows FROM attendance_sheet_exports;
 SELECT 'audit_logs' AS check_name, COUNT(*) AS total_rows FROM audit_logs;
+
+SELECT
+  'smoke_event_field_settings' AS check_name,
+  COUNT(*) AS actual_count
+FROM event_attendance_field_settings s
+JOIN events e ON e.event_id = s.event_id
+WHERE e.event_code = 'SMOKE-TEST-ORIENTATION';
 
 SELECT
   e.event_code,

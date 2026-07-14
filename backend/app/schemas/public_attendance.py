@@ -63,6 +63,7 @@ class PublicEventData(BaseModel):
     event_date: date
     event_status: Literal["draft", "open", "closed"]
     accepting_attendance: bool
+    attendance_field_requirements: dict[str, bool]
     program: PublicEventProgramData
 
 
@@ -123,11 +124,11 @@ class AttendanceSubmissionRequest(BaseModel):
     middle_name: TrimmedMiddleName | None = None
     last_name: TrimmedFirstOrLastName
     suffix: TrimmedSuffix | None = None
-    affiliation: TrimmedAffiliation
-    designation_category: TrimmedDesignation
-    sex: Literal["F", "M"]
+    affiliation: TrimmedAffiliation | None = None
+    designation_category: TrimmedDesignation | None = None
+    sex: Literal["F", "M"] | None = None
     email: EmailStr
-    consent_documentation_publication: bool
+    consent_documentation_publication: bool | None = None
     consent_database_processing: bool
     signature_text: TrimmedSignatureText | None = None
     signature_image: UploadFile | None = None
@@ -141,6 +142,10 @@ class AttendanceSubmissionRequest(BaseModel):
     @field_validator(
         "middle_name",
         "suffix",
+        "affiliation",
+        "designation_category",
+        "sex",
+        "consent_documentation_publication",
         "signature_text",
         "signature_image",
         "region_code",

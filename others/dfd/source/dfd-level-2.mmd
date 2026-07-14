@@ -7,7 +7,7 @@ flowchart LR
   p52((5.2 Display Fixed Attendance Page))
   p53((5.3 Submit Attendance Details))
   p61((6.1 Validate Event Status))
-  p62((6.2 Validate Required Fields))
+  p62((6.2 Validate Event Field Requirements))
   p63((6.3 Validate Contact Information))
   p64((6.4 Check Duplicate Within Same Event))
   p65((6.5 Store Attendance Record))
@@ -20,13 +20,13 @@ flowchart LR
   p75((7.5 Record Audit Log))
 
   d2[(D2 Roles and Program Assignments)]
-  d4[(D4 Events)]
+  d4[(D4 Event Configuration)]
   d5[(D5 Attendance Records)]
   d6[(D6 Attendance Sheet Exports)]
   d7[(D7 Audit Logs)]
 
   attendee -->|Scans QR or opens public link| p51
-  p51 <--> d4
+  p51 <-->|Event status and field requirements| d4
   p51 -->|Valid open event| p52
   p52 -->|Fixed attendance page| attendee
   attendee -->|Submitted fixed attendance details| p53

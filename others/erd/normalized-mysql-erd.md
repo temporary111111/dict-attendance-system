@@ -10,7 +10,7 @@ The design avoids one large attendance table. Program data, event data, admin us
 
 ## 2. Core Tables
 
-The MVP database has nine core operational/admin tables:
+The MVP database has eleven core operational/admin tables:
 
 1. `roles`
 2. `organizational_units`
@@ -19,18 +19,20 @@ The MVP database has nine core operational/admin tables:
 5. `program_admin_assignments`
 6. `events`
 7. `attendance_records`
-8. `attendance_sheet_exports`
-9. `audit_logs`
+8. `attendance_form_fields`
+9. `event_attendance_field_settings`
+10. `attendance_sheet_exports`
+11. `audit_logs`
 
 The `organizational_units` table stores DICT offices, divisions, sections, units, or similar internal groups in one hierarchy. This is cleaner than storing a free-text office/division value directly in `programs`.
 
 Because the supervisor mentioned PSGC codes for address handling, the database also includes normalized PSGC/address support tables:
 
-10. `attendance_record_addresses`
-11. `psgc_regions`
-12. `psgc_provinces`
-13. `psgc_cities_municipalities`
-14. `psgc_barangays`
+12. `attendance_record_addresses`
+13. `psgc_regions`
+14. `psgc_provinces`
+15. `psgc_cities_municipalities`
+16. `psgc_barangays`
 
 The address tables are separated from the official attendance sheet output. The current DICT attendance sheet template does not print address columns, but the system can still store PSGC-coded address data if the office requires address collection in the public attendance page.
 
@@ -147,9 +149,9 @@ Stores attendee submissions for a specific event. This is the main attendance da
 | `middle_name` | VARCHAR(100) NULL |  | Atomic name field |
 | `last_name` | VARCHAR(100) |  | Atomic name field |
 | `suffix` | VARCHAR(30) NULL |  | Example: Jr., III |
-| `affiliation` | VARCHAR(200) |  | School, university, agency, office, company, LGU, or organization |
-| `designation_category` | VARCHAR(150) |  | Attendee role/category, such as student, government official, employee, speaker, or guest |
-| `sex` | ENUM('F','M') |  | Template sex checkbox |
+| `affiliation` | VARCHAR(200) NULL |  | Configurable school, agency, company, LGU, or organization |
+| `designation_category` | VARCHAR(150) NULL |  | Configurable attendee role/category |
+| `sex` | ENUM('F','M') NULL |  | Configurable template sex checkbox |
 | `email` | VARCHAR(150) |  | Used for duplicate check |
 | `consent_documentation_publication` | TINYINT(1) |  | Photo/video/audio and publication consent |
 | `consent_database_processing` | TINYINT(1) |  | Organizer database/future processing consent |
@@ -164,7 +166,31 @@ Stores attendee submissions for a specific event. This is the main attendance da
 Recommended constraint:
 
 * `UNIQUE(event_id, email)` if email is required for every attendee.
-* If email can be optional, use an index instead and handle duplicate review in application logic.
+
+### 3.7A attendance_form_fields
+
+Stores the system-owned fixed attendance fields, safe defaults, and whether an
+admin may change their required/optional state. There is no custom-field CRUD.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `field_key` | VARCHAR(100) | PK | Stable fixed field key |
+| `field_label` | VARCHAR(150) |  | Display label |
+| `default_is_required` | TINYINT(1) |  | Default copied to new events |
+| `is_admin_configurable` | TINYINT(1) |  | 0 for locked integrity fields |
+| `display_order` | SMALLINT UNSIGNED | UNIQUE | Stable fixed-form order |
+
+### 3.7B event_attendance_field_settings
+
+Stores one requirement snapshot per event and fixed field.
+
+| Column | Suggested MySQL Type | Key | Notes |
+| --- | --- | --- | --- |
+| `event_id` | BIGINT UNSIGNED | PK, FK -> `events.event_id` | Configured event |
+| `field_key` | VARCHAR(100) | PK, FK -> `attendance_form_fields.field_key` | Fixed field |
+| `is_required` | TINYINT(1) |  | Event-specific requirement |
+| `created_at` | DATETIME |  | Snapshot creation timestamp |
+| `updated_at` | DATETIME |  | Last actual setting change |
 
 ### 3.8 attendance_sheet_exports
 

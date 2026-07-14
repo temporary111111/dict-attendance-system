@@ -174,6 +174,9 @@ Functional requirements:
 * The system shall generate a public attendance link for each event.
 * The system shall generate a QR code pointing to the event's public attendance page.
 * The system shall allow each event to have a status such as draft, open, closed, or archived.
+* The system shall create a per-event snapshot of the fixed attendance field requirements.
+* The system shall allow an authorized admin to set configurable fields as required or optional while the event is draft or open.
+* The system shall not allow admins to add, remove, rename, reorder, or hide attendance fields.
 
 Event status rules:
 
@@ -195,6 +198,7 @@ Functional requirements:
 * The public attendance page shall be accessible without a login.
 * The public attendance page shall only accept submissions when the event status is open.
 * The attendance form shall use fixed fields and shall not be dynamically built by admins.
+* The public event response shall identify which fixed fields are required for that event.
 * The attendance form shall include a privacy notice or consent text.
 * The system shall validate submitted attendance data before saving.
 * The system shall show a confirmation message after successful submission.
@@ -212,7 +216,7 @@ Recommended fixed attendance fields:
 * Optional address using PSGC codes
 * Consent for photo/video/audio documentation and possible DICT publication
 * Consent to be included in the organizer's database for future processing of relevant documents
-* Either a typed signature or an uploaded signature image
+* Typed signature or uploaded signature image
 
 Important note:
 
@@ -227,6 +231,7 @@ The system shall validate attendance submissions before storing them.
 Functional requirements:
 
 * The system shall validate required fields.
+* The system shall use the event's current field-requirement snapshot when validating a new submission.
 * The system shall validate email format.
 * The system shall validate that only one sex option is selected.
 * The system shall record consent responses.
@@ -251,7 +256,7 @@ Functional requirements:
 * The system shall store attendance records linked to a specific event.
 * The system shall store separated name fields: first name, middle name, last name, and suffix.
 * The system shall store affiliation, designation/category, sex, email, consent fields, submission timestamp, and attendance status.
-* The system shall require and store either a typed signature or a private signature image.
+* The system shall store a typed signature or private signature image when supplied or required by the event.
 * The system shall allow authorized users to view paginated attendance records by event.
 * The system shall allow authorized users to search records and filter them by attendance status.
 * The system shall provide attendance record details without exposing private file paths.
@@ -259,6 +264,15 @@ Functional requirements:
 * The system shall allow the Super Admin to update any attendance record status.
 * The system shall allow a Program Admin to update status only for events under an actively assigned program.
 * Every actual status change shall require a reason and shall create an audit log in the same database transaction.
+
+Default field requirement policy:
+
+* Always required and locked: first name, last name, email, and database-processing consent.
+* Required by default but configurable: affiliation, designation/category, sex, and documentation/publication consent response.
+* Optional by default but configurable: middle name, suffix, signature, PSGC address, street address, and postal code.
+* A required documentation/publication consent means the attendee must answer; declining remains valid.
+* Requiring street address or postal code also requires the PSGC address group.
+* Requirement changes apply only to future submissions and do not invalidate existing records.
 * Repeating the current status shall not create another audit entry.
 * The system shall not provide free editing of submitted attendee details in the MVP.
 * The system shall avoid hard deletion of attendance records.
@@ -588,8 +602,8 @@ Possible future improvements:
 * The system will not provide a general-purpose form builder.
 * Duplicate detection will only be handled within the same event during MVP.
 * Email is required for every public attendance submission.
-* Address collection is optional, but a supplied address must follow a valid PSGC hierarchy.
-* Either a typed signature or an uploaded signature image is required.
+* Address collection is optional by default, but a supplied address must follow a valid PSGC hierarchy.
+* Signature is optional by default and may be required per event; typed text or an uploaded image satisfies it.
 * Mobile number is not collected in the MVP.
 * Attendance submission is accepted only while the event is open.
 * Program Admins may review attendance only under actively assigned programs.

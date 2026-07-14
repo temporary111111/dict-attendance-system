@@ -40,6 +40,7 @@ The Super Admin is responsible for:
 * Managing all programs
 * Assigning Program Admins to programs
 * Managing all events
+* Configuring fixed attendance field requirements for all draft or open events
 * Generating event attendance links and QR codes
 * Viewing all attendance records
 * Generating and downloading official attendance sheets
@@ -59,6 +60,7 @@ The Program Admin has limited access based on assigned programs.
 The Program Admin is responsible for:
 
 * Managing events under assigned programs
+* Configuring fixed attendance field requirements for assigned draft or open events
 * Opening and closing attendance collection for events under assigned programs
 * Generating QR codes and public attendance links for events under assigned programs
 * Viewing attendance records under assigned programs
@@ -195,6 +197,10 @@ Fields Program Admins may edit:
 * Venue
 * Event date
 * Event status, if allowed by policy
+
+Both admin roles may also change configurable fixed attendance fields between
+required and optional while an accessible event is draft or open. They cannot
+change the locked required fields or create a custom form.
 
 ---
 
@@ -495,6 +501,7 @@ The system should log the following actions:
 | Assign Program Admin                | Yes                    | Not applicable           |
 | Create event                        | Yes                    | Yes                      |
 | Update event                        | Yes                    | Yes                      |
+| Configure attendance requirements  | Yes                    | Yes, assigned programs only |
 | Open event attendance               | Yes                    | Yes                      |
 | Close event attendance              | Yes                    | Yes                      |
 | Archive event                       | Yes                    | No                       |

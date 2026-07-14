@@ -129,6 +129,8 @@ GET /api/events
 POST /api/programs/{programId}/events
 GET /api/events/{eventId}
 PATCH /api/events/{eventId}
+GET /api/events/{eventId}/attendance-field-settings
+PATCH /api/events/{eventId}/attendance-field-settings
 POST /api/events/{eventId}/attendance-link
 POST /api/events/{eventId}/open
 POST /api/events/{eventId}/close
@@ -139,6 +141,13 @@ Super Admins manage events under any active program. Program Admins can manage
 events only under programs where they have an active assignment. Generate the
 attendance link and QR before opening collection. Open events must be closed
 before their event or parent program can be archived.
+
+Every new event receives its own snapshot of the fixed attendance fields.
+Authorized admins can change only whether configurable fields are required or
+optional while the event is `draft` or `open`. First name, last name, email,
+and database-processing consent are always required. Field names, order, and
+visibility cannot be changed, so this remains a fixed form rather than a form
+builder.
 
 QR generation uses these environment settings:
 
@@ -165,16 +174,21 @@ GET /api/psgc/cities-municipalities?regionCode={regionCode}&provinceCode={provin
 GET /api/psgc/barangays?cityMunicipalityCode={cityMunicipalityCode}
 ```
 
-The submission endpoint accepts `multipart/form-data` with `first_name`,
-optional `middle_name`, `last_name`, optional `suffix`, `affiliation`,
-`designation_category`, `sex`, `email`, both consent fields, and either
-`signature_text` or a PNG/JPEG `signature_image`.
+The public event response includes `attendance_field_requirements`, which the
+frontend uses to mark the fixed inputs required or optional. The submission
+endpoint accepts `multipart/form-data` with the fixed name, affiliation,
+designation/category, sex, email, consent, address, and typed or uploaded
+signature inputs. The backend enforces the selected event's requirement
+snapshot; existing submissions are not revalidated after a setting changes.
 
-Address fields are optional. Once any address field is provided,
+Address fields are optional by default. Once any address field is provided,
 `region_code`, `city_municipality_code`, and `barangay_code` are required.
 `province_code` stays optional for PSGC areas that are not province-based;
 `street_address` and `postal_code` are optional. Submitted codes must form an
-active hierarchy in the local PSGC tables.
+active hierarchy in the local PSGC tables. If an admin requires the PSGC
+address group, region, city/municipality, and barangay become required while
+province remains conditional. Requiring street address or postal code also
+requires the PSGC address group.
 
 The event must be open. A normalized email can be submitted only once per
 event. Uploaded signatures are verified, re-encoded as PNG, and saved under

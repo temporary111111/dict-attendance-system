@@ -125,6 +125,23 @@ def test_renderer_wraps_long_values_without_losing_text():
     )
 
 
+def test_renderer_leaves_missing_optional_values_blank():
+    row = replace(
+        make_row(),
+        affiliation=None,
+        designation_category=None,
+        sex=None,
+        signature_text=None,
+    )
+
+    text = extract_text(render([row]))
+    normalized_lines = [line.strip() for line in text.splitlines()]
+
+    assert "None" not in text
+    # Database consent lang ang true sa sample row; walang sex mark.
+    assert normalized_lines.count("X") == 1
+
+
 def test_renderer_embeds_valid_png_signature(tmp_path):
     signature_path = tmp_path / "signature.png"
     Image.new("RGBA", (240, 80), "white").save(signature_path)

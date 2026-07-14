@@ -556,7 +556,7 @@ python others/dfd/source/render_mermaid_diagrams.py
 
 Visually inspect Level 0, Level 1, and Level 2 updated PNGs.
 
-- [ ] **Step 3: Generate and inspect representative PDFs**
+- [x] **Step 3: Generate and inspect representative PDFs**
 
 Use the renderer test factories to produce:
 
@@ -569,7 +569,7 @@ Inspect page count and extracted text with Pypdf, then render representative
 pages with the temporary PDF inspection tooling for visual checks: no overlap,
 no clipped text, readable signatures, repeated headers, and no blank tail page.
 
-- [ ] **Step 4: Run final verification**
+- [x] **Step 4: Run final verification**
 
 ```powershell
 cd backend
@@ -584,7 +584,7 @@ authentication, and advertises `application/pdf`. Scan current authoritative
 docs for stale conditional Program Admin download wording. Validate generated
 SVG/Draw.io XML and verify no schema or ERD source timestamp changed.
 
-- [ ] **Step 5: Review the complete scoped work**
+- [x] **Step 5: Review the complete scoped work**
 
 Confirm the implementation contains no PDF storage directory, no schema/ERD
 change, no unrelated refactor, no exposed signature path, and no Git operation.

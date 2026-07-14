@@ -17,12 +17,14 @@ class FakeSession:
         listed_events=None,
         events=None,
         programs=None,
+        field_definitions=None,
         assignment_visibility_id=None,
         existing_event_code_id=None,
     ):
         self.listed_events = listed_events or []
         self.events = events or {}
         self.programs = programs or {}
+        self.field_definitions = field_definitions or make_field_definitions()
         self.assignment_visibility_id = assignment_visibility_id
         self.existing_event_code_id = existing_event_code_id
         self.scalars_statements = []
@@ -31,6 +33,8 @@ class FakeSession:
 
     def scalars(self, statement):
         self.scalars_statements.append(str(statement))
+        if "attendance_form_fields" in str(statement):
+            return SimpleNamespace(all=lambda: self.field_definitions)
         return SimpleNamespace(all=lambda: self.listed_events)
 
     def scalar(self, statement):
@@ -88,6 +92,43 @@ def make_program(program_id=3, *, status="active"):
         program_name="Free Wi-Fi for All",
         program_status=status,
     )
+
+
+def make_field_definitions():
+    required = {
+        "first_name",
+        "last_name",
+        "affiliation",
+        "designation_category",
+        "sex",
+        "email",
+        "consent_documentation_publication",
+        "consent_database_processing",
+    }
+    keys = [
+        "first_name",
+        "middle_name",
+        "last_name",
+        "suffix",
+        "affiliation",
+        "designation_category",
+        "sex",
+        "email",
+        "consent_documentation_publication",
+        "consent_database_processing",
+        "signature",
+        "psgc_address",
+        "street_address",
+        "postal_code",
+    ]
+    return [
+        SimpleNamespace(
+            field_key=key,
+            default_is_required=key in required,
+            display_order=index,
+        )
+        for index, key in enumerate(keys, start=1)
+    ]
 
 
 def make_event(
@@ -206,6 +247,15 @@ def test_create_event_generates_code_and_saves_draft_for_assigned_admin():
     assert response.json()["data"]["event_code"]
     assert session.added_event.created_by_user_id == 2
     assert session.added_event.public_attendance_url is None
+    field_settings = {
+        setting.field_key: setting.is_required
+        for setting in session.added_event.attendance_field_settings
+    }
+    assert len(field_settings) == 14
+    assert field_settings["first_name"] is True
+    assert field_settings["affiliation"] is True
+    assert field_settings["signature"] is False
+    assert field_settings["psgc_address"] is False
     assert session.committed is True
 
 

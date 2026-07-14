@@ -144,6 +144,9 @@ def make_attendance(
     address=None,
     signature_text="Maria Santos Reyes",
     signature_image_path=None,
+    affiliation="Municipality of San Fernando",
+    designation_category="Government Official",
+    sex="F",
 ):
     return SimpleNamespace(
         attendance_id=attendance_id,
@@ -154,9 +157,9 @@ def make_attendance(
         last_name="Reyes",
         suffix=None,
         email="maria.reyes@example.com",
-        affiliation="Municipality of San Fernando",
-        designation_category="Government Official",
-        sex="F",
+        affiliation=affiliation,
+        designation_category=designation_category,
+        sex=sex,
         consent_documentation_publication=False,
         consent_database_processing=True,
         signature_text=signature_text,
@@ -222,6 +225,36 @@ def test_list_event_attendance_returns_paginated_summary_for_super_admin():
         },
         "message": "Attendance records retrieved.",
     }
+
+
+def test_admin_responses_allow_omitted_optional_attendance_values():
+    attendance = make_attendance(
+        affiliation=None,
+        designation_category=None,
+        sex=None,
+        signature_text=None,
+    )
+    session = FakeSession(
+        event=attendance.event,
+        listed_records=[attendance],
+        total_items=1,
+        attendance_record=attendance,
+    )
+    client = make_client(session, current_user=make_user())
+
+    list_response = client.get("/api/events/5/attendance-records")
+    detail_response = client.get("/api/attendance-records/20")
+
+    assert list_response.status_code == 200
+    summary = list_response.json()["data"]["items"][0]
+    assert summary["affiliation"] is None
+    assert summary["designation_category"] is None
+    assert summary["sex"] is None
+    assert detail_response.status_code == 200
+    detail = detail_response.json()["data"]
+    assert detail["affiliation"] is None
+    assert detail["designation_category"] is None
+    assert detail["sex"] is None
 
 
 def test_assigned_program_admin_can_list_event_attendance():

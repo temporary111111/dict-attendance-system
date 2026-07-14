@@ -110,6 +110,20 @@ CREATE TABLE IF NOT EXISTS program_admin_assignments (
     )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS attendance_form_fields (
+  field_key VARCHAR(100) NOT NULL,
+  field_label VARCHAR(150) NOT NULL,
+  default_is_required TINYINT(1) NOT NULL,
+  is_admin_configurable TINYINT(1) NOT NULL,
+  display_order SMALLINT UNSIGNED NOT NULL,
+  PRIMARY KEY (field_key),
+  UNIQUE KEY uq_attendance_form_fields_display_order (display_order),
+  CONSTRAINT chk_attendance_form_fields_default_required
+    CHECK (default_is_required IN (0, 1)),
+  CONSTRAINT chk_attendance_form_fields_admin_configurable
+    CHECK (is_admin_configurable IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS events (
   event_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   program_id BIGINT UNSIGNED NOT NULL,
@@ -145,6 +159,24 @@ CREATE TABLE IF NOT EXISTS events (
     )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS event_attendance_field_settings (
+  event_id BIGINT UNSIGNED NOT NULL,
+  field_key VARCHAR(100) NOT NULL,
+  is_required TINYINT(1) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (event_id, field_key),
+  KEY idx_event_attendance_field_settings_field_key (field_key),
+  CONSTRAINT fk_event_attendance_field_settings_event
+    FOREIGN KEY (event_id) REFERENCES events (event_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_event_attendance_field_settings_field
+    FOREIGN KEY (field_key) REFERENCES attendance_form_fields (field_key)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT chk_event_attendance_field_settings_required
+    CHECK (is_required IN (0, 1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS attendance_records (
   attendance_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   event_id BIGINT UNSIGNED NOT NULL,
@@ -152,9 +184,9 @@ CREATE TABLE IF NOT EXISTS attendance_records (
   middle_name VARCHAR(100) NULL,
   last_name VARCHAR(100) NOT NULL,
   suffix VARCHAR(30) NULL,
-  affiliation VARCHAR(200) NOT NULL,
-  designation_category VARCHAR(150) NOT NULL,
-  sex ENUM('F', 'M') NOT NULL,
+  affiliation VARCHAR(200) NULL,
+  designation_category VARCHAR(150) NULL,
+  sex ENUM('F', 'M') NULL,
   email VARCHAR(150) NOT NULL,
   consent_documentation_publication TINYINT(1) NOT NULL DEFAULT 0,
   consent_database_processing TINYINT(1) NOT NULL DEFAULT 0,

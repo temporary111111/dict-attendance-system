@@ -33,6 +33,35 @@ ON DUPLICATE KEY UPDATE
   is_active = VALUES(is_active),
   updated_at = CURRENT_TIMESTAMP;
 
+-- Fixed system fields lang ito. Walang admin CRUD para hindi maging form builder.
+INSERT INTO attendance_form_fields (
+  field_key,
+  field_label,
+  default_is_required,
+  is_admin_configurable,
+  display_order
+)
+VALUES
+  ('first_name', 'First name', 1, 0, 1),
+  ('middle_name', 'Middle name', 0, 1, 2),
+  ('last_name', 'Last name', 1, 0, 3),
+  ('suffix', 'Suffix', 0, 1, 4),
+  ('affiliation', 'Affiliation', 1, 1, 5),
+  ('designation_category', 'Designation/category', 1, 1, 6),
+  ('sex', 'Sex', 1, 1, 7),
+  ('email', 'Email', 1, 0, 8),
+  ('consent_documentation_publication', 'Documentation/publication consent', 1, 1, 9),
+  ('consent_database_processing', 'Database-processing consent', 1, 0, 10),
+  ('signature', 'Signature', 0, 1, 11),
+  ('psgc_address', 'PSGC address', 0, 1, 12),
+  ('street_address', 'Street address', 0, 1, 13),
+  ('postal_code', 'Postal code', 0, 1, 14)
+ON DUPLICATE KEY UPDATE
+  field_label = VALUES(field_label),
+  default_is_required = VALUES(default_is_required),
+  is_admin_configurable = VALUES(is_admin_configurable),
+  display_order = VALUES(display_order);
+
 -- Optional setup notes:
 --
 -- 1. Create the first Super Admin account through the application or a secure admin setup command.

@@ -220,3 +220,10 @@ class Event(Base, TimestampMixin):
         "AttendanceSheetExport",
         back_populates="event",
     )
+    attendance_field_settings: Mapped[list["EventAttendanceFieldSetting"]] = (
+        relationship(
+            "EventAttendanceFieldSetting",
+            back_populates="event",
+            cascade="all, delete-orphan",
+        )
+    )

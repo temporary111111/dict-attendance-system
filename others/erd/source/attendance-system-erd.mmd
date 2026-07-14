@@ -9,6 +9,8 @@ erDiagram
   PROGRAMS ||--o{ PROGRAM_ADMIN_ASSIGNMENTS : has
   PROGRAMS ||--o{ EVENTS : contains
   USERS ||--o{ EVENTS : creates
+  EVENTS ||--o{ EVENT_ATTENDANCE_FIELD_SETTINGS : configures
+  ATTENDANCE_FORM_FIELDS ||--o{ EVENT_ATTENDANCE_FIELD_SETTINGS : defines
   EVENTS ||--o{ ATTENDANCE_RECORDS : receives
   ATTENDANCE_RECORDS ||--o| ATTENDANCE_RECORD_ADDRESSES : has_address
   EVENTS ||--o{ ATTENDANCE_SHEET_EXPORTS : has
@@ -90,6 +92,22 @@ erDiagram
     ENUM event_status
     DATETIME opened_at
     DATETIME closed_at
+    DATETIME created_at
+    DATETIME updated_at
+  }
+
+  ATTENDANCE_FORM_FIELDS {
+    VARCHAR field_key PK
+    VARCHAR field_label
+    BOOLEAN default_is_required
+    BOOLEAN is_admin_configurable
+    SMALLINT display_order UK
+  }
+
+  EVENT_ATTENDANCE_FIELD_SETTINGS {
+    BIGINT event_id PK,FK
+    VARCHAR field_key PK,FK
+    BOOLEAN is_required
     DATETIME created_at
     DATETIME updated_at
   }

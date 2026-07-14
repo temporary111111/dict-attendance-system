@@ -131,12 +131,25 @@ If the Program Admin tries to open an unassigned program directly through the UR
    * Event date
 6. System generates or accepts an event code.
 7. System validates required fields.
-8. System saves the event under the selected program.
+8. System saves the event under the selected program and copies the default fixed-field requirements into the event.
 9. System records the action in the audit trail.
+
+## 5.2 Configure Fixed Attendance Requirements
+
+1. Authorized admin opens the event's attendance field settings.
+2. System displays all fixed fields and whether each one is required or optional.
+3. Admin changes only the requirement of configurable fields.
+4. System keeps first name, last name, email, and database-processing consent locked as required.
+5. System validates address dependencies and saves actual changes in one transaction.
+6. System records actual changes in the audit trail.
+
+This configuration is allowed only while the event is draft or open. It does
+not add, remove, rename, reorder, or hide fields, and it affects only future
+submissions.
 
 ---
 
-## 5.2 Generate Attendance Link and QR Code
+## 5.3 Generate Attendance Link and QR Code
 
 1. Admin opens the event details page.
 2. Admin selects Generate Attendance Link or Generate QR Code.
@@ -153,7 +166,7 @@ The QR code points to the system's public attendance page, not to Google Forms.
 
 ---
 
-## 5.3 Set Event Status
+## 5.4 Set Event Status
 
 An event may have statuses such as:
 
@@ -186,7 +199,8 @@ Recommended rules:
 1. External attendee scans the QR code or opens the public attendance link.
 2. System checks if the event exists.
 3. System checks if the event status is open.
-4. System displays the fixed attendance page for the event.
+4. System loads the event's field-requirement snapshot.
+5. System displays the fixed attendance page and marks each input required or optional.
 
 Fixed attendance fields:
 
@@ -198,10 +212,10 @@ Fixed attendance fields:
 * Designation/Category
 * Sex
 * Email Address
-* Optional address using PSGC codes
+* Address using PSGC codes
 * Consent for photo/video/audio documentation and possible DICT publication
 * Consent to be included in the organizer's database for future processing of relevant documents
-* Either typed signature or uploaded signature image
+* Typed signature or uploaded signature image
 
 Important rule:
 
@@ -213,7 +227,7 @@ External attendees do not log in to the system.
 
 1. External attendee fills out the fixed attendance page.
 2. External attendee submits the form.
-3. System validates required fields.
+3. System validates fields using the event's current requirement settings.
 4. System validates email format.
 5. System checks consent responses.
 6. System checks duplicate submissions within the same event.
@@ -231,12 +245,19 @@ Attendance records are stored directly by the system. There is no Google Forms e
 
 During attendance submission, the system should check:
 
-* Required fields are not empty.
+* Fields required by the selected event are not empty.
 * Email format is valid.
 * Sex field has a valid value.
 * Consent values are recorded.
 * Event status is open.
 * Exact duplicate email entries within the same event are rejected.
+
+First name, last name, email, and database-processing consent remain required
+for every event. A required documentation/publication consent needs an answer,
+but an explicit decline is valid. If PSGC address is required, region,
+city/municipality, and barangay are required while province remains
+conditional. Existing records remain valid when an admin later changes a
+requirement.
 
 Duplicate checking for MVP:
 

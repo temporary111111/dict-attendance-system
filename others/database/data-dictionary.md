@@ -14,6 +14,8 @@ This data dictionary explains the tables in `schema.sql`. It is written for impl
 | `programs` | Stores DICT programs such as Free Wi-Fi for All, eGov Super App, or National Broadband Plan. |
 | `program_admin_assignments` | Stores which Program Admin user is assigned to which program. |
 | `events` | Stores specific activities/events under programs. |
+| `attendance_form_fields` | Stores system-owned fixed field definitions and defaults. |
+| `event_attendance_field_settings` | Stores required/optional field settings per event. |
 | `attendance_records` | Stores submitted attendance details per event. |
 | `attendance_record_addresses` | Stores optional PSGC-coded address details per attendance record. |
 | `attendance_sheet_exports` | Stores generated/downloaded attendance sheet history. |
@@ -124,6 +126,32 @@ Stores specific events or activities under programs.
 | `created_at` | When the event was created. |
 | `updated_at` | When the event was last updated. |
 
+## `attendance_form_fields`
+
+Stores the fixed attendance fields controlled by the system. Admins cannot add,
+rename, hide, reorder, or delete these fields.
+
+| Column | Meaning |
+| --- | --- |
+| `field_key` | Stable field key used by the backend and frontend. |
+| `field_label` | Human-readable fixed label. |
+| `default_is_required` | Required/optional default copied to new events. |
+| `is_admin_configurable` | Whether an admin may change the requirement. |
+| `display_order` | Stable display order of the fixed fields. |
+
+## `event_attendance_field_settings`
+
+Stores a complete requirement snapshot for every event. This prevents a later
+global default change from silently changing an existing event.
+
+| Column | Meaning |
+| --- | --- |
+| `event_id` | Event being configured. Part of the composite primary key. |
+| `field_key` | Fixed field being configured. Part of the composite primary key. |
+| `is_required` | Whether the field is required for future submissions. |
+| `created_at` | When the event snapshot was created. |
+| `updated_at` | When the setting last changed. |
+
 ## `attendance_records`
 
 Stores one attendance submission for one event.
@@ -136,9 +164,9 @@ Stores one attendance submission for one event.
 | `middle_name` | Attendee middle name, if provided. |
 | `last_name` | Attendee last name. |
 | `suffix` | Name suffix, such as Jr. or III. |
-| `affiliation` | School, university, agency, office, company, LGU, or organization. |
-| `designation_category` | Attendee role/category, such as student, government official, speaker, employee, guest, or participant. |
-| `sex` | `F` or `M`, matching the attendance sheet checkbox. |
+| `affiliation` | Configurable school, agency, office, company, LGU, or organization. Nullable when optional. |
+| `designation_category` | Configurable attendee role/category. Nullable when optional. |
+| `sex` | Configurable `F` or `M` template value. Nullable when optional. |
 | `email` | Email address. Used for duplicate checking within the same event. |
 | `consent_documentation_publication` | Consent for photo/video/audio documentation and possible publication. |
 | `consent_database_processing` | Consent for organizer database/future document processing. |
@@ -152,7 +180,7 @@ Stores one attendance submission for one event.
 
 Important rules:
 
-* The public submission must provide at least one of `signature_text` or `signature_image_path`. Each column is nullable because they are alternatives.
+* A required signature accepts either `signature_text` or `signature_image_path`. Both may be null when the event makes signature optional.
 * Raw signature image paths must not be exposed to clients. Images are served through an authenticated and authorized endpoint.
 * `duplicate_flag` is a separate review signal. Changing `attendance_status` does not automatically change this flag.
 * An actual `attendance_status` change requires a reason and an audit log in the same transaction.

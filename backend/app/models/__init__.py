@@ -5,6 +5,10 @@ from app.models.attendance import (
     AttendanceSheetExport,
 )
 from app.models.audit import AuditLog
+from app.models.attendance_fields import (
+    AttendanceFormField,
+    EventAttendanceFieldSetting,
+)
 from app.models.base import Base
 from app.models.programs import Event, Program, ProgramAdminAssignment
 from app.models.psgc import (
@@ -18,9 +22,11 @@ __all__ = [
     "AttendanceRecord",
     "AttendanceRecordAddress",
     "AttendanceSheetExport",
+    "AttendanceFormField",
     "AuditLog",
     "Base",
     "Event",
+    "EventAttendanceFieldSetting",
     "OrganizationalUnit",
     "PSGCBarangay",
     "PSGCCityMunicipality",

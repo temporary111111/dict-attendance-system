@@ -13,11 +13,13 @@ from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.models import (
+    AttendanceFormField,
     AttendanceRecord,
     AttendanceRecordAddress,
     AttendanceSheetExport,
     AuditLog,
     Event,
+    EventAttendanceFieldSetting,
     OrganizationalUnit,
     PSGCBarangay,
     PSGCCityMunicipality,
@@ -38,6 +40,8 @@ COUNT_CHECKS: tuple[tuple[str, type[Any]], ...] = (
     ("programs", Program),
     ("program_admin_assignments", ProgramAdminAssignment),
     ("events", Event),
+    ("attendance_form_fields", AttendanceFormField),
+    ("event_attendance_field_settings", EventAttendanceFieldSetting),
     ("attendance_records", AttendanceRecord),
     ("attendance_record_addresses", AttendanceRecordAddress),
     ("attendance_sheet_exports", AttendanceSheetExport),

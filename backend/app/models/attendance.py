@@ -66,9 +66,9 @@ class AttendanceRecord(Base, TimestampMixin):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     suffix: Mapped[str | None] = mapped_column(String(30))
     # General term ito para pwede students, government officials, employees, etc.
-    affiliation: Mapped[str] = mapped_column(String(200), nullable=False)
-    designation_category: Mapped[str] = mapped_column(String(150), nullable=False)
-    sex: Mapped[str] = mapped_column(Enum("F", "M", name="sex"), nullable=False)
+    affiliation: Mapped[str | None] = mapped_column(String(200))
+    designation_category: Mapped[str | None] = mapped_column(String(150))
+    sex: Mapped[str | None] = mapped_column(Enum("F", "M", name="sex"))
     email: Mapped[str] = mapped_column(String(150), nullable=False)
     consent_documentation_publication: Mapped[bool] = mapped_column(
         mysql.TINYINT(1),

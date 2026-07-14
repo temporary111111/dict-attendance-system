@@ -16,8 +16,10 @@ Use this order kapag may magkaibang guidance sa project files:
 - FastAPI API-only backend, MySQL, and SQLAlchemy.
 - Stateless JWT access token for admin authentication.
 - No Google Forms integration and no dynamic form builder.
-- Fixed public attendance fields with optional PSGC address collection.
-- Either typed or uploaded signature is required; image files are private.
+- Fixed public attendance fields with per-event required/optional settings.
+- First name, last name, email, and database-processing consent are always
+  required; other approved fields follow the event setting.
+- Uploaded signature images are private.
 - Super Admin sees all attendance records.
 - Program Admin sees and reviews attendance only under actively assigned
   programs.

@@ -71,9 +71,10 @@ sheets only for events under actively assigned programs.
 Used to verify whether a Program Admin is actively assigned before viewing,
 reviewing, or generating records for the selected event.
 
-## D4 Events
+## D4 Event Configuration
 
-Stores event details, event code, public attendance URL, QR code path/data, and event status.
+Stores event details, event code, public attendance URL, QR code path/data,
+event status, and the event's fixed-field requirement snapshot.
 
 ## D5 Attendance Records
 
@@ -120,7 +121,8 @@ Output:
 
 ## 5.2 Display Fixed Attendance Page
 
-The system displays the fixed attendance form for the event.
+The system displays the fixed attendance form and marks fields using the
+event's required/optional settings.
 
 Displayed fields:
 
@@ -134,8 +136,8 @@ Displayed fields:
 * Email Address
 * Consent for photo/video/audio documentation and possible DICT publication
 * Consent to be included in the organizer's database for future processing of relevant documents
-* Optional PSGC-based address
-* Either typed signature or uploaded signature image
+* PSGC-based address
+* Typed signature or uploaded signature image
 
 Output:
 
@@ -143,7 +145,8 @@ Output:
 
 Important rule:
 
-Admins do not build or customize the attendance form in the MVP.
+Admins do not build or customize the attendance form in the MVP. They can only
+change whether approved configurable fields are required or optional.
 
 ---
 
@@ -199,21 +202,22 @@ Input:
 
 Process:
 
-* Check required fields
+* Check fields required by the event configuration
 * Trim extra spaces
 * Normalize basic text fields
 * Check if consent responses were submitted
 
-Recommended required fields:
+Always-required fields:
 
 * First Name
 * Last Name
-* Affiliation (school, university, agency, office, company, LGU, or organization)
-* Designation/Category
-* Sex
 * Email Address
-* Consent responses
-* Either typed signature or uploaded signature image
+* Database-processing consent
+
+Affiliation, designation/category, sex, documentation/publication consent,
+middle name, suffix, signature, and address fields follow the selected event's
+configuration. A required documentation/publication consent needs an answer,
+but an explicit decline is valid.
 
 Output:
 
@@ -530,7 +534,7 @@ Output:
 1. Public attendance submission is allowed only for open events.
 2. Program Admin can only view or review records for actively assigned program events.
 3. External attendees do not log in.
-4. The attendance form is fixed, not dynamically built per event.
+4. The attendance form has fixed fields; only approved required/optional settings vary per event.
 5. Invalid submissions should not be silently saved as valid records.
 6. Duplicate submissions should not overwrite existing attendance records.
 7. Name-only duplicate checking should not be trusted.
@@ -552,7 +556,8 @@ Output:
 The current attendance workflow uses these approved decisions:
 
 * Email is required.
-* Either a typed signature or uploaded signature image is required.
+* Signature is optional by default and may be required by the selected event.
+* First name, last name, email, and database-processing consent are always required.
 * Mobile number is not collected in the MVP.
 * PSGC address collection is optional, but supplied address codes must form a valid hierarchy.
 * Super Admin can review all records.

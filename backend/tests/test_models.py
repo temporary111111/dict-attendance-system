@@ -6,6 +6,8 @@ from app.models import (
     AttendanceRecord,
     AttendanceRecordAddress,
     Base,
+    Event,
+    EventAttendanceFieldSetting,
 )
 
 
@@ -24,6 +26,8 @@ EXPECTED_TABLES = {
     "psgc_cities_municipalities",
     "psgc_barangays",
     "attendance_record_addresses",
+    "attendance_form_fields",
+    "event_attendance_field_settings",
 }
 
 
@@ -49,6 +53,44 @@ def test_attendance_record_columns_match_fixed_attendance_form():
     }
 
     assert ("event_id", "email") in unique_columns
+
+
+def test_configurable_attendance_columns_are_nullable():
+    table = Base.metadata.tables["attendance_records"]
+
+    assert table.c.affiliation.nullable is True
+    assert table.c.designation_category.nullable is True
+    assert table.c.sex.nullable is True
+    assert table.c.first_name.nullable is False
+    assert table.c.last_name.nullable is False
+    assert table.c.email.nullable is False
+    assert table.c.consent_database_processing.nullable is False
+
+
+def test_attendance_field_settings_use_normalized_composite_key():
+    definitions = Base.metadata.tables["attendance_form_fields"]
+    settings = Base.metadata.tables["event_attendance_field_settings"]
+
+    assert tuple(column.name for column in definitions.primary_key.columns) == (
+        "field_key",
+    )
+    assert tuple(column.name for column in settings.primary_key.columns) == (
+        "event_id",
+        "field_key",
+    )
+    assert {
+        foreign_key.parent.name: foreign_key.target_fullname
+        for foreign_key in settings.foreign_keys
+    } == {
+        "event_id": "events.event_id",
+        "field_key": "attendance_form_fields.field_key",
+    }
+
+
+def test_event_has_attendance_field_settings_relationship():
+    relationship = inspect(Event).relationships["attendance_field_settings"]
+
+    assert relationship.mapper.class_ is EventAttendanceFieldSetting
 
 
 def test_attendance_record_address_references_attendance_and_psgc_tables():

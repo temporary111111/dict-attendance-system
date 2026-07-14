@@ -9,7 +9,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import Settings
-from app.models import Event, Program, ProgramAdminAssignment, User
+from app.models import (
+    AttendanceFormField,
+    Event,
+    EventAttendanceFieldSetting,
+    Program,
+    ProgramAdminAssignment,
+    User,
+)
+from app.models.attendance_fields import ATTENDANCE_FIELD_KEYS
 from app.schemas.events import CreateEventRequest, UpdateEventRequest
 from app.services.qr_code_service import (
     QRCodeGenerationError,
@@ -52,6 +60,10 @@ class InvalidEventTransitionError(Exception):
 
 class EventMustBeClosedError(Exception):
     """Raised kapag ina-archive ang currently open event."""
+
+
+class AttendanceFieldConfigurationError(Exception):
+    """Raised kapag incomplete ang system-owned fixed field definitions."""
 
 
 @dataclass
@@ -155,6 +167,16 @@ def create_event(
     if program.program_status != "active":
         raise EventProgramArchivedError
 
+    field_definitions = list(
+        db.scalars(
+            select(AttendanceFormField).order_by(AttendanceFormField.display_order)
+        ).all()
+    )
+    if {field.field_key for field in field_definitions} != set(
+        ATTENDANCE_FIELD_KEYS
+    ):
+        raise AttendanceFieldConfigurationError
+
     event = Event(
         program_id=program_id,
         created_by_user_id=current_user.user_id,
@@ -169,6 +191,13 @@ def create_event(
         opened_at=None,
         closed_at=None,
     )
+    event.attendance_field_settings = [
+        EventAttendanceFieldSetting(
+            field_key=field.field_key,
+            is_required=field.default_is_required,
+        )
+        for field in field_definitions
+    ]
     db.add(event)
     _commit_event_write(db)
     db.refresh(event)

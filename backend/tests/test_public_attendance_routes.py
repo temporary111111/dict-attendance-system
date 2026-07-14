@@ -12,6 +12,24 @@ from app.db.session import get_db
 from app.main import create_app
 
 
+DEFAULT_REQUIREMENTS = {
+    "first_name": True,
+    "middle_name": False,
+    "last_name": True,
+    "suffix": False,
+    "affiliation": True,
+    "designation_category": True,
+    "sex": True,
+    "email": True,
+    "consent_documentation_publication": True,
+    "consent_database_processing": True,
+    "signature": False,
+    "psgc_address": False,
+    "street_address": False,
+    "postal_code": False,
+}
+
+
 class FakeSession:
     def __init__(
         self,
@@ -78,11 +96,16 @@ def make_client(session, *, signature_directory=None) -> TestClient:
     return TestClient(app)
 
 
-def make_event(status="open"):
+def make_event(status="open", *, requirement_overrides=None):
+    requirements = DEFAULT_REQUIREMENTS | (requirement_overrides or {})
     return SimpleNamespace(
         event_id=5,
         event_code="public-code",
         event_status=status,
+        attendance_field_settings=[
+            SimpleNamespace(field_key=key, is_required=value)
+            for key, value in requirements.items()
+        ],
     )
 
 
@@ -196,6 +219,76 @@ def test_submit_attendance_treats_empty_signature_image_as_not_uploaded():
     assert session.added_attendance.signature_image_path is None
 
 
+def test_optional_configurable_fields_may_be_omitted():
+    event = make_event(
+        requirement_overrides={
+            "affiliation": False,
+            "designation_category": False,
+            "sex": False,
+            "consent_documentation_publication": False,
+        }
+    )
+    session = FakeSession(event=event)
+    client = make_client(session)
+    data = valid_form_data(include_address=False)
+    for key in (
+        "middle_name",
+        "affiliation",
+        "designation_category",
+        "sex",
+        "consent_documentation_publication",
+        "signature_text",
+    ):
+        data.pop(key, None)
+
+    response = client.post(
+        "/api/public/events/public-code/attendance",
+        data=data,
+    )
+
+    assert response.status_code == 201
+    attendance = session.added_attendance
+    assert attendance.affiliation is None
+    assert attendance.designation_category is None
+    assert attendance.sex is None
+    assert attendance.consent_documentation_publication is False
+    assert attendance.signature_text is None
+
+
+def test_event_policy_requires_configured_signature():
+    session = FakeSession(
+        event=make_event(requirement_overrides={"signature": True})
+    )
+    client = make_client(session)
+    data = valid_form_data(include_address=False)
+    data.pop("signature_text")
+
+    response = client.post(
+        "/api/public/events/public-code/attendance",
+        data=data,
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "SIGNATURE_REQUIRED"
+
+
+def test_event_policy_reports_missing_required_configurable_fields():
+    session = FakeSession(event=make_event())
+    client = make_client(session)
+    data = valid_form_data(include_address=False)
+    data.pop("affiliation")
+
+    response = client.post(
+        "/api/public/events/public-code/attendance",
+        data=data,
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["fields"] == {
+        "affiliation": "This field is required for this event."
+    }
+
+
 def test_submit_attendance_rejects_duplicate_email_for_event():
     session = FakeSession(
         event=make_event(),
@@ -271,7 +364,11 @@ def test_submit_attendance_rejects_mismatched_psgc_hierarchy():
 def test_submit_attendance_requires_typed_or_image_signature():
     data = valid_form_data(include_address=False)
     data["signature_text"] = ""
-    client = make_client(FakeSession(event=make_event()))
+    client = make_client(
+        FakeSession(
+            event=make_event(requirement_overrides={"signature": True})
+        )
+    )
 
     response = client.post(
         "/api/public/events/public-code/attendance",

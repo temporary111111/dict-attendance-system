@@ -11,6 +11,7 @@ This folder contains the MySQL database deliverables derived from the approved E
 | `smoke-test.sql` | Sample inserts and verification queries for testing the schema relationships. |
 | `data-dictionary.md` | Explanation of every table and field in beginner-friendly terms. |
 | `psgc-import-plan.md` | Plan for importing official PSA PSGC data into local MySQL lookup tables. |
+| `migrations/` | One-time SQL updates para sa existing database. |
 
 ## Suggested Setup Order
 
@@ -26,6 +27,12 @@ PowerShell example:
 Get-Content .\others\database\schema.sql | mysql -u root -p dict_attendance_system
 Get-Content .\others\database\seed-core.sql | mysql -u root -p dict_attendance_system
 Get-Content .\others\database\smoke-test.sql | mysql -u root -p dict_attendance_system
+```
+
+Existing database migration:
+
+```powershell
+Get-Content .\others\database\migrations\2026-07-13-add-attendance-field-settings.sql | mysql -u root -p dict_attendance_system
 ```
 
 `cmd.exe` example:

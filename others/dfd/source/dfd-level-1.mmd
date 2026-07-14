@@ -6,7 +6,7 @@ flowchart LR
 
   p1((1.0 Authenticate Admin User))
   p2((2.0 Manage Users, Programs, and Assignments))
-  p3((3.0 Manage Events))
+  p3((3.0 Manage Events and Field Requirements))
   p4((4.0 Generate Attendance Link and QR Code))
   p5((5.0 Collect Attendance Submission))
   p6((6.0 Validate, Store, and Review Attendance Records))
@@ -16,7 +16,7 @@ flowchart LR
   d1[(D1 Users)]
   d2[(D2 Roles and Program Assignments)]
   d3[(D3 Programs)]
-  d4[(D4 Events)]
+  d4[(D4 Event Configuration)]
   d5[(D5 Attendance Records)]
   d6[(D6 Attendance Sheet Exports)]
   d7[(D7 Audit Logs)]
@@ -33,8 +33,8 @@ flowchart LR
   p2 <--> d3
   p2 --> d7
 
-  super_admin -->|Event details/status changes| p3
-  program_admin -->|Create/update events under assigned program| p3
+  super_admin -->|Event details, status, field requirements| p3
+  program_admin -->|Assigned event and field requirement changes| p3
   p3 <--> d2
   p3 <--> d3
   p3 <--> d4

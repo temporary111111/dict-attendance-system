@@ -17,6 +17,7 @@ from app.models import (
     PSGCProvince,
     PSGCRegion,
 )
+from app.models.attendance_fields import ATTENDANCE_FIELD_KEYS
 from app.schemas.public_attendance import AttendanceSubmissionRequest
 from app.services.signature_service import (
     remove_signature_image,
@@ -44,6 +45,11 @@ class SignatureRequiredError(Exception):
     """Raised kapag walang typed o uploaded signature."""
 
 
+class AttendanceFieldValidationError(Exception):
+    def __init__(self, fields: dict[str, str]):
+        self.fields = fields
+
+
 @dataclass
 class AttendanceSubmissionResult:
     attendance: AttendanceRecord
@@ -58,7 +64,10 @@ def _is_duplicate_entry_error(error: IntegrityError) -> bool:
 def get_public_event(db: Session, event_code: str) -> Event:
     event = db.scalar(
         select(Event)
-        .options(selectinload(Event.program))
+        .options(
+            selectinload(Event.program),
+            selectinload(Event.attendance_field_settings),
+        )
         .where(
             Event.event_code == event_code,
             Event.event_status != "archived",
@@ -67,6 +76,55 @@ def get_public_event(db: Session, event_code: str) -> Event:
     if event is None:
         raise PublicEventNotFoundError
     return event
+
+
+def attendance_field_requirements(event: Event) -> dict[str, bool]:
+    """Ginagawang validated map ang per-event fixed field snapshot."""
+    requirements = {
+        setting.field_key: bool(setting.is_required)
+        for setting in event.attendance_field_settings
+    }
+    if set(requirements) != set(ATTENDANCE_FIELD_KEYS):
+        raise RuntimeError("Event attendance field settings are incomplete.")
+    return requirements
+
+
+def _validate_event_field_requirements(
+    payload: AttendanceSubmissionRequest,
+    requirements: dict[str, bool],
+    *,
+    has_uploaded_signature: bool,
+) -> None:
+    missing: dict[str, str] = {}
+    direct_fields = (
+        "middle_name",
+        "suffix",
+        "affiliation",
+        "designation_category",
+        "sex",
+        "consent_documentation_publication",
+        "street_address",
+        "postal_code",
+    )
+    for field_key in direct_fields:
+        if requirements[field_key] and getattr(payload, field_key) is None:
+            missing[field_key] = "This field is required for this event."
+
+    if requirements["psgc_address"]:
+        for field_key in (
+            "region_code",
+            "city_municipality_code",
+            "barangay_code",
+        ):
+            if getattr(payload, field_key) is None:
+                missing[field_key] = "This field is required for this event."
+
+    if requirements["signature"] and (
+        payload.signature_text is None and not has_uploaded_signature
+    ):
+        raise SignatureRequiredError
+    if missing:
+        raise AttendanceFieldValidationError(missing)
 
 
 def _validate_psgc_address(
@@ -121,6 +179,18 @@ def submit_attendance(
     if event.event_status != "open":
         raise EventNotOpenError
 
+    requirements = attendance_field_requirements(event)
+    has_uploaded_signature = (
+        signature_image is not None and bool(signature_image.filename)
+    )
+    _validate_event_field_requirements(
+        payload,
+        requirements,
+        has_uploaded_signature=has_uploaded_signature,
+    )
+
+    _validate_psgc_address(db, payload)
+
     duplicate_id = db.scalar(
         select(AttendanceRecord.attendance_id).where(
             AttendanceRecord.event_id == event.event_id,
@@ -129,13 +199,6 @@ def submit_attendance(
     )
     if duplicate_id is not None:
         raise DuplicateAttendanceError
-
-    _validate_psgc_address(db, payload)
-    has_uploaded_signature = (
-        signature_image is not None and bool(signature_image.filename)
-    )
-    if payload.signature_text is None and not has_uploaded_signature:
-        raise SignatureRequiredError
 
     signature_image_path = None
     if has_uploaded_signature:
@@ -156,7 +219,7 @@ def submit_attendance(
         designation_category=payload.designation_category,
         sex=payload.sex,
         email=str(payload.email),
-        consent_documentation_publication=(
+        consent_documentation_publication=bool(
             payload.consent_documentation_publication
         ),
         consent_database_processing=payload.consent_database_processing,

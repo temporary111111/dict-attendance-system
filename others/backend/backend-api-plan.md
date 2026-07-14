@@ -144,6 +144,8 @@ Important rules:
 | `POST` | `/api/programs/{programId}/events` | Admin | Create an event under a program. | `events`, `program_admin_assignments` |
 | `GET` | `/api/events/{eventId}` | Admin | View event details. | `events`, `programs` |
 | `PATCH` | `/api/events/{eventId}` | Admin | Update allowed event fields. | `events`, `program_admin_assignments` |
+| `GET` | `/api/events/{eventId}/attendance-field-settings` | Admin | View the event's fixed field requirements. | `attendance_form_fields`, `event_attendance_field_settings` |
+| `PATCH` | `/api/events/{eventId}/attendance-field-settings` | Admin | Change configurable fields between required and optional. | `attendance_form_fields`, `event_attendance_field_settings`, `audit_logs` |
 | `POST` | `/api/events/{eventId}/attendance-link` | Admin | Generate or refresh public attendance link and QR data. | `events` |
 | `POST` | `/api/events/{eventId}/open` | Admin | Open attendance collection. | `events` |
 | `POST` | `/api/events/{eventId}/close` | Admin | Close attendance collection. | `events` |
@@ -154,6 +156,11 @@ Important rules:
 * Super Admin can create events under any program.
 * Program Admin can create events only under assigned programs.
 * Program Admin can edit events only under assigned programs.
+* Each new event receives a snapshot of every fixed attendance field and its default requirement.
+* Authorized admins may change configurable requirements only while the event is `draft` or `open`.
+* First name, last name, email, and database-processing consent are locked as required.
+* Admins cannot add, remove, rename, reorder, or hide fields; this is not a form builder.
+* Actual requirement changes create one audit log entry. Existing attendance records are not revalidated.
 * `events.event_code` must be unique.
 * `events.public_attendance_url` is the public URL used by the QR code.
 * Public attendance should accept submissions only when the event is open.
@@ -176,7 +183,7 @@ Suggested event statuses:
 
 | Method | Endpoint | Auth | Purpose | Tables |
 | --- | --- | --- | --- | --- |
-| `GET` | `/api/public/events/{eventCode}` | Public | Load public event details for the attendance page. | `events`, `programs` |
+| `GET` | `/api/public/events/{eventCode}` | Public | Load public event details and its fixed field requirements. | `events`, `programs`, `event_attendance_field_settings` |
 | `POST` | `/api/public/events/{eventCode}/attendance` | Public | Submit fixed attendance details. | `attendance_records`, `attendance_record_addresses`, PSGC tables |
 
 Fixed attendance inputs:
@@ -215,8 +222,11 @@ Important rules:
 * If the same email submits again for the same event, the API should return `409 DUPLICATE_ATTENDANCE` and should not create another attendance row under the current schema.
 * The whole address section is optional. If any address value is submitted, region, city or municipality, and barangay are required; province remains optional for non-province PSGC areas.
 * Submitted PSGC codes must exist, be active, and form a matching hierarchy in the local PSGC tables.
-* Database processing consent must be accepted. Documentation/publication consent may be declined.
-* Either a typed signature or uploaded PNG/JPEG signature is required.
+* Database processing consent is locked as required and must be accepted.
+* Affiliation, designation/category, sex, and the documentation/publication consent response are required by default but configurable per event.
+* Middle name, suffix, signature, PSGC address, street address, and postal code are optional by default but configurable per event.
+* When documentation/publication consent is required, the attendee must answer it; an explicit decline is still a valid response.
+* When signature is required, either a typed signature or uploaded PNG/JPEG signature satisfies it.
 * Uploaded signatures are verified, re-encoded as PNG, and stored in a private directory that is not exposed as static media.
 * The confirmation message should not expose private admin data.
 

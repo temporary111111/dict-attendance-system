@@ -54,9 +54,9 @@ class AttendanceSheetEvent:
 class AttendanceSheetRow:
     row_number: int
     attendee_name: str
-    affiliation: str
-    designation_category: str
-    sex: Literal["F", "M"]
+    affiliation: str | None
+    designation_category: str | None
+    sex: Literal["F", "M"] | None
     email: str
     consent_documentation_publication: bool
     consent_database_processing: bool
@@ -111,7 +111,7 @@ def _styles() -> dict[str, ParagraphStyle]:
 
 
 def _text(value: object, style: ParagraphStyle) -> Paragraph:
-    return Paragraph(escape(str(value)), style)
+    return Paragraph(escape("" if value is None else str(value)), style)
 
 
 def _event_date(value: date) -> str:
