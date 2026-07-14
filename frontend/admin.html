@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Admin | DICT Attendance System</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./css/base.css" />
+    <link rel="stylesheet" href="./css/admin.css" />
+    <script src="./js/config.js"></script>
+    <script type="module" src="./js/admin.js"></script>
+  </head>
+  <body class="admin-page">
+    <div id="app-loading" class="app-loading" role="status">
+      <div class="large-spinner"></div>
+      <span>Loading admin workspace...</span>
+    </div>
+
+    <div id="admin-app" class="admin-shell" hidden>
+      <aside id="sidebar" class="sidebar" aria-label="Admin navigation">
+        <a class="sidebar-brand" href="#dashboard" aria-label="DICT Attendance System dashboard">
+          <img src="./assets/dict-header.png" alt="DICT" />
+          <span>Attendance System</span>
+        </a>
+
+        <nav class="sidebar-nav">
+          <button class="nav-item" data-view="dashboard" type="button">
+            <span class="nav-symbol" aria-hidden="true">▦</span>
+            <span>Dashboard</span>
+          </button>
+          <button class="nav-item" data-view="programs" type="button">
+            <span class="nav-symbol" aria-hidden="true">▤</span>
+            <span>Programs</span>
+          </button>
+          <button class="nav-item" data-view="events" type="button">
+            <span class="nav-symbol" aria-hidden="true">□</span>
+            <span>Events</span>
+          </button>
+          <button id="audit-nav" class="nav-item" data-view="audit" type="button" hidden>
+            <span class="nav-symbol" aria-hidden="true">◷</span>
+            <span>Audit Logs</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-user">
+          <div id="user-initials" class="user-avatar" aria-hidden="true"></div>
+          <div class="user-meta">
+            <strong id="sidebar-user-name"></strong>
+            <span id="sidebar-user-role"></span>
+          </div>
+          <button id="logout-button" class="logout-button" type="button" title="Sign out" aria-label="Sign out">↪</button>
+        </div>
+      </aside>
+
+      <button id="sidebar-scrim" class="sidebar-scrim" type="button" aria-label="Close navigation" hidden></button>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button id="menu-button" class="icon-button menu-button" type="button" title="Open navigation" aria-label="Open navigation">☰</button>
+            <div>
+              <p class="topbar-context">DICT ATTENDANCE</p>
+              <h1 id="page-title">Dashboard</h1>
+            </div>
+          </div>
+          <button id="refresh-button" class="secondary-button refresh-button" type="button">
+            <span aria-hidden="true">↻</span>
+            <span>Refresh</span>
+          </button>
+        </header>
+
+        <main id="view-root" class="view-root" tabindex="-1"></main>
+      </section>
+    </div>
+
+    <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  </body>
+</html>

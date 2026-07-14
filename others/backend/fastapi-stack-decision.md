@@ -91,8 +91,10 @@ FastAPI is a practical fit because:
 * The frontend remains separately hostable and calls the backend through its
   configurable API base URL.
 
-## Remaining Non-Decisions
+## Current Frontend Implementation
 
-* Which PDF or spreadsheet library will generate the official attendance sheet.
-* Where generated attendance-sheet exports will be stored.
-* Whether the first frontend version will run from a static server or a simple deployed static host.
+The first frontend version is a separate static vanilla HTML, CSS, and
+JavaScript app under `frontend/`. Local development uses Python's static HTTP
+server on `http://127.0.0.1:5500`, while `frontend/js/config.js` controls the
+backend API base URL. This keeps deployment open to same-server or separate
+static hosting later.
