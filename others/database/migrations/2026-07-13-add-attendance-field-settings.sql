@@ -64,12 +64,11 @@ ON DUPLICATE KEY UPDATE
   is_admin_configurable = VALUES(is_admin_configurable),
   display_order = VALUES(display_order);
 
-INSERT INTO event_attendance_field_settings (event_id, field_key, is_required)
+-- Missing snapshots lang ang idagdag para hindi ma-overwrite ang dating admin choices.
+INSERT IGNORE INTO event_attendance_field_settings (event_id, field_key, is_required)
 SELECT e.event_id, f.field_key, f.default_is_required
 FROM events e
-CROSS JOIN attendance_form_fields f
-ON DUPLICATE KEY UPDATE
-  is_required = event_attendance_field_settings.is_required;
+CROSS JOIN attendance_form_fields f;
 
 ALTER TABLE attendance_records
   MODIFY COLUMN affiliation VARCHAR(200) NULL,

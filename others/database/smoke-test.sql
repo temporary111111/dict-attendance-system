@@ -186,13 +186,11 @@ ON DUPLICATE KEY UPDATE
   updated_at = CURRENT_TIMESTAMP;
 
 -- Snapshot ng fixed field defaults para sa sample event.
-INSERT INTO event_attendance_field_settings (event_id, field_key, is_required)
+INSERT IGNORE INTO event_attendance_field_settings (event_id, field_key, is_required)
 SELECT e.event_id, f.field_key, f.default_is_required
 FROM events e
 CROSS JOIN attendance_form_fields f
-WHERE e.event_code = 'SMOKE-TEST-ORIENTATION'
-ON DUPLICATE KEY UPDATE
-  is_required = event_attendance_field_settings.is_required;
+WHERE e.event_code = 'SMOKE-TEST-ORIENTATION';
 
 -- 6. Insert minimal PSGC sample rows so address foreign keys can be tested.
 INSERT INTO psgc_regions (region_code, region_name, is_active)
