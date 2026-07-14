@@ -300,6 +300,11 @@ Important rules:
 * Super Admin reports can include all programs and events.
 * Program Admin reports must be filtered to assigned programs only.
 * Reports should clearly separate valid, duplicate, invalid, and void records.
+* Dashboard operational totals include active programs and non-archived events only.
+* Program summaries retain draft, open, closed, and archived event counts for historical reporting.
+* Program summaries accept optional inclusive `dateFrom` and `dateTo` filters based on event date; `dateFrom` cannot be later than `dateTo`.
+* Event attendance reports include status, sex, and documentation/publication consent breakdowns.
+* Detailed attendee rows remain in the paginated attendance-record API; the official full attendee list remains the event attendance-sheet PDF.
 
 ## 13. PSGC Lookup API
 
@@ -322,6 +327,17 @@ Important rules:
 | Method | Endpoint | Auth | Purpose | Tables |
 | --- | --- | --- | --- | --- |
 | `GET` | `/api/audit-logs` | Super Admin | List audit logs with filters. | `audit_logs`, `users` |
+
+Supported filters:
+
+* `page` and `pageSize` for newest-first pagination; page size is limited to 100.
+* `userId`, `action`, `entityType`, and `entityId` for exact filtering.
+* Inclusive `dateFrom` and `dateTo`; `dateFrom` cannot be later than `dateTo`.
+* `search` across action, entity type, description, and actor name.
+
+The response may include before/after JSON, IP address, and user agent because
+the endpoint is restricted to Super Admin. The actor is nullable so historical
+logs remain readable if the related user reference becomes null.
 
 Actions that should be logged:
 

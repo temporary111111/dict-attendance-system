@@ -239,6 +239,41 @@ Each request returns a private, non-cacheable PDF attachment. The server does
 not retain the generated file: `attendance_sheet_exports.file_path` remains
 `NULL`, while the export summary and audit log are saved in one transaction.
 
+## Dashboard And Reports
+
+Authenticated admins can retrieve role-scoped operational summaries through:
+
+```text
+GET /api/dashboard/summary
+GET /api/reports/programs/{programId}/summary
+GET /api/reports/events/{eventId}/attendance
+```
+
+The dashboard counts active programs, non-archived events, attendance status
+totals, and five recent visible events. Super Admins see all matching data;
+Program Admins see only programs with an active assignment.
+
+Program summaries include all event statuses for the selected accessible
+program and support optional inclusive `dateFrom` and `dateTo` event-date
+filters. Event reports include attendance-status, sex, and documentation
+consent breakdowns. Detailed attendee rows remain available through the
+paginated attendance-record endpoint, while the official attendee list is
+generated through the attendance-sheet PDF endpoint.
+
+## Audit Logs
+
+Only Super Admins can browse audit history:
+
+```text
+GET /api/audit-logs
+```
+
+The endpoint is ordered newest first and supports `page`, `pageSize`,
+`userId`, `action`, `entityType`, `entityId`, inclusive `dateFrom`/`dateTo`,
+and `search`. Search checks the action, entity type, description, and actor
+name. Results include the affected entity, before/after JSON, request metadata,
+and a nullable actor for historical rows whose user no longer exists.
+
 ## Create Local Super Admin
 
 After running `others/database/schema.sql` and `others/database/seed-core.sql`,
