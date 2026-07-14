@@ -210,10 +210,7 @@ def _attendance_table(
         [_text(value, styles["header"]) for value in header]
     ]
     if not rows:
-        data.append(
-            [_text(1, styles["small_center"])]
-            + [_text("", styles["small_center"]) for _ in range(9)]
-        )
+        data.append([_text(1, styles["small_center"])] + [""] * 9)
 
     for row in rows:
         data.append(
