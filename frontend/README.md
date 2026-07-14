@@ -7,8 +7,11 @@ Hindi kailangang ilagay o i-serve ng FastAPI ang frontend files.
 
 * Login with stateless JWT access token
 * Role-scoped dashboard summary
-* Searchable visible program list
-* Searchable visible event list
+* Program creation and editing for Super Admin
+* Event creation, editing, QR/link generation, and attendance lifecycle actions
+* Per-event fixed attendance field requirements
+* Attendance record review and status update for authorized admins
+* Generated DICT attendance-sheet PDF download per event
 * Paginated and filtered audit logs for Super Admin only
 
 ## Local Run

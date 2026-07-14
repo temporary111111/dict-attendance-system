@@ -104,3 +104,42 @@ export async function apiRequest(path, options = {}) {
 
   return payload;
 }
+
+export async function apiDownload(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  const token = getAccessToken();
+
+  if (options.auth !== false && token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  let response;
+  try {
+    response = await fetch(apiUrl(path), { ...options, headers });
+  } catch {
+    throw new ApiError("Hindi ma-connect sa backend server.", {
+      code: "NETWORK_ERROR",
+    });
+  }
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    const error = payload?.error || payload?.detail?.error || {};
+    if (response.status === 401 && options.auth !== false) {
+      clearSession();
+      window.location.replace("./index.html?expired=1");
+    }
+    throw new ApiError(error.message || `Request failed (${response.status}).`, {
+      status: response.status,
+      code: error.code,
+      fields: error.fields,
+    });
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: response.headers
+      .get("content-disposition")
+      ?.match(/filename="?([^";]+)"?/i)?.[1],
+  };
+}
