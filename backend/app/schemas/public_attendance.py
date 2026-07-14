@@ -142,6 +142,7 @@ class AttendanceSubmissionRequest(BaseModel):
         "middle_name",
         "suffix",
         "signature_text",
+        "signature_image",
         "region_code",
         "province_code",
         "city_municipality_code",

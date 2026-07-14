@@ -181,6 +181,21 @@ def test_submit_attendance_saves_normalized_record_and_psgc_address():
     assert session.committed is True
 
 
+def test_submit_attendance_treats_empty_signature_image_as_not_uploaded():
+    session = FakeSession(event=make_event())
+    client = make_client(session)
+    data = valid_form_data(include_address=False)
+    data["signature_image"] = ""
+
+    response = client.post(
+        "/api/public/events/public-code/attendance",
+        data=data,
+    )
+
+    assert response.status_code == 201
+    assert session.added_attendance.signature_image_path is None
+
+
 def test_submit_attendance_rejects_duplicate_email_for_event():
     session = FakeSession(
         event=make_event(),
