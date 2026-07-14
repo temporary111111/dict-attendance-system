@@ -86,7 +86,7 @@ Data received from the system:
 * Event records
 * Generated attendance link and QR code
 * Attendance records for events under assigned programs
-* Downloadable attendance sheets for events under assigned programs, if allowed
+* Downloadable attendance sheets for events under actively assigned programs
 * Event/program reports for assigned scope
 
 ---

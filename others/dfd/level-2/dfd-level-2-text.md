@@ -61,9 +61,8 @@ generate/download attendance sheets for any event.
 
 ## 3.3 Program Admin
 
-The Program Admin may view and update attendance status only for events under
-actively assigned programs. Attendance sheet download remains subject to office
-policy.
+The Program Admin may view, update attendance status, and generate attendance
+sheets only for events under actively assigned programs.
 
 ## 4. Data Stores
 
@@ -379,7 +378,8 @@ Process:
 
 * Check if the event exists
 * Check if the user has permission to access the event
-* If Program Admin, verify that the event belongs to an assigned program
+* If Program Admin, verify an active assignment to the event's program
+* Allow generation for draft, open, closed, and archived events
 
 Data stores used:
 
@@ -404,9 +404,9 @@ Input:
 Process:
 
 * Retrieve event details
-* Retrieve valid attendance records
-* Exclude void records from official count by default
-* Include duplicate/invalid records only if admin selects an audit/review view
+* Retrieve all valid attendance records from the selected event only
+* Exclude duplicate, invalid, and void records from the PDF and official count
+* Order records chronologically for stable row numbering
 
 Data stores used:
 
@@ -435,7 +435,7 @@ Process:
 * Add event title, venue, and date
 * Add DICT heading and privacy notice
 * Combine separated name fields into the template's Name column
-* Map affiliation to the school, agency, office, or organization column
+* Map affiliation to the general Affiliation column
 * Map designation/category
 * Map sex into F/M columns
 * Map email address
@@ -456,12 +456,13 @@ The system generates the attendance sheet file.
 Input:
 
 * Formatted attendance sheet content
-* Requested export format
+* Fixed PDF export format
 
 Process:
 
-* Generate PDF, Excel, or other approved format
-* Store file path if the system keeps generated files
+* Generate a landscape A4 PDF in memory
+* Return the PDF directly with private, non-cacheable headers
+* Keep the export file path null because the server retains no PDF copy
 * Count exported records
 
 Data store used:
@@ -489,7 +490,7 @@ Input:
 Process:
 
 * Create audit log entry
-* Include action type: GENERATE_ATTENDANCE_SHEET or DOWNLOAD_ATTENDANCE_SHEET
+* Include action type: generated_attendance_sheet
 * Include affected event and export record
 
 Data store used:
@@ -502,7 +503,7 @@ Output:
 
 ---
 
-## 6. Main Data Flow Summary
+## 8. Main Data Flow Summary
 
 1. External attendee opens event attendance link or scans QR code.
 2. System checks event status.
@@ -524,7 +525,7 @@ Output:
 
 ---
 
-## 7. Critical Rules
+## 9. Critical Rules
 
 1. Public attendance submission is allowed only for open events.
 2. Program Admin can only view or review records for actively assigned program events.
@@ -540,10 +541,13 @@ Output:
 12. An actual attendance status change requires a reason and an audit log in the same transaction.
 13. Submitted attendee details are not freely edited or hard deleted in the MVP.
 14. Uploaded signature images are private and require authenticated, role-based access.
+15. One generated PDF represents one selected event and all of its valid attendees.
+16. Event status does not block an authorized attendance-sheet export.
+17. The server records export/audit history but does not retain generated PDF files.
 
 ---
 
-## 8. Resolved Attendance Decisions
+## 10. Resolved Attendance Decisions
 
 The current attendance workflow uses these approved decisions:
 
@@ -553,4 +557,4 @@ The current attendance workflow uses these approved decisions:
 * PSGC address collection is optional, but supplied address codes must form a valid hierarchy.
 * Super Admin can review all records.
 * Program Admin can review records only under actively assigned programs.
-* Attendance sheet download permission for Program Admin remains an export-policy decision.
+* Program Admin can generate attendance sheets only for actively assigned program events.

@@ -105,7 +105,7 @@ def html_for(source: str, title: str, mermaid_js_path: Path) -> str:
 
 class CDP:
     def __init__(self, ws_url: str):
-        self.ws = websocket.create_connection(ws_url, timeout=10, origin="http://localhost")
+        self.ws = websocket.create_connection(ws_url, timeout=60, origin="http://localhost")
         self.msg_id = 0
 
     def call(self, method: str, params: dict | None = None) -> dict:

@@ -48,7 +48,7 @@ flowchart LR
   p67 --> d7
   p67 -->|Paginated records, detail, or status result| admin
 
-  admin -->|Select event and request attendance sheet| p71
+  admin -->|Select one event and request attendance PDF| p71
   p71 <--> d2
   p71 <--> d4
   p71 --> p72
@@ -57,7 +57,7 @@ flowchart LR
   p72 --> p73
   p73 --> p74
   p74 --> d6
-  p74 -->|Downloadable attendance sheet| admin
+  p74 -->|Private downloadable attendance PDF| admin
   p74 --> p75
   p75 --> d7
 

@@ -69,7 +69,7 @@ flowchart LR
   p7 --> d6
   p7 --> d7
   p7 -->|Dashboard, reports, attendance sheets| super_admin
-  p7 -->|Reports and sheets for assigned program, if permitted| program_admin
+  p7 -->|Reports and sheets for actively assigned program| program_admin
 
   super_admin -->|Audit log request| p8
   p8 <--> d7

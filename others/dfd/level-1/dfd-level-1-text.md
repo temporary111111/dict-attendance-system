@@ -388,6 +388,8 @@ Process:
 * Apply role-based filters
 * Generate summary or report
 * Generate attendance sheet using DICT template format
+* Include all valid attendees of one selected event
+* Return the PDF directly without retaining a server file
 * Record download/export if requested
 
 Data stores used:
@@ -483,7 +485,7 @@ Program Admin sends:
 * QR/link generation requests
 * Attendance list/detail requests for assigned programs
 * Attendance status changes with reasons for assigned programs
-* Attendance sheet generation requests, if allowed
+* Attendance sheet generation requests for assigned programs
 * Report requests
 
 Program Admin receives:
@@ -493,7 +495,7 @@ Program Admin receives:
 * Event records
 * QR codes and public attendance links
 * Attendance records for events under assigned programs
-* Attendance sheets for events under assigned programs, if allowed
+* Attendance sheets for events under actively assigned programs
 * Reports for assigned programs and their events
 
 ---

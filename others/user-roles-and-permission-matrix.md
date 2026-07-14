@@ -62,7 +62,7 @@ The Program Admin is responsible for:
 * Opening and closing attendance collection for events under assigned programs
 * Generating QR codes and public attendance links for events under assigned programs
 * Viewing attendance records under assigned programs
-* Generating attendance sheets for events under assigned programs, if allowed
+* Generating attendance sheets for events under actively assigned programs
 * Generating reports for assigned programs and their events
 
 The Program Admin must not access programs, events, attendance records, reports, or downloads outside their assigned programs.
@@ -118,9 +118,9 @@ The External Attendee:
 | Delete attendance records                | No, void only | No                          | No                       |
 | Mark attendance as valid/duplicate/invalid/void | Yes   | Yes, events under assigned programs only | No           |
 | Generate all attendance sheets           | Yes         | No                            | No                       |
-| Generate assigned program event attendance sheet | Yes | Yes, if allowed by policy     | No                       |
+| Generate assigned program event attendance sheet | Yes | Yes, assigned programs only   | No                       |
 | Download all attendance sheets           | Yes         | No                            | No                       |
-| Download assigned attendance sheets      | Yes         | Yes, if allowed by policy     | No                       |
+| Download assigned attendance sheets      | Yes         | Yes, assigned programs only   | No                       |
 | View reports for all programs            | Yes         | No                            | No                       |
 | View reports for assigned programs       | Yes         | Yes                           | No                       |
 | Export all reports                       | Yes         | No                            | No                       |
@@ -265,13 +265,14 @@ Recommended rule:
 
 ## 5.9 Attendance Sheet Download
 
-The downloadable attendance sheet may contain personal information, consent responses, and signatures if implemented.
+The downloadable attendance sheet contains personal information, consent responses, and typed or image signatures.
 
 Recommended rule:
 
 * Super Admin: can generate and download attendance sheets for all events
-* Program Admin: can generate and download attendance sheets only for events under assigned programs, if allowed by office policy
+* Program Admin: can generate and download attendance sheets only for events under actively assigned programs
 * All downloads must be recorded in the audit trail
+* Event status does not block an authorized attendance-sheet export
 
 ---
 
@@ -325,7 +326,7 @@ A Program Admin can access only:
 * Programs assigned to them
 * Events under assigned programs
 * Attendance records under events in assigned programs
-* Attendance sheets under events in assigned programs, if allowed
+* Attendance sheets under events in actively assigned programs
 * Reports under assigned programs and their events
 
 A Program Admin must not access:
@@ -437,7 +438,7 @@ Allowed only if:
 
 * User role is Program Admin
 * Event belongs to a program assigned to that Program Admin
-* Download permission is enabled for Program Admins
+* Program assignment is active
 
 ---
 
@@ -459,7 +460,7 @@ Can:
 * Generate QR codes and attendance links for events under assigned programs
 * Open/close events under assigned programs
 * View attendance records for events under assigned programs
-* Generate attendance sheets for events under assigned programs, if allowed
+* Generate attendance sheets for events under actively assigned programs
 * Generate reports for assigned programs and their events
 * Export assigned reports, if allowed
 
@@ -498,7 +499,7 @@ The system should log the following actions:
 | Close event attendance              | Yes                    | Yes                      |
 | Archive event                       | Yes                    | No                       |
 | Generate attendance link / QR code  | Yes                    | Yes                      |
-| Generate/download attendance sheet  | Yes                    | Yes, if allowed          |
+| Generate/download attendance sheet  | Yes                    | Yes, assigned programs only |
 | Export report                       | Yes                    | Yes, if allowed          |
 | Mark attendance status              | Yes                    | Yes, assigned programs only |
 

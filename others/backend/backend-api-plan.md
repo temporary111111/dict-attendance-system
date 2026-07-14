@@ -263,18 +263,19 @@ Status request:
 
 | Method | Endpoint | Auth | Purpose | Tables |
 | --- | --- | --- | --- | --- |
-| `POST` | `/api/events/{eventId}/attendance-sheet-exports` | Admin | Generate an official attendance sheet file. | `events`, `programs`, `attendance_records`, `attendance_sheet_exports` |
-| `GET` | `/api/events/{eventId}/attendance-sheet-exports` | Admin | List export history for an event. | `attendance_sheet_exports` |
-| `GET` | `/api/attendance-sheet-exports/{exportId}/download` | Admin | Download a generated attendance sheet file. | `attendance_sheet_exports` |
+| `POST` | `/api/events/{eventId}/attendance-sheet-exports` | Admin | Generate and directly download the selected event's official PDF. | `events`, `programs`, `attendance_records`, `attendance_sheet_exports`, `audit_logs` |
 
 Important rules:
 
 * The generated file must follow the fixed DICT attendance sheet template format.
 * The system does not import a template at runtime in the MVP. The layout should be implemented in the export generator.
-* Exports should normally include only `attendance_status = 'valid'`.
+* One request selects one event and includes all of that event's `attendance_status = 'valid'` records.
 * `attendance_sheet_exports.total_records` stores the number of attendance rows included in the generated file.
-* `attendance_sheet_exports.file_path` stores where the generated file is saved.
-* Program Admin export/download is allowed only for events under assigned programs and only if office policy allows it.
+* The MVP generates PDF only and returns it directly with private, non-cacheable headers.
+* The server does not retain generated PDF files, so `attendance_sheet_exports.file_path` remains `NULL`.
+* Generation is allowed for draft, open, closed, and archived events.
+* Super Admin can export any event. Program Admin can export events only under actively assigned programs.
+* The export row and audit row are saved in one database transaction.
 
 ## 12. Dashboard and Report API
 
@@ -376,7 +377,7 @@ Public attendance validation:
 6. Event endpoints and public attendance link generation.
 7. Public event lookup and attendance submission endpoints.
 8. Attendance record list and status endpoints.
-9. Attendance sheet export generation and download endpoints.
+9. Attendance sheet PDF generation and direct-download endpoint.
 10. Dashboard and report endpoints.
 11. PSGC lookup endpoints.
 12. Audit log endpoints.
@@ -386,8 +387,6 @@ Public attendance validation:
 These decisions are not finalized by the current docs:
 
 * Password reset process.
-* PDF or spreadsheet export library.
-* Whether Program Admins are allowed to generate and download attendance sheets in the MVP.
 * Whether contact number should be added to `attendance_records`; it is not in the current tested schema.
 
 Decisions already implemented:
@@ -397,6 +396,8 @@ Decisions already implemented:
 * Signature images use configurable private local storage.
 * The first submission API accepts either typed or uploaded image signatures.
 * Address fields are optional but are validated as one PSGC hierarchy when supplied.
+* Attendance sheets use ReportLab PDF generation and Pypdf verification.
+* Assigned Program Admins may generate attendance sheets for their program events.
 
 ## 19. MVP Non-Goals
 

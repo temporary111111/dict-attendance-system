@@ -66,7 +66,7 @@ The Program Admin can:
 * Generate QR codes and public attendance links for events under assigned programs
 * View attendance records for events under assigned programs
 * Review and update attendance record status for events under actively assigned programs
-* Generate and download attendance sheets for events under assigned programs, if allowed by policy
+* Generate and download attendance sheets for events under actively assigned programs
 * View reports for assigned programs and their events
 * Export reports, if allowed by system policy
 
@@ -279,6 +279,8 @@ The system shall generate downloadable attendance sheets using the DICT template
 Functional requirements:
 
 * The system shall generate an attendance sheet for a selected event.
+* One generated PDF shall include all `valid` attendance records from that selected event only.
+* The system shall allow generation for draft, open, closed, and archived events.
 * The attendance sheet shall include the event title, venue, date, office heading from the program's owning organizational unit, privacy notice, and attendance table.
 * The attendance table shall follow the provided template columns:
   * row number
@@ -293,6 +295,8 @@ Functional requirements:
 * The system shall paginate rows as needed.
 * The system shall allow authorized admins to download the generated attendance sheet.
 * The system shall record attendance sheet download/export actions in the audit trail.
+* The system shall return the generated PDF directly without retaining a permanent server copy.
+* The export history and audit entry shall be saved in one database transaction.
 
 Recommended output formats:
 
@@ -598,10 +602,9 @@ Possible future improvements:
 The implemented attendance workflow is already defined above. These remaining
 questions affect future export, reporting, and governance work:
 
-1. Should Program Admins be allowed to download official attendance sheets, or should this remain Super Admin-only?
-2. Which final export formats are required: PDF, Excel, CSV, or a selected combination?
-3. What official data retention period and final privacy wording should the system use?
-4. Should archived programs and events still be included in summary reports?
+1. Should Phase 2 add Excel or CSV in addition to the implemented PDF export?
+2. What official data retention period and final privacy wording should the system use?
+3. Should archived programs and events still be included in summary reports?
 
 ---
 
@@ -619,7 +622,7 @@ The MVP is considered successful if:
 * Duplicate or invalid submissions can be flagged.
 * Attendance records can be searched, filtered, and viewed per event with role-based access.
 * Super Admins and assigned Program Admins can review record status with a required reason and audit trail.
-* Event attendance sheets can be generated and downloaded using the supervisor-provided DICT template.
+* One selected event's valid attendees can be downloaded as a DICT-format PDF by an authorized admin.
 * Reports can be generated per event and per program.
 * Important admin actions are recorded in the audit trail.
 * The system is usable for actual DICT program/event attendance monitoring.

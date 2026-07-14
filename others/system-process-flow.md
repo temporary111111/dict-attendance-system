@@ -299,18 +299,20 @@ Avoid hard deleting attendance records. Use status fields instead.
 1. Admin opens the event details page or Reports module.
 2. Admin selects Generate Attendance Sheet.
 3. System verifies that the admin has access to the event.
-4. System retrieves valid attendance records for the selected event.
-5. System formats the records using the DICT attendance sheet template.
-6. System includes:
+4. System accepts the selected event regardless of its current event status.
+5. System retrieves all valid attendance records for that selected event only.
+6. System formats the records using the DICT attendance sheet template.
+7. System includes:
    * DICT heading
    * Event title
    * Venue
    * Event date
    * Privacy notice
    * Attendance table
-7. System paginates attendance rows as needed.
-8. Admin downloads the generated file.
-9. System records the download/export action in the audit trail.
+8. System paginates attendance rows as needed.
+9. System creates the PDF in memory and returns it directly to the admin.
+10. System saves the export summary and audit entry in one transaction.
+11. Admin downloads the generated file; the server does not retain a PDF copy.
 
 The attendance sheet should include the following columns:
 
@@ -515,6 +517,10 @@ The attendance page uses fixed fields based on the required DICT attendance form
 ## Rule 7: Generate Template-Based Attendance Sheets
 
 The official event attendance sheet is generated after or during the event using stored attendance records and the supervisor-provided template format.
+
+Generation is also allowed during event preparation for admin flexibility. One
+PDF always represents one selected event and all of its currently valid
+attendees.
 
 ---
 
