@@ -195,6 +195,7 @@ def create_event(
         EventAttendanceFieldSetting(
             field_key=field.field_key,
             is_required=field.default_is_required,
+            is_visible=True,
         )
         for field in field_definitions
     ]

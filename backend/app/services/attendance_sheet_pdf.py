@@ -219,15 +219,15 @@ def _attendance_table(
                 _text(row.attendee_name, styles["small"]),
                 _text(row.affiliation, styles["small"]),
                 _text(row.designation_category, styles["small"]),
-                _text("X" if row.sex == "F" else "", styles["small_center"]),
-                _text("X" if row.sex == "M" else "", styles["small_center"]),
+                _check_mark(row.sex == "F", styles["small_center"]),
+                _check_mark(row.sex == "M", styles["small_center"]),
                 _text(row.email, styles["small"]),
-                _text(
-                    "X" if row.consent_documentation_publication else "",
+                _check_mark(
+                    row.consent_documentation_publication,
                     styles["small_center"],
                 ),
-                _text(
-                    "X" if row.consent_database_processing else "",
+                _check_mark(
+                    row.consent_database_processing,
                     styles["small_center"],
                 ),
                 _signature_cell(row, styles),
@@ -249,9 +249,7 @@ def _attendance_table(
         ],
         repeatRows=1,
     )
-    table.setStyle(
-        TableStyle(
-            [
+    table_commands = [
                 ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#333333")),
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D9EAF7")),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -259,10 +257,13 @@ def _attendance_table(
                 ("RIGHTPADDING", (0, 0), (-1, -1), 1.5),
                 ("TOPPADDING", (0, 0), (-1, -1), 2),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
-            ]
-        )
-    )
+    ]
+    table.setStyle(TableStyle(table_commands))
     return table
+
+
+def _check_mark(selected: bool, style: ParagraphStyle) -> object:
+    return _text("✓" if selected else "", style)
 
 
 def _signature_cell(

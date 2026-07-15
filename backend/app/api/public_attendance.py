@@ -28,6 +28,7 @@ from app.services.public_attendance_service import (
     PublicEventNotFoundError,
     SignatureRequiredError,
     attendance_field_requirements,
+    attendance_field_visibility,
     get_public_event,
     submit_attendance,
 )
@@ -46,6 +47,7 @@ def _public_event_data(event) -> dict[str, Any]:
         "event_status": event.event_status,
         "accepting_attendance": event.event_status == "open",
         "attendance_field_requirements": attendance_field_requirements(event),
+        "attendance_field_visibility": attendance_field_visibility(event),
         "program": {
             "program_id": event.program.program_id,
             "program_name": event.program.program_name,

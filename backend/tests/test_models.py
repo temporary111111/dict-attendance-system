@@ -85,6 +85,7 @@ def test_attendance_field_settings_use_normalized_composite_key():
         "event_id": "events.event_id",
         "field_key": "attendance_form_fields.field_key",
     }
+    assert settings.c.is_visible.nullable is False
 
 
 def test_event_has_attendance_field_settings_relationship():

@@ -145,7 +145,7 @@ function attachAddressHandlers() {
   root.querySelector("#city-municipality-code").addEventListener("change", loadBarangays);
 }
 
-function configureRequirements(requirements) {
+function configureFieldSettings(requirements, visibility) {
   for (const [key, required] of Object.entries(requirements)) {
     const field = root.querySelector(`[data-field="${CSS.escape(key)}"]`);
     if (!field) continue;
@@ -153,11 +153,21 @@ function configureRequirements(requirements) {
     if (input && input.type !== "checkbox" && key !== "signature") input.required = required;
   }
   root.querySelector("#consent-database-processing").required = true;
-  root.querySelector("#consent-documentation-publication").required = requirements.consent_documentation_publication;
+  root.querySelector("#consent-documentation-yes").required = requirements.consent_documentation_publication;
+  for (const [key, isVisible] of Object.entries(visibility)) {
+    const field = root.querySelector(`[data-field="${CSS.escape(key)}"]`);
+    if (!field || isVisible) continue;
+    field.hidden = true;
+    for (const control of field.querySelectorAll("input, select, textarea")) {
+      control.disabled = true;
+      control.required = false;
+    }
+  }
 }
 
 function renderAttendanceForm(event) {
   const requirements = event.attendance_field_requirements;
+  const visibility = event.attendance_field_visibility;
   root.innerHTML = `
     <section class="attendance-event">
       <p class="attendance-program"></p>
@@ -186,7 +196,7 @@ function renderAttendanceForm(event) {
         <div class="field-group" data-field="postal_code" data-label-key="postal_code"><label for="postal-code">${requiredLabel("postal_code", requirements)}</label><input id="postal-code" name="postal_code" maxlength="10" inputmode="numeric" autocomplete="postal-code" /><span class="field-error"></span></div>
       </div><span class="field-error" data-error-for="psgc_address"></span></section>
       <section class="form-section" data-field="signature" data-label-key="signature"><h2>${requiredLabel("signature", requirements)}</h2><div class="attendance-grid"><div class="field-group"><label for="signature-text">Typed full name</label><input id="signature-text" name="signature_text" maxlength="150" autocomplete="name" /><span class="field-error"></span></div><div class="field-group"><label for="signature-image">Signature image</label><input id="signature-image" name="signature_image" type="file" accept="image/png,image/jpeg" /><span class="field-error"></span></div></div><p class="field-help">Provide either a typed full name or a PNG/JPEG signature image when a signature is required.</p><span class="field-error" data-error-for="signature"></span></section>
-      <section class="form-section"><h2>Consent</h2><div class="attendance-grid"><div class="wide-field" data-field="consent_documentation_publication" data-label-key="consent_documentation_publication"><label class="checkbox-field" for="consent-documentation-publication"><input id="consent-documentation-publication" name="consent_documentation_publication" type="checkbox" /><span>${requiredLabel("consent_documentation_publication", requirements)}</span></label><span class="field-error"></span></div><div class="wide-field" data-field="consent_database_processing" data-label-key="consent_database_processing"><label class="checkbox-field" for="consent-database-processing"><input id="consent-database-processing" name="consent_database_processing" type="checkbox" required /><span>${requiredLabel("consent_database_processing", requirements)}</span></label><span class="field-error"></span></div></div></section>
+      <section class="form-section"><h2>Consent</h2><div class="attendance-grid"><fieldset class="choice-field wide-field" data-field="consent_documentation_publication" data-label-key="consent_documentation_publication"><legend>${requiredLabel("consent_documentation_publication", requirements)}</legend><div class="choice-options"><label><input id="consent-documentation-yes" name="consent_documentation_publication" type="radio" value="true" /> Yes</label><label><input name="consent_documentation_publication" type="radio" value="false" /> No</label></div><span class="field-error"></span></fieldset><div class="wide-field" data-field="consent_database_processing" data-label-key="consent_database_processing"><label class="checkbox-field" for="consent-database-processing"><input id="consent-database-processing" name="consent_database_processing" type="checkbox" required /><span>${requiredLabel("consent_database_processing", requirements)}. I agree that my attendance information may be stored and processed for this event.</span></label><span class="field-error"></span></div></div></section>
       <div class="submit-row"><button id="attendance-submit" class="primary-button" type="submit"><span class="button-label">Submit attendance</span><span class="button-spinner"></span></button></div>
     </form>`;
   root.querySelector(".attendance-program").textContent = event.program.program_name;
@@ -195,13 +205,13 @@ function renderAttendanceForm(event) {
   root.querySelector(".attendance-description").hidden = !event.event_description;
   root.querySelector("#event-date").textContent = formatDate(event.event_date);
   root.querySelector("#event-venue").textContent = event.venue;
-  configureRequirements(requirements);
+  configureFieldSettings(requirements, visibility);
   attachAddressHandlers();
   loadRegions().catch((error) => setFieldError("psgc_address", error.message));
   root.querySelector("#attendance-form").addEventListener("submit", (submitEvent) => submitAttendance(submitEvent, event));
 }
 
-function validateBeforeSubmit(requirements) {
+function validateBeforeSubmit(requirements, visibility) {
   let valid = true;
   const form = root.querySelector("#attendance-form");
   for (const input of form.querySelectorAll("input[required], select[required], textarea[required]")) {
@@ -211,12 +221,12 @@ function validateBeforeSubmit(requirements) {
       valid = false;
     }
   }
-  if (requirements.signature && !form.elements.signature_text.value.trim() && !form.elements.signature_image.files.length) {
+  if (visibility.signature && requirements.signature && !form.elements.signature_text.value.trim() && !form.elements.signature_image.files.length) {
     setFieldError("signature", "Provide a typed or uploaded signature.");
     valid = false;
   }
   const addressStarted = [form.elements.region_code.value, form.elements.province_code.value, form.elements.city_municipality_code.value, form.elements.barangay_code.value, form.elements.street_address.value.trim(), form.elements.postal_code.value.trim()].some(Boolean);
-  if ((requirements.psgc_address || addressStarted) && (!form.elements.region_code.value || !form.elements.city_municipality_code.value || !form.elements.barangay_code.value)) {
+  if (visibility.psgc_address && (requirements.psgc_address || addressStarted) && (!form.elements.region_code.value || !form.elements.city_municipality_code.value || !form.elements.barangay_code.value)) {
     setFieldError("psgc_address", "Select region, city or municipality, and barangay.");
     valid = false;
   }
@@ -227,14 +237,15 @@ async function submitAttendance(event, publicEvent) {
   event.preventDefault();
   clearErrors();
   const requirements = publicEvent.attendance_field_requirements;
-  if (!validateBeforeSubmit(requirements)) return;
+  const visibility = publicEvent.attendance_field_visibility;
+  if (!validateBeforeSubmit(requirements, visibility)) return;
   const form = event.currentTarget;
   const submit = root.querySelector("#attendance-submit");
   submit.disabled = true;
   submit.classList.add("is-loading");
   const formData = new FormData(form);
   formData.set("consent_database_processing", String(form.elements.consent_database_processing.checked));
-  formData.set("consent_documentation_publication", String(form.elements.consent_documentation_publication.checked));
+  formData.set("consent_documentation_publication", form.elements.consent_documentation_publication.value || "false");
   if (!form.elements.signature_image.files.length) formData.delete("signature_image");
   try {
     const response = await apiRequest(`/public/events/${encodeURIComponent(publicEvent.event_code)}/attendance`, { method: "POST", auth: false, body: formData });

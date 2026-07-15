@@ -64,6 +64,7 @@ class PublicEventData(BaseModel):
     event_status: Literal["draft", "open", "closed"]
     accepting_attendance: bool
     attendance_field_requirements: dict[str, bool]
+    attendance_field_visibility: dict[str, bool]
     program: PublicEventProgramData
 
 

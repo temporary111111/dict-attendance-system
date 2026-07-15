@@ -46,6 +46,7 @@ class OrganizationalUnitItem(BaseModel):
     unit_name: str
     unit_type: str
     unit_code: str | None
+    is_active: bool = True
 
 
 class OrganizationalUnitListResponse(BaseModel):
@@ -119,8 +120,6 @@ class UpdateOrganizationalUnitRequest(BaseModel):
 
 class ManagedOrganizationalUnitItem(OrganizationalUnitItem):
     """Current unit state na ibinabalik pagkatapos ng management action."""
-
-    is_active: bool
 
 
 class UpdateOrganizationalUnitResponse(BaseModel):

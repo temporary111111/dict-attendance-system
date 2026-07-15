@@ -89,9 +89,21 @@ def attendance_field_requirements(event: Event) -> dict[str, bool]:
     return requirements
 
 
+def attendance_field_visibility(event: Event) -> dict[str, bool]:
+    """Ginagawang validated map ang show/hide snapshot ng event."""
+    visibility = {
+        setting.field_key: bool(getattr(setting, "is_visible", True))
+        for setting in event.attendance_field_settings
+    }
+    if set(visibility) != set(ATTENDANCE_FIELD_KEYS):
+        raise RuntimeError("Event attendance field visibility is incomplete.")
+    return visibility
+
+
 def _validate_event_field_requirements(
     payload: AttendanceSubmissionRequest,
     requirements: dict[str, bool],
+    visibility: dict[str, bool],
     *,
     has_uploaded_signature: bool,
 ) -> None:
@@ -107,10 +119,14 @@ def _validate_event_field_requirements(
         "postal_code",
     )
     for field_key in direct_fields:
-        if requirements[field_key] and getattr(payload, field_key) is None:
+        if (
+            visibility[field_key]
+            and requirements[field_key]
+            and getattr(payload, field_key) is None
+        ):
             missing[field_key] = "This field is required for this event."
 
-    if requirements["psgc_address"]:
+    if visibility["psgc_address"] and requirements["psgc_address"]:
         for field_key in (
             "region_code",
             "city_municipality_code",
@@ -119,7 +135,7 @@ def _validate_event_field_requirements(
             if getattr(payload, field_key) is None:
                 missing[field_key] = "This field is required for this event."
 
-    if requirements["signature"] and (
+    if visibility["signature"] and requirements["signature"] and (
         payload.signature_text is None and not has_uploaded_signature
     ):
         raise SignatureRequiredError
@@ -180,16 +196,21 @@ def submit_attendance(
         raise EventNotOpenError
 
     requirements = attendance_field_requirements(event)
+    visibility = attendance_field_visibility(event)
     has_uploaded_signature = (
-        signature_image is not None and bool(signature_image.filename)
+        visibility["signature"]
+        and signature_image is not None
+        and bool(signature_image.filename)
     )
     _validate_event_field_requirements(
         payload,
         requirements,
+        visibility,
         has_uploaded_signature=has_uploaded_signature,
     )
 
-    _validate_psgc_address(db, payload)
+    if visibility["psgc_address"]:
+        _validate_psgc_address(db, payload)
 
     duplicate_id = db.scalar(
         select(AttendanceRecord.attendance_id).where(
@@ -212,30 +233,42 @@ def submit_attendance(
     attendance = AttendanceRecord(
         event_id=event.event_id,
         first_name=payload.first_name,
-        middle_name=payload.middle_name,
+        middle_name=payload.middle_name if visibility["middle_name"] else None,
         last_name=payload.last_name,
-        suffix=payload.suffix,
-        affiliation=payload.affiliation,
-        designation_category=payload.designation_category,
-        sex=payload.sex,
+        suffix=payload.suffix if visibility["suffix"] else None,
+        affiliation=payload.affiliation if visibility["affiliation"] else None,
+        designation_category=(
+            payload.designation_category
+            if visibility["designation_category"]
+            else None
+        ),
+        sex=payload.sex if visibility["sex"] else None,
         email=str(payload.email),
         consent_documentation_publication=bool(
             payload.consent_documentation_publication
+            if visibility["consent_documentation_publication"]
+            else False
         ),
         consent_database_processing=payload.consent_database_processing,
-        signature_text=payload.signature_text,
+        signature_text=(
+            payload.signature_text if visibility["signature"] else None
+        ),
         signature_image_path=signature_image_path,
         attendance_status="valid",
         duplicate_flag=False,
     )
-    if payload.has_address:
+    if visibility["psgc_address"] and payload.has_address:
         attendance.address = AttendanceRecordAddress(
             region_code=payload.region_code,
             province_code=payload.province_code,
             city_municipality_code=payload.city_municipality_code,
             barangay_code=payload.barangay_code,
-            street_address=payload.street_address,
-            postal_code=payload.postal_code,
+            street_address=(
+                payload.street_address if visibility["street_address"] else None
+            ),
+            postal_code=(
+                payload.postal_code if visibility["postal_code"] else None
+            ),
         )
 
     try:

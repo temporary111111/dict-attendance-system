@@ -292,6 +292,10 @@
   margin-top: 16px;
 }
 
+.psgc-management-panel {
+  margin-top: 16px;
+}
+
 .panel {
   min-width: 0;
   border: 1px solid var(--line);
@@ -446,6 +450,7 @@
 }
 
 .badge-archived,
+.badge-inactive,
 .badge-invalid,
 .badge-void {
   background: #eceff2;
@@ -680,6 +685,12 @@
   padding-top: 14px;
 }
 
+.qr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .qr-preview img {
   width: 170px;
   height: 170px;
@@ -700,12 +711,26 @@
   border-radius: 6px;
 }
 
+.settings-heading,
 .setting-row {
-  display: flex;
-  min-height: 48px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px 74px;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  gap: 10px;
+}
+
+.settings-heading {
+  color: var(--ink-500);
+  padding: 0 12px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.settings-heading span:first-child { text-align: left; }
+
+.setting-row {
+  min-height: 48px;
   border-bottom: 1px solid var(--line);
   padding: 9px 12px;
 }
@@ -713,7 +738,7 @@
 .setting-row:last-child { border-bottom: 0; }
 .setting-row label { font-size: 0.84rem; font-weight: 700; }
 .setting-row small { display: block; color: var(--ink-500); font-size: 0.72rem; }
-.setting-row input { width: 19px; min-height: 19px; accent-color: var(--blue-700); }
+.setting-row input { width: 19px; min-height: 19px; margin: 0 auto; accent-color: var(--blue-700); }
 
 .dialog-error { margin: 0; color: var(--red-700); font-size: 0.82rem; }
 

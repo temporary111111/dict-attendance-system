@@ -32,6 +32,7 @@ def _setting_data(setting) -> dict[str, Any]:
         "field_key": setting.field_key,
         "field_label": setting.field.field_label,
         "is_required": bool(setting.is_required),
+        "is_visible": bool(getattr(setting, "is_visible", True)),
         "is_admin_configurable": bool(setting.field.is_admin_configurable),
         "display_order": setting.field.display_order,
     }
@@ -74,7 +75,10 @@ def _raise_settings_error(exc: Exception) -> None:
             detail=error_response(
                 "FIELD_NOT_CONFIGURABLE",
                 "Locked attendance fields cannot be changed.",
-                {key: "This field is always required." for key in exc.field_keys},
+                {
+                    key: "This field's visibility and requirement are locked."
+                    for key in exc.field_keys
+                },
             ),
         )
     if isinstance(exc, InvalidFieldRequirementsError):
@@ -82,8 +86,8 @@ def _raise_settings_error(exc: Exception) -> None:
             status_code=422,
             detail=error_response(
                 "INVALID_FIELD_REQUIREMENTS",
-                "Street or postal requirements need a required PSGC address.",
-                {"psgc_address": "Make PSGC address required first."},
+                "Visible and required address fields need a visible PSGC address.",
+                {"psgc_address": "Show and require the PSGC address first."},
             ),
         )
     raise exc

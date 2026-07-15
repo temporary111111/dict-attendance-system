@@ -163,6 +163,7 @@ CREATE TABLE IF NOT EXISTS event_attendance_field_settings (
   event_id BIGINT UNSIGNED NOT NULL,
   field_key VARCHAR(100) NOT NULL,
   is_required TINYINT(1) NOT NULL,
+  is_visible TINYINT(1) NOT NULL DEFAULT 1,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (event_id, field_key),
@@ -174,7 +175,9 @@ CREATE TABLE IF NOT EXISTS event_attendance_field_settings (
     FOREIGN KEY (field_key) REFERENCES attendance_form_fields (field_key)
     ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_event_attendance_field_settings_required
-    CHECK (is_required IN (0, 1))
+    CHECK (is_required IN (0, 1)),
+  CONSTRAINT chk_event_attendance_field_settings_visible
+    CHECK (is_visible IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS attendance_records (

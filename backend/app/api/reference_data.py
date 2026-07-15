@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -54,12 +54,14 @@ def list_roles(
 )
 def list_organizational_units(
     db: Annotated[Session, Depends(get_db)],
+    include_inactive: Annotated[bool, Query(alias="includeInactive")] = False,
 ) -> dict[str, Any]:
-    """Kinukuha ang active DICT units kasama ang hierarchy references."""
+    """Kinukuha ang DICT units kasama ang hierarchy at status."""
+    statement = select(OrganizationalUnit)
+    if not include_inactive:
+        statement = statement.where(OrganizationalUnit.is_active.is_(True))
     organizational_units = db.scalars(
-        select(OrganizationalUnit)
-        .where(OrganizationalUnit.is_active.is_(True))
-        .order_by(OrganizationalUnit.unit_name)
+        statement.order_by(OrganizationalUnit.unit_name)
     ).all()
 
     return success_response(

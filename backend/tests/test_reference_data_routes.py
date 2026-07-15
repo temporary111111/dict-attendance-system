@@ -119,6 +119,7 @@ def test_list_organizational_units_returns_hierarchy_fields():
                 unit_name="DICT",
                 unit_type="department",
                 unit_code="DICT",
+                is_active=True,
             ),
             SimpleNamespace(
                 org_unit_id=2,
@@ -126,6 +127,7 @@ def test_list_organizational_units_returns_hierarchy_fields():
                 unit_name="Regional Operations",
                 unit_type="office",
                 unit_code="RO",
+                is_active=True,
             ),
         ]
     )
@@ -141,6 +143,7 @@ def test_list_organizational_units_returns_hierarchy_fields():
                 "unit_name": "DICT",
                 "unit_type": "department",
                 "unit_code": "DICT",
+                "is_active": True,
             },
             {
                 "org_unit_id": 2,
@@ -148,6 +151,7 @@ def test_list_organizational_units_returns_hierarchy_fields():
                 "unit_name": "Regional Operations",
                 "unit_type": "office",
                 "unit_code": "RO",
+                "is_active": True,
             },
         ],
         "message": "Organizational units retrieved.",
@@ -195,6 +199,7 @@ def test_create_organizational_unit_normalizes_and_saves_active_child():
             "unit_name": "Regional Operations Office",
             "unit_type": "regional office",
             "unit_code": "RO-OPS",
+            "is_active": True,
         },
         "message": "Organizational unit created.",
     }

@@ -55,6 +55,7 @@ def make_event(*, status="draft"):
                 event_id=5,
                 field_key=key,
                 is_required=required,
+                is_visible=True,
                 field=field,
             )
         )
@@ -132,6 +133,13 @@ def requirement_map(response):
     }
 
 
+def visibility_map(response):
+    return {
+        item["field_key"]: item["is_visible"]
+        for item in response.json()["data"]
+    }
+
+
 def test_get_event_attendance_field_settings_returns_ordered_fixed_fields():
     client = make_client(FakeSession(event=make_event()))
 
@@ -144,6 +152,7 @@ def test_get_event_attendance_field_settings_returns_ordered_fixed_fields():
         "field_key": "first_name",
         "field_label": "First name",
         "is_required": True,
+        "is_visible": True,
         "is_admin_configurable": False,
         "display_order": 1,
     }
@@ -179,6 +188,48 @@ def test_update_rejects_locked_field():
     response = client.patch(
         "/api/events/5/attendance-field-settings",
         json={"requirements": {"email": False}},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "FIELD_NOT_CONFIGURABLE"
+
+
+def test_hiding_configurable_field_also_makes_it_optional():
+    event = make_event()
+    event.attendance_field_settings[4].is_required = True
+    client = make_client(FakeSession(event=event))
+
+    response = client.patch(
+        "/api/events/5/attendance-field-settings",
+        json={"visibility": {"affiliation": False}},
+    )
+
+    assert response.status_code == 200
+    assert visibility_map(response)["affiliation"] is False
+    assert requirement_map(response)["affiliation"] is False
+
+
+def test_hiding_psgc_address_also_hides_dependent_address_fields():
+    client = make_client(FakeSession(event=make_event()))
+
+    response = client.patch(
+        "/api/events/5/attendance-field-settings",
+        json={"visibility": {"psgc_address": False}},
+    )
+
+    assert response.status_code == 200
+    visibility = visibility_map(response)
+    assert visibility["psgc_address"] is False
+    assert visibility["street_address"] is False
+    assert visibility["postal_code"] is False
+
+
+def test_update_rejects_hiding_locked_field():
+    client = make_client(FakeSession(event=make_event()))
+
+    response = client.patch(
+        "/api/events/5/attendance-field-settings",
+        json={"visibility": {"email": False}},
     )
 
     assert response.status_code == 422

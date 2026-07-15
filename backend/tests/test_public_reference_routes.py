@@ -24,6 +24,7 @@ PUBLIC_REQUIREMENTS = {
     "street_address": False,
     "postal_code": False,
 }
+PUBLIC_VISIBILITY = {key: True for key in PUBLIC_REQUIREMENTS}
 
 
 class FakeSession:
@@ -65,7 +66,7 @@ def make_public_event(status="open"):
         event_date=date(2026, 8, 15),
         event_status=status,
         attendance_field_settings=[
-            SimpleNamespace(field_key=key, is_required=value)
+            SimpleNamespace(field_key=key, is_required=value, is_visible=True)
             for key, value in PUBLIC_REQUIREMENTS.items()
         ],
         program=SimpleNamespace(
@@ -91,7 +92,8 @@ def test_get_public_event_returns_safe_open_event_details_without_auth():
             "event_date": "2026-08-15",
             "event_status": "open",
             "accepting_attendance": True,
-            "attendance_field_requirements": PUBLIC_REQUIREMENTS,
+                "attendance_field_requirements": PUBLIC_REQUIREMENTS,
+                "attendance_field_visibility": PUBLIC_VISIBILITY,
             "program": {
                 "program_id": 3,
                 "program_name": "Free Wi-Fi for All",

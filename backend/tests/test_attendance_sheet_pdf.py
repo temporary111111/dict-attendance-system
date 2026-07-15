@@ -138,8 +138,8 @@ def test_renderer_leaves_missing_optional_values_blank():
     normalized_lines = [line.strip() for line in text.splitlines()]
 
     assert "None" not in text
-    # Database consent lang ang true sa sample row; walang sex mark.
-    assert normalized_lines.count("X") == 1
+    # Vector check mark ang gamit; wala nang ambiguous na X text.
+    assert normalized_lines.count("X") == 0
 
 
 def test_renderer_embeds_valid_png_signature(tmp_path):

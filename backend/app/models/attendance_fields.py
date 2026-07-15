@@ -78,6 +78,10 @@ class EventAttendanceFieldSetting(Base, TimestampMixin):
             "is_required IN (0, 1)",
             name="chk_event_attendance_field_settings_required",
         ),
+        CheckConstraint(
+            "is_visible IN (0, 1)",
+            name="chk_event_attendance_field_settings_visible",
+        ),
     )
 
     event_id: Mapped[int] = mapped_column(
@@ -97,6 +101,11 @@ class EventAttendanceFieldSetting(Base, TimestampMixin):
     is_required: Mapped[bool] = mapped_column(
         mysql.TINYINT(1),
         nullable=False,
+    )
+    is_visible: Mapped[bool] = mapped_column(
+        mysql.TINYINT(1),
+        nullable=False,
+        server_default="1",
     )
 
     event: Mapped["Event"] = relationship(

@@ -25,6 +25,7 @@ const views = {
   reports: { title: "Reports", load: renderReports },
   units: { title: "Organizational Units", load: renderUnits, superAdminOnly: true },
   users: { title: "Admin Users", load: renderUsers, superAdminOnly: true },
+  psgc: { title: "PSGC Data", load: renderPsgcManagement, superAdminOnly: true },
   audit: { title: "Audit Logs", load: renderAuditLogs, superAdminOnly: true },
 };
 
@@ -123,6 +124,42 @@ function closeDialog() {
 function setButtonBusy(button, busy) {
   button.disabled = busy;
   button.classList.toggle("is-loading", busy);
+}
+
+async function copyText(value) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  if (!copied) throw new Error("Copy is not supported by this browser.");
+}
+
+async function downloadQr(imageUrl, eventCode, button) {
+  setButtonBusy(button, true);
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error("QR image could not be downloaded.");
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `attendance-qr-${eventCode}.png`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("QR code downloaded.");
+  } catch (error) {
+    setDialogError(error.message);
+  } finally {
+    setButtonBusy(button, false);
+  }
 }
 
 async function downloadPdf(eventId, button) {
@@ -347,7 +384,7 @@ async function showProgramDialog(program = null) {
   const form = dialogContent.querySelector("#program-form");
   const unitSelect = form.elements.owning_unit_id;
   try {
-    const units = (await apiRequest("/organizational-units")).data;
+    const units = (await apiRequest("/organizational-units?includeInactive=true")).data;
     for (const unit of units) {
       const option = document.createElement("option");
       option.value = unit.org_unit_id;
@@ -652,6 +689,7 @@ async function showEventDialog(event) {
   if (editable) addAction("Generate QR/link", (button) => runEventAction(current, "/attendance-link", "POST", button));
   if (current.event_status === "draft") addAction("Open attendance", (button) => runEventAction(current, "/open", "POST", button), "primary-button");
   if (current.event_status === "open") addAction("Close attendance", (button) => runEventAction(current, "/close", "POST", button), "primary-button");
+  if (current.event_status === "closed") addAction("Reopen attendance", (button) => runEventAction(current, "/open", "POST", button), "primary-button");
   if (isSuperAdmin() && current.event_status === "closed") addAction("Archive event", (button) => runEventAction(current, "/archive", "PATCH", button), "danger-button");
 
   if (current.public_attendance_url && current.qr_code_path) {
@@ -671,10 +709,22 @@ async function showEventDialog(event) {
     copy.className = "secondary-button";
     copy.textContent = "Copy attendance link";
     copy.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(current.public_attendance_url);
-      showToast("Attendance link copied.");
+      try {
+        await copyText(current.public_attendance_url);
+        showToast("Attendance link copied.");
+      } catch (error) {
+        setDialogError(error.message);
+      }
     });
-    preview.append(image, link, copy);
+    const download = document.createElement("button");
+    download.type = "button";
+    download.className = "secondary-button";
+    download.textContent = "Download QR";
+    download.addEventListener("click", () => downloadQr(image.src, current.event_code, download));
+    const qrActions = document.createElement("div");
+    qrActions.className = "qr-actions";
+    qrActions.append(copy, download);
+    preview.append(image, link, qrActions);
   }
 }
 
@@ -695,7 +745,7 @@ async function runEventAction(event, suffix, method, button) {
 }
 
 async function showFieldSettings(event) {
-  openDialog("Attendance fields", `<div class="dialog-stack"><p id="dialog-error" class="dialog-error" role="alert"></p><p class="secondary-cell">Required fields are shown to attendees. Locked fields are always required.</p><form id="field-settings-form" class="dialog-form"><div id="field-settings-list" class="settings-list"></div><div class="dialog-actions"><button class="secondary-button" type="button" data-back>Back</button><button class="primary-button" type="submit" ${event.event_status === "closed" || event.event_status === "archived" ? "disabled" : ""}><span class="button-label">Save requirements</span><span class="button-spinner"></span></button></div></form></div>`);
+  openDialog("Attendance fields", `<div class="dialog-stack"><p id="dialog-error" class="dialog-error" role="alert"></p><p class="secondary-cell">Choose which fixed fields attendees can see and which visible fields they must answer. Core identity and database-consent fields stay locked.</p><form id="field-settings-form" class="dialog-form"><div class="settings-heading"><span>Field</span><span>Show</span><span>Require</span></div><div id="field-settings-list" class="settings-list"></div><div class="dialog-actions"><button class="secondary-button" type="button" data-back>Back</button><button class="primary-button" type="submit" ${event.event_status === "closed" || event.event_status === "archived" ? "disabled" : ""}><span class="button-label">Save field settings</span><span class="button-spinner"></span></button></div></form></div>`);
   const list = dialogContent.querySelector("#field-settings-list");
   try {
     const settings = (await apiRequest(`/events/${event.event_id}/attendance-field-settings`)).data;
@@ -703,18 +753,41 @@ async function showFieldSettings(event) {
       const row = document.createElement("div");
       row.className = "setting-row";
       const label = document.createElement("label");
-      label.htmlFor = `field-${setting.field_key}`;
       label.textContent = setting.field_label;
       const note = document.createElement("small");
       note.textContent = setting.is_admin_configurable ? "Configurable" : "Always required";
       label.append(note);
-      const input = document.createElement("input");
-      input.id = `field-${setting.field_key}`;
-      input.type = "checkbox";
-      input.checked = setting.is_required;
-      input.disabled = !setting.is_admin_configurable || event.event_status === "closed" || event.event_status === "archived";
-      input.dataset.fieldKey = setting.field_key;
-      row.append(label, input);
+      const locked = !setting.is_admin_configurable || event.event_status === "closed" || event.event_status === "archived";
+      const visible = document.createElement("input");
+      visible.type = "checkbox";
+      visible.checked = setting.is_visible;
+      visible.disabled = locked;
+      visible.dataset.fieldKey = setting.field_key;
+      visible.dataset.settingType = "visibility";
+      visible.dataset.configurable = String(setting.is_admin_configurable);
+      visible.setAttribute("aria-label", `Show ${setting.field_label}`);
+      const required = document.createElement("input");
+      required.type = "checkbox";
+      required.checked = setting.is_required;
+      required.disabled = locked || !setting.is_visible;
+      required.dataset.fieldKey = setting.field_key;
+      required.dataset.settingType = "requirement";
+      required.dataset.configurable = String(setting.is_admin_configurable);
+      required.setAttribute("aria-label", `Require ${setting.field_label}`);
+      visible.addEventListener("change", () => {
+        if (!visible.checked) required.checked = false;
+        required.disabled = locked || !visible.checked;
+        if (setting.field_key === "psgc_address" && !visible.checked) {
+          for (const childKey of ["street_address", "postal_code"]) {
+            const childVisible = list.querySelector(`[data-setting-type="visibility"][data-field-key="${childKey}"]`);
+            if (childVisible) {
+              childVisible.checked = false;
+              childVisible.dispatchEvent(new Event("change"));
+            }
+          }
+        }
+      });
+      row.append(label, visible, required);
       list.append(row);
     }
   } catch (error) {
@@ -725,13 +798,17 @@ async function showFieldSettings(event) {
     submitEvent.preventDefault();
     const save = submitEvent.currentTarget.querySelector('[type="submit"]');
     const requirements = {};
-    for (const input of list.querySelectorAll("input[data-field-key]:not(:disabled)")) requirements[input.dataset.fieldKey] = input.checked;
-    if (!Object.keys(requirements).length) return;
+    const visibility = {};
+    for (const input of list.querySelectorAll("input[data-field-key]")) {
+      if (input.dataset.configurable !== "true") continue;
+      if (input.dataset.settingType === "visibility") visibility[input.dataset.fieldKey] = input.checked;
+      if (input.dataset.settingType === "requirement") requirements[input.dataset.fieldKey] = input.checked;
+    }
     setButtonBusy(save, true);
     setDialogError();
     try {
-      await apiRequest(`/events/${event.event_id}/attendance-field-settings`, { method: "PATCH", body: { requirements } });
-      showToast("Attendance field requirements updated.");
+      await apiRequest(`/events/${event.event_id}/attendance-field-settings`, { method: "PATCH", body: { requirements, visibility } });
+      showToast("Attendance field settings updated.");
       showFieldSettings(event);
     } catch (error) {
       setDialogError(error.message);
@@ -945,22 +1022,30 @@ async function renderUnits() {
     const unitsById = new Map(units.map((unit) => [unit.org_unit_id, unit]));
     root.innerHTML = `
       <section class="view-intro"><div><h2>Organizational Units</h2><p id="unit-count"></p></div><button id="create-unit" class="primary-button" type="button">Add unit</button></section>
-      <div class="toolbar"><div class="field-group search-field"><label for="unit-search">Search</label><input id="unit-search" type="search" placeholder="Unit name, type, or code" /></div></div>
+      <div class="toolbar"><div class="field-group search-field"><label for="unit-search">Search</label><input id="unit-search" type="search" placeholder="Unit name, type, or code" /></div><div class="field-group"><label for="unit-status">Status</label><select id="unit-status"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div>
       <section class="panel"><div id="unit-table" class="table-wrap"></div></section>`;
-    setText("#unit-count", `${formatNumber(units.length)} active unit${units.length === 1 ? "" : "s"}`);
+    setText("#unit-count", `${formatNumber(units.length)} organizational unit${units.length === 1 ? "" : "s"}`);
     const draw = () => {
       const search = document.querySelector("#unit-search").value.trim().toLowerCase();
-      const filtered = units.filter((unit) => `${unit.unit_name} ${unit.unit_type} ${unit.unit_code || ""}`.toLowerCase().includes(search));
+      const status = document.querySelector("#unit-status").value;
+      const filtered = units.filter((unit) => {
+        const matchesSearch = `${unit.unit_name} ${unit.unit_type} ${unit.unit_code || ""}`.toLowerCase().includes(search);
+        const unitStatus = unit.is_active ? "active" : "inactive";
+        return matchesSearch && (!status || status === unitStatus);
+      });
       const container = document.querySelector("#unit-table");
       if (!filtered.length) {
         renderEmpty(container, "No matching units", "Adjust the current search.");
         return;
       }
-      container.innerHTML = '<table class="data-table"><thead><tr><th>Unit</th><th>Type</th><th>Code</th><th>Parent unit</th><th>Action</th></tr></thead><tbody></tbody></table>';
+      container.innerHTML = '<table class="data-table"><thead><tr><th>Unit</th><th>Type</th><th>Code</th><th>Parent unit</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table>';
       const tbody = container.querySelector("tbody");
       for (const unit of filtered) {
         const row = document.createElement("tr");
         row.append(cell(unit.unit_name, "primary-cell"), cell(unit.unit_type), cell(unit.unit_code), cell(unitsById.get(unit.parent_unit_id)?.unit_name || "Root unit"));
+        const statusCell = document.createElement("td");
+        statusCell.append(badge(unit.is_active ? "active" : "inactive"));
+        row.append(statusCell);
         const actionCell = document.createElement("td");
         const action = document.createElement("button");
         action.type = "button";
@@ -973,6 +1058,7 @@ async function renderUnits() {
       }
     };
     document.querySelector("#unit-search").addEventListener("input", draw);
+    document.querySelector("#unit-status").addEventListener("change", draw);
     document.querySelector("#create-unit").addEventListener("click", () => showUnitDialog(null, units));
     draw();
   } catch (error) {
@@ -986,7 +1072,7 @@ function addUnitOptions(select, units, selectedId = null, excludeId = null) {
   rootOption.textContent = "No parent (root unit)";
   select.append(rootOption);
   for (const unit of units) {
-    if (unit.org_unit_id === excludeId) continue;
+    if (unit.org_unit_id === excludeId || !unit.is_active) continue;
     const option = document.createElement("option");
     option.value = unit.org_unit_id;
     option.textContent = `${unit.unit_name} (${unit.unit_type})`;
@@ -1005,7 +1091,7 @@ function showUnitDialog(unit, units) {
         <div class="field-group"><label for="unit-code">Unit code</label><input id="unit-code" name="unit_code" maxlength="50" /></div>
         <div class="field-group full-span"><label for="unit-parent">Parent unit</label><select id="unit-parent" name="parent_unit_id"></select></div>
       </div>
-      <div class="dialog-actions"><button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save unit</span><span class="button-spinner"></span></button></div>
+      <div class="dialog-actions">${unit ? `<button id="unit-status-action" class="${unit.is_active ? "danger-button" : "secondary-button"}" type="button">${unit.is_active ? "Deactivate unit" : "Restore unit"}</button>` : ""}<button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save unit</span><span class="button-spinner"></span></button></div>
     </form>`);
   const form = dialogContent.querySelector("#unit-form");
   addUnitOptions(form.elements.parent_unit_id, units, unit?.parent_unit_id, unit?.org_unit_id);
@@ -1015,6 +1101,24 @@ function showUnitDialog(unit, units) {
     form.elements.unit_code.value = unit.unit_code || "";
   }
   dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  dialogContent.querySelector("#unit-status-action")?.addEventListener("click", async (clickEvent) => {
+    const nextActive = !unit.is_active;
+    const verb = nextActive ? "Restore" : "Deactivate";
+    if (!window.confirm(`${verb} this organizational unit?`)) return;
+    const button = clickEvent.currentTarget;
+    setButtonBusy(button, true);
+    setDialogError();
+    try {
+      await apiRequest(`/organizational-units/${unit.org_unit_id}`, { method: "PATCH", body: { is_active: nextActive } });
+      closeDialog();
+      showToast(`Organizational unit ${nextActive ? "restored" : "deactivated"}.`);
+      renderUnits();
+    } catch (error) {
+      setDialogError(error.message);
+    } finally {
+      setButtonBusy(button, false);
+    }
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const save = form.querySelector('[type="submit"]');
@@ -1037,6 +1141,138 @@ function showUnitDialog(unit, units) {
       setButtonBusy(save, false);
     }
   });
+}
+
+async function renderPsgcManagement() {
+  renderLoading();
+  try {
+    const [summaryResponse, regionsResponse] = await Promise.all([
+      apiRequest("/admin/psgc/summary"),
+      apiRequest("/psgc/regions"),
+    ]);
+    const summary = summaryResponse.data;
+    root.innerHTML = `
+      <section class="view-intro"><div><h2>PSGC Reference Data</h2><p>Add or update lookup records through their official PSGC codes.</p></div></section>
+      <section class="summary-grid" aria-label="PSGC totals">
+        <article class="summary-card"><span class="summary-label">Regions</span><strong class="summary-value">${formatNumber(summary.regions)}</strong></article>
+        <article class="summary-card green"><span class="summary-label">Provinces</span><strong class="summary-value">${formatNumber(summary.provinces)}</strong></article>
+        <article class="summary-card amber"><span class="summary-label">Cities / municipalities</span><strong class="summary-value">${formatNumber(summary.cities_municipalities)}</strong></article>
+        <article class="summary-card"><span class="summary-label">Barangays</span><strong class="summary-value">${formatNumber(summary.barangays)}</strong></article>
+      </section>
+      <section class="panel psgc-management-panel">
+        <header class="panel-header"><h3>Add or update a PSGC record</h3></header>
+        <form id="psgc-form" class="panel-body dialog-form">
+          <div id="psgc-feedback" class="notice notice-error" role="alert" hidden></div>
+          <div class="form-grid">
+            <div class="field-group full-span"><label for="psgc-level">Record type</label><select id="psgc-level" name="level"><option value="region">Region</option><option value="province">Province</option><option value="city">City or municipality</option><option value="barangay">Barangay</option></select></div>
+            <div class="field-group full-span" data-psgc-parent="region"><label for="psgc-region">Region</label><select id="psgc-region" name="region_code"></select></div>
+            <div class="field-group full-span" data-psgc-parent="province"><label for="psgc-province">Province</label><select id="psgc-province" name="province_code"></select></div>
+            <div class="field-group full-span" data-psgc-parent="city"><label for="psgc-city">City or municipality</label><select id="psgc-city" name="city_municipality_code"></select></div>
+            <div class="field-group"><label for="psgc-code">Official PSGC code</label><input id="psgc-code" name="code" inputmode="numeric" pattern="[0-9]+" maxlength="10" required /></div>
+            <div class="field-group"><label for="psgc-type">City/municipality type</label><select id="psgc-type" name="city_municipality_type"><option value="city">City</option><option value="municipality">Municipality</option></select></div>
+            <div class="field-group full-span"><label for="psgc-name">Official name</label><input id="psgc-name" name="name" maxlength="150" required /></div>
+          </div>
+          <p class="field-help">Saving an existing code updates its name or hierarchy and reactivates it.</p>
+          <div class="dialog-actions"><button class="primary-button" type="submit"><span class="button-label">Save PSGC record</span><span class="button-spinner"></span></button></div>
+        </form>
+      </section>`;
+    const form = document.querySelector("#psgc-form");
+    const level = form.elements.level;
+    const region = form.elements.region_code;
+    const province = form.elements.province_code;
+    const city = form.elements.city_municipality_code;
+    const type = form.elements.city_municipality_type;
+
+    const fillSelect = (select, items, valueKey, labelKey, placeholder) => {
+      select.innerHTML = "";
+      const empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = placeholder;
+      select.append(empty);
+      for (const item of items) {
+        const option = document.createElement("option");
+        option.value = item[valueKey];
+        option.textContent = item[labelKey];
+        select.append(option);
+      }
+    };
+    fillSelect(region, regionsResponse.data, "region_code", "region_name", "Select region");
+    fillSelect(province, [], "province_code", "province_name", "Select province (if applicable)");
+    fillSelect(city, [], "city_municipality_code", "city_municipality_name", "Select city or municipality");
+
+    const loadProvinces = async () => {
+      fillSelect(province, [], "province_code", "province_name", "Select province (if applicable)");
+      fillSelect(city, [], "city_municipality_code", "city_municipality_name", "Select city or municipality");
+      if (!region.value) return;
+      const response = await apiRequest(`/psgc/provinces?regionCode=${encodeURIComponent(region.value)}`);
+      fillSelect(province, response.data, "province_code", "province_name", "Select province (if applicable)");
+      await loadCities();
+    };
+    const loadCities = async () => {
+      fillSelect(city, [], "city_municipality_code", "city_municipality_name", "Select city or municipality");
+      if (!region.value) return;
+      const query = new URLSearchParams({ regionCode: region.value });
+      if (province.value) query.set("provinceCode", province.value);
+      const response = await apiRequest(`/psgc/cities-municipalities?${query}`);
+      fillSelect(city, response.data, "city_municipality_code", "city_municipality_name", "Select city or municipality");
+    };
+    region.addEventListener("change", () => loadProvinces().catch((error) => showPsgcError(error.message)));
+    province.addEventListener("change", () => loadCities().catch((error) => showPsgcError(error.message)));
+
+    const updateForm = () => {
+      const selected = level.value;
+      document.querySelector('[data-psgc-parent="region"]').hidden = selected === "region";
+      document.querySelector('[data-psgc-parent="province"]').hidden = !["city", "barangay"].includes(selected);
+      document.querySelector('[data-psgc-parent="city"]').hidden = selected !== "barangay";
+      type.closest(".field-group").hidden = selected !== "city";
+      region.required = selected !== "region";
+      city.required = selected === "barangay";
+      form.elements.code.value = "";
+      form.elements.name.value = "";
+    };
+    const showPsgcError = (message) => {
+      const feedback = document.querySelector("#psgc-feedback");
+      feedback.textContent = message;
+      feedback.hidden = false;
+    };
+    level.addEventListener("change", updateForm);
+    updateForm();
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const submit = form.querySelector('[type="submit"]');
+      const selected = level.value;
+      const code = form.elements.code.value;
+      const name = form.elements.name.value;
+      let path;
+      let payload;
+      if (selected === "region") {
+        path = "/admin/psgc/regions";
+        payload = { region_code: code, region_name: name };
+      } else if (selected === "province") {
+        path = "/admin/psgc/provinces";
+        payload = { province_code: code, province_name: name, region_code: region.value };
+      } else if (selected === "city") {
+        path = "/admin/psgc/cities-municipalities";
+        payload = { city_municipality_code: code, city_municipality_name: name, city_municipality_type: type.value, region_code: region.value, province_code: province.value || null };
+      } else {
+        path = "/admin/psgc/barangays";
+        payload = { barangay_code: code, barangay_name: name, city_municipality_code: city.value };
+      }
+      setButtonBusy(submit, true);
+      document.querySelector("#psgc-feedback").hidden = true;
+      try {
+        const response = await apiRequest(path, { method: "POST", body: payload });
+        showToast(response.message);
+        renderPsgcManagement();
+      } catch (error) {
+        showPsgcError(error.message);
+      } finally {
+        setButtonBusy(submit, false);
+      }
+    });
+  } catch (error) {
+    renderError(error, renderPsgcManagement);
+  }
 }
 
 async function renderUsers() {
@@ -1273,6 +1509,7 @@ function initializeUser(user) {
   const showSuperAdminNavigation = user.role.role_name === "super_admin";
   document.querySelector("#units-nav").hidden = !showSuperAdminNavigation;
   document.querySelector("#users-nav").hidden = !showSuperAdminNavigation;
+  document.querySelector("#psgc-nav").hidden = !showSuperAdminNavigation;
   document.querySelector("#audit-nav").hidden = !showSuperAdminNavigation;
 }
 
