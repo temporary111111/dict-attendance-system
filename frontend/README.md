@@ -8,6 +8,8 @@ Hindi kailangang ilagay o i-serve ng FastAPI ang frontend files.
 * Login with stateless JWT access token
 * Role-scoped dashboard summary
 * Program creation and editing for Super Admin
+* Organizational unit and admin-user management for Super Admin
+* Program Admin assignment and revocation within each program
 * Event creation, editing, QR/link generation, and attendance lifecycle actions
 * Per-event fixed attendance field requirements
 * Attendance record review and status update for authorized admins

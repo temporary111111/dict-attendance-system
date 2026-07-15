@@ -22,6 +22,8 @@ const views = {
   dashboard: { title: "Dashboard", load: renderDashboard },
   programs: { title: "Programs", load: renderPrograms },
   events: { title: "Events", load: renderEvents },
+  units: { title: "Organizational Units", load: renderUnits, superAdminOnly: true },
+  users: { title: "Admin Users", load: renderUsers, superAdminOnly: true },
   audit: { title: "Audit Logs", load: renderAuditLogs, superAdminOnly: true },
 };
 
@@ -338,7 +340,7 @@ async function showProgramDialog(program = null) {
         <div class="field-group full-span"><label for="program-unit">Owning office or unit</label><select id="program-unit" name="owning_unit_id" required></select></div>
         <div class="field-group full-span"><label for="program-description">Description</label><textarea id="program-description" name="description" maxlength="5000"></textarea></div>
       </div>
-      <div class="dialog-actions">${program ? `<button id="program-status-action" class="danger-button" type="button">${program.program_status === "active" ? "Archive program" : "Restore program"}</button>` : ""}<button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save program</span><span class="button-spinner"></span></button></div>
+      <div class="dialog-actions">${program ? `<button id="manage-program-admins" class="secondary-button" type="button">Program Admins</button><button id="program-status-action" class="danger-button" type="button">${program.program_status === "active" ? "Archive program" : "Restore program"}</button>` : ""}<button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save program</span><span class="button-spinner"></span></button></div>
     </form>`,
   );
   const form = dialogContent.querySelector("#program-form");
@@ -360,6 +362,7 @@ async function showProgramDialog(program = null) {
     setDialogError(error.message);
   }
   dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  dialogContent.querySelector("#manage-program-admins")?.addEventListener("click", () => showProgramAdmins(program));
   dialogContent.querySelector("#program-status-action")?.addEventListener("click", async (clickEvent) => {
     const nextStatus = program.program_status === "active" ? "archived" : "active";
     if (!window.confirm(`${nextStatus === "archived" ? "Archive" : "Restore"} this program?`)) return;
@@ -401,6 +404,82 @@ async function showProgramDialog(program = null) {
       setButtonBusy(save, false);
     }
   });
+}
+
+async function showProgramAdmins(program) {
+  openDialog("Program Admin assignments", `<div class="dialog-stack"><p id="dialog-error" class="dialog-error" role="alert"></p><form id="assignment-form" class="toolbar"><div class="field-group search-field"><label for="assignment-user">Program Admin</label><select id="assignment-user" name="user_id" required></select></div><button class="primary-button" type="submit">Assign</button></form><div id="assignment-results" class="table-wrap"></div><div class="dialog-actions"><button class="secondary-button" type="button" data-back>Back to program</button></div></div>`);
+  const select = dialogContent.querySelector("#assignment-user");
+  const result = dialogContent.querySelector("#assignment-results");
+  const load = async () => {
+    result.innerHTML = '<div class="loading-state"><div class="large-spinner"></div><span>Loading assignments...</span></div>';
+    try {
+      const [assignmentsResponse, usersResponse] = await Promise.all([apiRequest(`/programs/${program.program_id}/admins`), apiRequest("/users")]);
+      const assignments = assignmentsResponse.data;
+      const eligibleUsers = usersResponse.data.filter((user) => user.account_status === "active" && user.role.role_name === "program_admin");
+      select.innerHTML = "";
+      for (const user of eligibleUsers) {
+        const option = document.createElement("option");
+        option.value = user.user_id;
+        option.textContent = `${user.full_name} (${user.email})`;
+        select.append(option);
+      }
+      if (!assignments.length) {
+        renderEmpty(result, "No Program Admin assignments", "Assign an active Program Admin account to this program.");
+        return;
+      }
+      result.innerHTML = '<table class="data-table"><thead><tr><th>Program Admin</th><th>Email</th><th>Status</th><th>Assigned</th><th>Action</th></tr></thead><tbody></tbody></table>';
+      const tbody = result.querySelector("tbody");
+      for (const assignment of assignments) {
+        const row = document.createElement("tr");
+        const statusCell = document.createElement("td");
+        statusCell.append(badge(assignment.assignment_status));
+        const actionCell = document.createElement("td");
+        if (assignment.assignment_status === "active") {
+          const revoke = document.createElement("button");
+          revoke.type = "button";
+          revoke.className = "table-button";
+          revoke.textContent = "Revoke";
+          revoke.addEventListener("click", async () => {
+            if (!window.confirm("Revoke this Program Admin assignment?")) return;
+            revoke.disabled = true;
+            try {
+              await apiRequest(`/program-admin-assignments/${assignment.assignment_id}/revoke`, { method: "PATCH" });
+              showToast("Program Admin assignment revoked.");
+              load();
+            } catch (error) {
+              setDialogError(error.message);
+              revoke.disabled = false;
+            }
+          });
+          actionCell.append(revoke);
+        } else {
+          actionCell.textContent = "-";
+        }
+        row.append(cell(assignment.user.full_name, "primary-cell"), cell(assignment.user.email), statusCell, cell(formatDateTime(assignment.assigned_at)), actionCell);
+        tbody.append(row);
+      }
+    } catch (error) {
+      setDialogError(error.message);
+      renderEmpty(result, "Unable to load assignments", error.message);
+    }
+  };
+  dialogContent.querySelector("[data-back]").addEventListener("click", () => showProgramDialog(program));
+  dialogContent.querySelector("#assignment-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submit = event.currentTarget.querySelector('[type="submit"]');
+    setButtonBusy(submit, true);
+    setDialogError();
+    try {
+      await apiRequest(`/programs/${program.program_id}/admins`, { method: "POST", body: { user_id: Number(select.value) } });
+      showToast("Program Admin assigned.");
+      load();
+    } catch (error) {
+      setDialogError(error.message);
+    } finally {
+      setButtonBusy(submit, false);
+    }
+  });
+  await load();
 }
 
 async function renderEvents() {
@@ -741,6 +820,229 @@ async function showAttendanceStatusDialog(record, event) {
   });
 }
 
+async function renderUnits() {
+  renderLoading();
+  try {
+    const units = (await apiRequest("/organizational-units")).data;
+    const unitsById = new Map(units.map((unit) => [unit.org_unit_id, unit]));
+    root.innerHTML = `
+      <section class="view-intro"><div><h2>Organizational Units</h2><p id="unit-count"></p></div><button id="create-unit" class="primary-button" type="button">Add unit</button></section>
+      <div class="toolbar"><div class="field-group search-field"><label for="unit-search">Search</label><input id="unit-search" type="search" placeholder="Unit name, type, or code" /></div></div>
+      <section class="panel"><div id="unit-table" class="table-wrap"></div></section>`;
+    setText("#unit-count", `${formatNumber(units.length)} active unit${units.length === 1 ? "" : "s"}`);
+    const draw = () => {
+      const search = document.querySelector("#unit-search").value.trim().toLowerCase();
+      const filtered = units.filter((unit) => `${unit.unit_name} ${unit.unit_type} ${unit.unit_code || ""}`.toLowerCase().includes(search));
+      const container = document.querySelector("#unit-table");
+      if (!filtered.length) {
+        renderEmpty(container, "No matching units", "Adjust the current search.");
+        return;
+      }
+      container.innerHTML = '<table class="data-table"><thead><tr><th>Unit</th><th>Type</th><th>Code</th><th>Parent unit</th><th>Action</th></tr></thead><tbody></tbody></table>';
+      const tbody = container.querySelector("tbody");
+      for (const unit of filtered) {
+        const row = document.createElement("tr");
+        row.append(cell(unit.unit_name, "primary-cell"), cell(unit.unit_type), cell(unit.unit_code), cell(unitsById.get(unit.parent_unit_id)?.unit_name || "Root unit"));
+        const actionCell = document.createElement("td");
+        const action = document.createElement("button");
+        action.type = "button";
+        action.className = "table-button";
+        action.textContent = "Manage";
+        action.addEventListener("click", () => showUnitDialog(unit, units));
+        actionCell.append(action);
+        row.append(actionCell);
+        tbody.append(row);
+      }
+    };
+    document.querySelector("#unit-search").addEventListener("input", draw);
+    document.querySelector("#create-unit").addEventListener("click", () => showUnitDialog(null, units));
+    draw();
+  } catch (error) {
+    renderError(error, renderUnits);
+  }
+}
+
+function addUnitOptions(select, units, selectedId = null, excludeId = null) {
+  const rootOption = document.createElement("option");
+  rootOption.value = "";
+  rootOption.textContent = "No parent (root unit)";
+  select.append(rootOption);
+  for (const unit of units) {
+    if (unit.org_unit_id === excludeId) continue;
+    const option = document.createElement("option");
+    option.value = unit.org_unit_id;
+    option.textContent = `${unit.unit_name} (${unit.unit_type})`;
+    select.append(option);
+  }
+  select.value = selectedId ? String(selectedId) : "";
+}
+
+function showUnitDialog(unit, units) {
+  openDialog(unit ? "Manage organizational unit" : "Add organizational unit", `
+    <form id="unit-form" class="dialog-form">
+      <p id="dialog-error" class="dialog-error" role="alert"></p>
+      <div class="form-grid">
+        <div class="field-group full-span"><label for="unit-name">Unit name</label><input id="unit-name" name="unit_name" maxlength="200" required /></div>
+        <div class="field-group"><label for="unit-type">Unit type</label><input id="unit-type" name="unit_type" maxlength="50" placeholder="office, division, section" required /></div>
+        <div class="field-group"><label for="unit-code">Unit code</label><input id="unit-code" name="unit_code" maxlength="50" /></div>
+        <div class="field-group full-span"><label for="unit-parent">Parent unit</label><select id="unit-parent" name="parent_unit_id"></select></div>
+      </div>
+      <div class="dialog-actions"><button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save unit</span><span class="button-spinner"></span></button></div>
+    </form>`);
+  const form = dialogContent.querySelector("#unit-form");
+  addUnitOptions(form.elements.parent_unit_id, units, unit?.parent_unit_id, unit?.org_unit_id);
+  if (unit) {
+    form.elements.unit_name.value = unit.unit_name;
+    form.elements.unit_type.value = unit.unit_type;
+    form.elements.unit_code.value = unit.unit_code || "";
+  }
+  dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const save = form.querySelector('[type="submit"]');
+    const payload = {
+      unit_name: form.elements.unit_name.value,
+      unit_type: form.elements.unit_type.value,
+      unit_code: form.elements.unit_code.value.trim() || null,
+      parent_unit_id: form.elements.parent_unit_id.value ? Number(form.elements.parent_unit_id.value) : null,
+    };
+    setButtonBusy(save, true);
+    setDialogError();
+    try {
+      await apiRequest(unit ? `/organizational-units/${unit.org_unit_id}` : "/organizational-units", { method: unit ? "PATCH" : "POST", body: payload });
+      closeDialog();
+      showToast(unit ? "Organizational unit updated." : "Organizational unit created.");
+      renderUnits();
+    } catch (error) {
+      setDialogError(error.message);
+    } finally {
+      setButtonBusy(save, false);
+    }
+  });
+}
+
+async function renderUsers() {
+  renderLoading();
+  try {
+    const users = (await apiRequest("/users")).data;
+    root.innerHTML = `
+      <section class="view-intro"><div><h2>Admin Users</h2><p id="user-count"></p></div><button id="create-user" class="primary-button" type="button">Add admin user</button></section>
+      <div class="toolbar"><div class="field-group search-field"><label for="user-search">Search</label><input id="user-search" type="search" placeholder="Name, email, role, or unit" /></div><div class="field-group"><label for="user-status">Status</label><select id="user-status"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div>
+      <section class="panel"><div id="user-table" class="table-wrap"></div></section>`;
+    setText("#user-count", `${formatNumber(users.length)} admin account${users.length === 1 ? "" : "s"}`);
+    const draw = () => {
+      const search = document.querySelector("#user-search").value.trim().toLowerCase();
+      const status = document.querySelector("#user-status").value;
+      const filtered = users.filter((user) => {
+        const searchable = `${user.full_name} ${user.email} ${user.role.role_name} ${user.org_unit?.unit_name || ""}`.toLowerCase();
+        return (!search || searchable.includes(search)) && (!status || user.account_status === status);
+      });
+      const container = document.querySelector("#user-table");
+      if (!filtered.length) {
+        renderEmpty(container, "No matching admin users", "Adjust the current filters.");
+        return;
+      }
+      container.innerHTML = '<table class="data-table"><thead><tr><th>Admin user</th><th>Role</th><th>Organizational unit</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table>';
+      const tbody = container.querySelector("tbody");
+      for (const user of filtered) {
+        const row = document.createElement("tr");
+        const identity = document.createElement("td");
+        const name = document.createElement("div");
+        name.className = "primary-cell";
+        name.textContent = user.full_name;
+        const email = document.createElement("div");
+        email.className = "secondary-cell";
+        email.textContent = user.email;
+        identity.append(name, email);
+        const statusCell = document.createElement("td");
+        statusCell.append(badge(user.account_status));
+        const actionCell = document.createElement("td");
+        const action = document.createElement("button");
+        action.type = "button";
+        action.className = "table-button";
+        action.textContent = "Manage";
+        action.addEventListener("click", () => showUserDialog(user));
+        actionCell.append(action);
+        row.append(identity, cell(formatRole(user.role.role_name)), cell(user.org_unit?.unit_name), statusCell, actionCell);
+        tbody.append(row);
+      }
+    };
+    document.querySelector("#user-search").addEventListener("input", draw);
+    document.querySelector("#user-status").addEventListener("change", draw);
+    document.querySelector("#create-user").addEventListener("click", () => showUserDialog());
+    draw();
+  } catch (error) {
+    renderError(error, renderUsers);
+  }
+}
+
+async function showUserDialog(user = null) {
+  openDialog(user ? "Manage admin user" : "Add admin user", `<form id="user-form" class="dialog-form"><p id="dialog-error" class="dialog-error" role="alert"></p><div class="form-grid"><div class="field-group full-span"><label for="admin-name">Full name</label><input id="admin-name" name="full_name" maxlength="150" required /></div><div class="field-group full-span"><label for="admin-email">Email address</label><input id="admin-email" name="email" type="email" maxlength="150" required /></div>${user ? "" : '<div class="field-group full-span"><label for="admin-password">Temporary password</label><input id="admin-password" name="password" type="password" minlength="8" maxlength="72" required /></div>'}<div class="field-group"><label for="admin-role">Role</label><select id="admin-role" name="role_id" required></select></div><div class="field-group"><label for="admin-unit">Organizational unit</label><select id="admin-unit" name="org_unit_id"></select></div></div><div class="dialog-actions">${user ? `<button id="user-status-action" class="${user.account_status === "active" ? "danger-button" : "secondary-button"}" type="button">${user.account_status === "active" ? "Deactivate account" : "Activate account"}</button>` : ""}<button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save user</span><span class="button-spinner"></span></button></div></form>`);
+  const form = dialogContent.querySelector("#user-form");
+  try {
+    const [rolesResponse, unitsResponse] = await Promise.all([apiRequest("/roles"), apiRequest("/organizational-units")]);
+    for (const role of rolesResponse.data) {
+      const option = document.createElement("option");
+      option.value = role.role_id;
+      option.textContent = formatRole(role.role_name);
+      form.elements.role_id.append(option);
+    }
+    const none = document.createElement("option");
+    none.value = "";
+    none.textContent = "No organizational unit";
+    form.elements.org_unit_id.append(none);
+    for (const unit of unitsResponse.data) {
+      const option = document.createElement("option");
+      option.value = unit.org_unit_id;
+      option.textContent = unit.unit_name;
+      form.elements.org_unit_id.append(option);
+    }
+    if (user) {
+      form.elements.full_name.value = user.full_name;
+      form.elements.email.value = user.email;
+      form.elements.role_id.value = String(user.role.role_id);
+      form.elements.org_unit_id.value = user.org_unit ? String(user.org_unit.org_unit_id) : "";
+    }
+  } catch (error) {
+    setDialogError(error.message);
+  }
+  dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  dialogContent.querySelector("#user-status-action")?.addEventListener("click", async (clickEvent) => {
+    const nextStatus = user.account_status === "active" ? "inactive" : "active";
+    if (!window.confirm(`${nextStatus === "inactive" ? "Deactivate" : "Activate"} this account?`)) return;
+    const button = clickEvent.currentTarget;
+    setButtonBusy(button, true);
+    try {
+      await apiRequest(`/users/${user.user_id}/status`, { method: "PATCH", body: { account_status: nextStatus } });
+      closeDialog();
+      showToast("Admin account status updated.");
+      renderUsers();
+    } catch (error) {
+      setDialogError(error.message);
+    } finally {
+      setButtonBusy(button, false);
+    }
+  });
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const save = form.querySelector('[type="submit"]');
+    const payload = { full_name: form.elements.full_name.value, email: form.elements.email.value, role_id: Number(form.elements.role_id.value), org_unit_id: form.elements.org_unit_id.value ? Number(form.elements.org_unit_id.value) : null };
+    if (!user) payload.password = form.elements.password.value;
+    setButtonBusy(save, true);
+    setDialogError();
+    try {
+      await apiRequest(user ? `/users/${user.user_id}` : "/users", { method: user ? "PATCH" : "POST", body: payload });
+      closeDialog();
+      showToast(user ? "Admin user updated." : "Admin user created.");
+      renderUsers();
+    } catch (error) {
+      setDialogError(error.message);
+    } finally {
+      setButtonBusy(save, false);
+    }
+  });
+}
+
 function auditQuery() {
   const params = new URLSearchParams({ page: String(state.auditPage), pageSize: "25" });
   const fields = {
@@ -850,7 +1152,10 @@ function initializeUser(user) {
   setText("#sidebar-user-name", user.full_name);
   setText("#sidebar-user-role", formatRole(user.role.role_name));
   setText("#user-initials", initials(user.full_name));
-  document.querySelector("#audit-nav").hidden = user.role.role_name !== "super_admin";
+  const showSuperAdminNavigation = user.role.role_name === "super_admin";
+  document.querySelector("#units-nav").hidden = !showSuperAdminNavigation;
+  document.querySelector("#users-nav").hidden = !showSuperAdminNavigation;
+  document.querySelector("#audit-nav").hidden = !showSuperAdminNavigation;
 }
 
 document.querySelector("#dialog-close").addEventListener("click", closeDialog);
