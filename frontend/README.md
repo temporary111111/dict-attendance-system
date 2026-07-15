@@ -51,7 +51,7 @@ Edit `js/config.js` when the backend host changes:
 
 ```javascript
 window.APP_CONFIG = Object.freeze({
-  apiBaseUrl: "http://127.0.0.1:8000/api",
+  apiBaseUrl: "http://192.168.1.131:8000/api",
 });
 ```
 
@@ -74,3 +74,5 @@ python frontend\scripts\smoke_check.py
 
 The checker validates local HTML references, duplicate element IDs, JavaScript
 module imports, and the configured API URL without requiring Node.js.
+
+For the complete role-based workflow, see [manual-test-guide.md](./manual-test-guide.md).
