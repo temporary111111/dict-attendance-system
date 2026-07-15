@@ -22,6 +22,7 @@ const views = {
   dashboard: { title: "Dashboard", load: renderDashboard },
   programs: { title: "Programs", load: renderPrograms },
   events: { title: "Events", load: renderEvents },
+  reports: { title: "Reports", load: renderReports },
   units: { title: "Organizational Units", load: renderUnits, superAdminOnly: true },
   users: { title: "Admin Users", load: renderUsers, superAdminOnly: true },
   audit: { title: "Audit Logs", load: renderAuditLogs, superAdminOnly: true },
@@ -818,6 +819,123 @@ async function showAttendanceStatusDialog(record, event) {
       setButtonBusy(save, false);
     }
   });
+}
+
+async function renderReports() {
+  renderLoading();
+  try {
+    const programs = (await apiRequest("/programs")).data;
+    root.innerHTML = `
+      <section class="view-intro"><div><h2>Attendance Reports</h2><p>Program and event attendance summaries</p></div></section>
+      <form id="report-filters" class="toolbar">
+        <div class="field-group search-field"><label for="report-program">Program</label><select id="report-program" required></select></div>
+        <div class="field-group"><label for="report-date-from">From</label><input id="report-date-from" type="date" /></div>
+        <div class="field-group"><label for="report-date-to">To</label><input id="report-date-to" type="date" /></div>
+        <button class="primary-button" type="submit">Apply</button>
+      </form>
+      <section id="report-results"></section>`;
+    const select = document.querySelector("#report-program");
+    if (!programs.length) {
+      renderEmpty(document.querySelector("#report-results"), "No visible programs", "Reports appear once you can access a program.");
+      return;
+    }
+    for (const program of programs) {
+      const option = document.createElement("option");
+      option.value = program.program_id;
+      option.textContent = program.program_name;
+      select.append(option);
+    }
+    const load = () => loadProgramReport(Number(select.value));
+    document.querySelector("#report-filters").addEventListener("submit", (event) => {
+      event.preventDefault();
+      load();
+    });
+    await load();
+  } catch (error) {
+    renderError(error, renderReports);
+  }
+}
+
+async function loadProgramReport(programId) {
+  const container = document.querySelector("#report-results");
+  container.innerHTML = '<div class="panel loading-state"><div class="large-spinner"></div><span>Loading report...</span></div>';
+  const params = new URLSearchParams();
+  const dateFrom = document.querySelector("#report-date-from").value;
+  const dateTo = document.querySelector("#report-date-to").value;
+  if (dateFrom) params.set("dateFrom", dateFrom);
+  if (dateTo) params.set("dateTo", dateTo);
+  try {
+    const data = (await apiRequest(`/reports/programs/${programId}/summary${params.size ? `?${params}` : ""}`)).data;
+    container.innerHTML = `
+      <section class="summary-grid" aria-label="Program report totals">
+        <article class="summary-card"><span class="summary-label">Events</span><strong id="report-total-events" class="summary-value"></strong></article>
+        <article class="summary-card green"><span class="summary-label">Attendance records</span><strong id="report-total-attendance" class="summary-value"></strong></article>
+        <article class="summary-card amber"><span class="summary-label">Valid attendees</span><strong id="report-valid-attendance" class="summary-value"></strong></article>
+      </section>
+      <section class="dashboard-grid">
+        <article class="panel"><header class="panel-header"><h3>Attendance status</h3></header><div id="report-attendance-bars" class="panel-body status-bars"></div></article>
+        <article class="panel"><header class="panel-header"><h3>Event status</h3></header><div id="report-event-bars" class="panel-body status-bars"></div></article>
+      </section>
+      <section class="panel report-events-panel"><header class="panel-header"><h3 id="report-event-heading"></h3></header><div id="report-event-table" class="table-wrap"></div></section>`;
+    setText("#report-total-events", formatNumber(data.total_events));
+    setText("#report-total-attendance", formatNumber(data.total_attendance));
+    setText("#report-valid-attendance", formatNumber(data.attendance_by_status.valid));
+    setText("#report-event-heading", `${data.program_name} events`);
+    statusBars(document.querySelector("#report-attendance-bars"), data.attendance_by_status);
+    statusBars(document.querySelector("#report-event-bars"), data.events_by_status);
+    const events = document.querySelector("#report-event-table");
+    if (!data.events.length) {
+      renderEmpty(events, "No events in this date range", "Adjust the selected dates or choose another program.");
+      return;
+    }
+    events.innerHTML = '<table class="data-table"><thead><tr><th>Event</th><th>Date</th><th>Status</th><th class="numeric-cell">Attendance</th><th class="numeric-cell">Valid</th><th>Action</th></tr></thead><tbody></tbody></table>';
+    const tbody = events.querySelector("tbody");
+    for (const event of data.events) {
+      const row = document.createElement("tr");
+      const statusCell = document.createElement("td");
+      statusCell.append(badge(event.event_status));
+      const actionCell = document.createElement("td");
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "table-button";
+      action.textContent = "View summary";
+      action.addEventListener("click", () => showEventReport(event.event_id));
+      actionCell.append(action);
+      row.append(cell(event.event_title, "primary-cell"), cell(formatDate(event.event_date)), statusCell, cell(formatNumber(event.total_attendance), "numeric-cell"), cell(formatNumber(event.valid_attendance), "numeric-cell"), actionCell);
+      tbody.append(row);
+    }
+  } catch (error) {
+    container.innerHTML = '<section class="panel error-state"><div class="state-symbol">!</div><strong>Unable to load this report</strong><span id="report-error-message"></span></section>';
+    setText("#report-error-message", error.message, container);
+  }
+}
+
+async function showEventReport(eventId) {
+  openDialog("Event attendance summary", '<div class="dialog-stack"><p id="dialog-error" class="dialog-error" role="alert"></p><div id="event-report-content" class="loading-state"><div class="large-spinner"></div><span>Loading event summary...</span></div></div>');
+  const container = dialogContent.querySelector("#event-report-content");
+  try {
+    const data = (await apiRequest(`/reports/events/${eventId}/attendance`)).data;
+    container.className = "dialog-stack";
+    container.innerHTML = '<section class="summary-grid"><article class="summary-card"><span class="summary-label">Attendance records</span><strong id="event-report-total" class="summary-value"></strong></article><article class="summary-card green"><span class="summary-label">Valid attendees</span><strong id="event-report-valid" class="summary-value"></strong></article><article class="summary-card amber"><span class="summary-label">Documentation consent</span><strong id="event-report-consent" class="summary-value"></strong></article></section><dl id="event-report-meta" class="event-meta"></dl><section class="panel"><header class="panel-header"><h3>Attendance status</h3></header><div id="event-report-statuses" class="panel-body status-bars"></div></section><section class="panel"><header class="panel-header"><h3>Attendees by sex</h3></header><div id="event-report-sex" class="panel-body status-bars"></div></section><div class="dialog-actions"><button id="event-report-pdf" class="secondary-button" type="button">Generate PDF</button><button class="primary-button" type="button" data-close>Close</button></div>';
+    setText("#event-report-total", formatNumber(data.total_attendance), container);
+    setText("#event-report-valid", formatNumber(data.attendance_by_status.valid), container);
+    setText("#event-report-consent", `${formatNumber(data.documentation_consent.accepted)} accepted`, container);
+    const meta = container.querySelector("#event-report-meta");
+    for (const [label, value] of [["Program", data.program_name], ["Event", data.event_title], ["Date", formatDate(data.event_date)], ["Venue", data.venue], ["Status", data.event_status]]) {
+      const dt = document.createElement("dt");
+      const dd = document.createElement("dd");
+      dt.textContent = label;
+      dd.textContent = value;
+      meta.append(dt, dd);
+    }
+    statusBars(container.querySelector("#event-report-statuses"), data.attendance_by_status);
+    statusBars(container.querySelector("#event-report-sex"), data.attendees_by_sex);
+    container.querySelector("[data-close]").addEventListener("click", closeDialog);
+    container.querySelector("#event-report-pdf").addEventListener("click", (event) => downloadPdf(eventId, event.currentTarget));
+  } catch (error) {
+    container.className = "error-state";
+    container.textContent = error.message;
+  }
 }
 
 async function renderUnits() {

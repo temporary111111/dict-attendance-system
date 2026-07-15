@@ -14,6 +14,7 @@ Hindi kailangang ilagay o i-serve ng FastAPI ang frontend files.
 * Per-event fixed attendance field requirements
 * Attendance record review and status update for authorized admins
 * Generated DICT attendance-sheet PDF download per event
+* Program and event attendance summary reports
 * Paginated and filtered audit logs for Super Admin only
 
 ## Local Run

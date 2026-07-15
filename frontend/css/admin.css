@@ -288,6 +288,10 @@
   margin-top: 16px;
 }
 
+.report-events-panel {
+  margin-top: 16px;
+}
+
 .panel {
   min-width: 0;
   border: 1px solid var(--line);
