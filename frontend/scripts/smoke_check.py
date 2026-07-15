@@ -82,7 +82,11 @@ def check_config() -> list[str]:
 
 def main() -> None:
     errors = []
-    for html_path in (FRONTEND_ROOT / "index.html", FRONTEND_ROOT / "admin.html"):
+    for html_path in (
+        FRONTEND_ROOT / "index.html",
+        FRONTEND_ROOT / "admin.html",
+        FRONTEND_ROOT / "attendance.html",
+    ):
         errors.extend(check_html(html_path))
     errors.extend(check_js_imports())
     errors.extend(check_config())

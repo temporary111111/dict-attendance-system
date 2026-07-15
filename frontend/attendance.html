@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Event Attendance | DICT</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./css/base.css" />
+    <link rel="stylesheet" href="./css/attendance.css" />
+    <script src="./js/config.js"></script>
+    <script type="module" src="./js/attendance.js"></script>
+  </head>
+  <body class="attendance-page">
+    <header class="attendance-header">
+      <img src="./assets/dict-header.png" alt="Department of Information and Communications Technology" />
+    </header>
+    <main id="attendance-root" class="attendance-root" aria-live="polite">
+      <section class="attendance-state" role="status">
+        <div class="large-spinner"></div>
+        <span>Loading event attendance form...</span>
+      </section>
+    </main>
+  </body>
+</html>

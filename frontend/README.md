@@ -15,6 +15,7 @@ Hindi kailangang ilagay o i-serve ng FastAPI ang frontend files.
 * Attendance record review and status update for authorized admins
 * Generated DICT attendance-sheet PDF download per event
 * Program and event attendance summary reports
+* Public QR/link attendance page with PSGC address selection
 * Paginated and filtered audit logs for Super Admin only
 
 ## Local Run
@@ -36,6 +37,12 @@ Open:
 
 ```text
 http://127.0.0.1:5500/
+```
+
+The generated event QR code opens this public route:
+
+```text
+http://127.0.0.1:5500/attendance.html?event=EVENT_CODE
 ```
 
 ## API Configuration
