@@ -39,7 +39,13 @@ function renderError(title, message) {
 }
 
 function setFieldError(fieldName, message = "") {
-  const normalizedName = ["region_code", "province_code", "city_municipality_code", "barangay_code"].includes(fieldName) ? "psgc_address" : fieldName;
+  let normalizedName = fieldName;
+  if (["region_code", "province_code", "city_municipality_code", "barangay_code"].includes(fieldName)) {
+    normalizedName = "psgc_address";
+  }
+  if (["signature_text", "signature_image"].includes(fieldName)) {
+    normalizedName = "signature";
+  }
   const field = root.querySelector(`[data-field="${CSS.escape(normalizedName)}"]`);
   if (!field) return;
   const input = field.querySelector("input, select, textarea");
