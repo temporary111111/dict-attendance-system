@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any, NoReturn
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import require_super_admin
@@ -23,6 +23,11 @@ from app.services.psgc_admin_service import (
     upsert_province,
     upsert_region,
 )
+from app.services.psgc_import_service import (
+    PSGCImportValidationError,
+    import_psgc_workbook,
+    preview_psgc_workbook,
+)
 
 router = APIRouter(prefix="/admin/psgc", tags=["PSGC management"])
 
@@ -35,6 +40,84 @@ def _parent_error() -> NoReturn:
             "Select an active and matching PSGC parent record.",
         ),
     )
+
+
+async def _read_psgc_upload(file: UploadFile, max_bytes: int) -> tuple[bytes, str]:
+    """Binabasa lang ang reasonable-size Excel file bago ito i-validate."""
+    file_name = file.filename or "PSGC-masterlist.xlsx"
+    if not file_name.lower().endswith(".xlsx"):
+        raise HTTPException(
+            status_code=422,
+            detail=error_response(
+                "INVALID_PSGC_IMPORT_FILE",
+                "Upload an official PSGC Excel (.xlsx) file.",
+            ),
+        )
+    contents = await file.read(max_bytes + 1)
+    if len(contents) > max_bytes:
+        raise HTTPException(
+            status_code=422,
+            detail=error_response(
+                "INVALID_PSGC_IMPORT_FILE",
+                "The PSGC Excel file exceeds the allowed upload size.",
+            ),
+        )
+    return contents, file_name
+
+
+@router.post("/imports/preview")
+async def preview_psgc_import(
+    request: Request,
+    source_version: Annotated[str, Form(min_length=1, max_length=120)],
+    file: Annotated[UploadFile, File()],
+    current_user: Annotated[User, Depends(require_super_admin)],
+) -> dict[str, Any]:
+    """Preview lang ito; walang mababago sa PSGC lookup tables."""
+    contents, file_name = await _read_psgc_upload(
+        file,
+        request.app.state.settings.psgc_import_max_bytes,
+    )
+    try:
+        preview = preview_psgc_workbook(contents, file_name)
+        message = "PSGC file is ready to import."
+    except PSGCImportValidationError as error:
+        preview = error.preview
+        message = "PSGC file needs correction before import."
+    preview["source_version"] = source_version.strip()
+    return success_response(preview, message)
+
+
+@router.post("/imports/apply")
+async def apply_psgc_import(
+    request: Request,
+    source_version: Annotated[str, Form(min_length=1, max_length=120)],
+    file: Annotated[UploadFile, File()],
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_super_admin)],
+) -> dict[str, Any]:
+    """Imports only a workbook that passes the same validation as preview."""
+    contents, file_name = await _read_psgc_upload(
+        file,
+        request.app.state.settings.psgc_import_max_bytes,
+    )
+    try:
+        result = import_psgc_workbook(
+            db,
+            contents,
+            file_name,
+            source_version.strip(),
+            current_user.user_id,
+        )
+    except PSGCImportValidationError as error:
+        raise HTTPException(
+            status_code=422,
+            detail=error_response(
+                "INVALID_PSGC_IMPORT",
+                "PSGC file validation failed. Preview and correct the file first.",
+                {"file": error.errors},
+            ),
+        ) from error
+    return success_response(result, "PSGC masterlist imported.")
 
 
 @router.get("/summary")

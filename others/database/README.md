@@ -10,7 +10,7 @@ This folder contains the MySQL database deliverables derived from the approved E
 | `seed-core.sql` | Starter seed data for roles and the root DICT organizational unit. |
 | `smoke-test.sql` | Sample inserts and verification queries for testing the schema relationships. |
 | `data-dictionary.md` | Explanation of every table and field in beginner-friendly terms. |
-| `psgc-import-plan.md` | Plan for importing official PSA PSGC data into local MySQL lookup tables. |
+| `psgc-import-plan.md` | Actual Super Admin workflow for importing official PSA PSGC data into local MySQL lookup tables. |
 | `migrations/` | One-time SQL updates para sa existing database. |
 
 ## Suggested Setup Order
@@ -19,7 +19,7 @@ This folder contains the MySQL database deliverables derived from the approved E
 2. Run `schema.sql`.
 3. Run `seed-core.sql`.
 4. Run `smoke-test.sql` to verify that the schema works.
-5. Import PSGC data later using the process in `psgc-import-plan.md`.
+5. Log in as Super Admin and import the official PSGC `.xlsx` file using the preview-and-confirm process in `psgc-import-plan.md`.
 
 PowerShell example:
 

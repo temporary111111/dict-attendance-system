@@ -1159,6 +1159,28 @@ async function renderPsgcManagement() {
         <article class="summary-card amber"><span class="summary-label">Cities / municipalities</span><strong class="summary-value">${formatNumber(summary.cities_municipalities)}</strong></article>
         <article class="summary-card"><span class="summary-label">Barangays</span><strong class="summary-value">${formatNumber(summary.barangays)}</strong></article>
       </section>
+      <section class="panel psgc-import-panel">
+        <header class="panel-header"><h3>Import PSA PSGC masterlist</h3></header>
+        <form id="psgc-import-form" class="panel-body dialog-form">
+          <div id="psgc-import-feedback" class="notice notice-error" role="alert" hidden></div>
+          <div class="form-grid">
+            <div class="field-group full-span"><label for="psgc-import-file">Official PSGC Excel file</label><input id="psgc-import-file" name="file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required /></div>
+            <div class="field-group"><label for="psgc-source-version">PSA release/version</label><input id="psgc-source-version" name="source_version" maxlength="120" placeholder="Example: PSGC 2Q 2026" required /></div>
+          </div>
+          <p class="field-help">Preview checks the Excel headers, PSGC codes, duplicates, and parent hierarchy before anything is saved.</p>
+          <div class="dialog-actions"><button id="psgc-preview-button" class="secondary-button" type="submit"><span class="button-label">Preview file</span><span class="button-spinner"></span></button><button id="psgc-import-button" class="primary-button" type="button" hidden disabled><span class="button-label">Import masterlist</span><span class="button-spinner"></span></button></div>
+          <section id="psgc-import-preview" class="psgc-import-preview" aria-live="polite" hidden>
+            <p id="psgc-import-status" class="field-help"></p>
+            <dl class="psgc-import-counts">
+              <div><dt>Regions</dt><dd id="psgc-import-regions">0</dd></div>
+              <div><dt>Provinces</dt><dd id="psgc-import-provinces">0</dd></div>
+              <div><dt>Cities / municipalities</dt><dd id="psgc-import-cities">0</dd></div>
+              <div><dt>Barangays</dt><dd id="psgc-import-barangays">0</dd></div>
+            </dl>
+            <ul id="psgc-import-errors" class="psgc-import-errors" hidden></ul>
+          </section>
+        </form>
+      </section>
       <section class="panel psgc-management-panel">
         <header class="panel-header"><h3>Add or update a PSGC record</h3></header>
         <form id="psgc-form" class="panel-body dialog-form">
@@ -1177,6 +1199,94 @@ async function renderPsgcManagement() {
         </form>
       </section>`;
     const form = document.querySelector("#psgc-form");
+    const importForm = document.querySelector("#psgc-import-form");
+    const importFile = importForm.elements.file;
+    const sourceVersion = importForm.elements.source_version;
+    const previewButton = document.querySelector("#psgc-preview-button");
+    const importButton = document.querySelector("#psgc-import-button");
+    const importFeedback = document.querySelector("#psgc-import-feedback");
+    const importPreview = document.querySelector("#psgc-import-preview");
+    const importStatus = document.querySelector("#psgc-import-status");
+    const importErrors = document.querySelector("#psgc-import-errors");
+    let readyImport = null;
+
+    const resetImportPreview = () => {
+      readyImport = null;
+      importPreview.hidden = true;
+      importFeedback.hidden = true;
+      importButton.hidden = true;
+      importButton.disabled = true;
+    };
+    const showImportFeedback = (message) => {
+      importFeedback.textContent = message;
+      importFeedback.hidden = false;
+    };
+    const makeImportFormData = () => {
+      const data = new FormData();
+      data.append("source_version", sourceVersion.value.trim());
+      data.append("file", importFile.files[0]);
+      return data;
+    };
+    const showImportPreview = (preview, message) => {
+      const counts = preview.counts || {};
+      document.querySelector("#psgc-import-regions").textContent = formatNumber(counts.regions || 0);
+      document.querySelector("#psgc-import-provinces").textContent = formatNumber(counts.provinces || 0);
+      document.querySelector("#psgc-import-cities").textContent = formatNumber(counts.cities_municipalities || 0);
+      document.querySelector("#psgc-import-barangays").textContent = formatNumber(counts.barangays || 0);
+      importStatus.textContent = preview.valid ? `${message} Ready to import ${preview.file_name}.` : "No data was saved. Correct the listed file issues, then preview again.";
+      importErrors.replaceChildren();
+      for (const error of preview.errors || []) {
+        const item = document.createElement("li");
+        item.textContent = error;
+        importErrors.append(item);
+      }
+      importErrors.hidden = !(preview.errors || []).length;
+      importPreview.hidden = false;
+      readyImport = preview.valid ? preview : null;
+      importButton.hidden = !readyImport;
+      importButton.disabled = !readyImport;
+    };
+    importFile.addEventListener("change", resetImportPreview);
+    sourceVersion.addEventListener("input", resetImportPreview);
+    importForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!importFile.files[0]) {
+        showImportFeedback("Choose the official PSGC Excel file first.");
+        return;
+      }
+      setButtonBusy(previewButton, true);
+      importFeedback.hidden = true;
+      try {
+        const response = await apiRequest("/admin/psgc/imports/preview", {
+          method: "POST",
+          body: makeImportFormData(),
+        });
+        showImportPreview(response.data, response.message);
+      } catch (error) {
+        showImportFeedback(error.message);
+      } finally {
+        setButtonBusy(previewButton, false);
+      }
+    });
+    importButton.addEventListener("click", async () => {
+      if (!readyImport || !importFile.files[0]) return;
+      const confirmed = window.confirm("Import this validated PSGC masterlist into the local lookup data?");
+      if (!confirmed) return;
+      setButtonBusy(importButton, true);
+      importFeedback.hidden = true;
+      try {
+        const response = await apiRequest("/admin/psgc/imports/apply", {
+          method: "POST",
+          body: makeImportFormData(),
+        });
+        showToast(response.message);
+        renderPsgcManagement();
+      } catch (error) {
+        showImportFeedback(error.message);
+      } finally {
+        setButtonBusy(importButton, false);
+      }
+    });
     const level = form.elements.level;
     const region = form.elements.region_code;
     const province = form.elements.province_code;

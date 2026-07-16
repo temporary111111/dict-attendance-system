@@ -177,8 +177,8 @@ GET /api/psgc/barangays?cityMunicipalityCode={cityMunicipalityCode}
 The public event response includes `attendance_field_requirements`, which the
 frontend uses to mark the fixed inputs required or optional. The submission
 endpoint accepts `multipart/form-data` with the fixed name, affiliation,
-designation/category, sex, email, consent, address, and typed or uploaded
-signature inputs. The backend enforces the selected event's requirement
+designation/category, sex, email, consent, address, and optional signature
+image input. The backend enforces the selected event's requirement
 snapshot; existing submissions are not revalidated after a setting changes.
 
 Address fields are optional by default. Once any address field is provided,
@@ -199,6 +199,22 @@ directory as static media.
 SIGNATURE_DIRECTORY=storage/signatures
 SIGNATURE_MAX_BYTES=5242880
 ```
+
+## PSGC Masterlist Import
+
+Super Admins can import an official PSA Excel masterlist through the admin UI.
+The UI calls these protected endpoints:
+
+```text
+POST /api/admin/psgc/imports/preview
+POST /api/admin/psgc/imports/apply
+```
+
+Both endpoints require `multipart/form-data` with `file` (`.xlsx`) and
+`source_version`. Preview only validates headers, numeric codes, duplicates,
+and the complete PSGC parent hierarchy. Apply validates the same file again,
+then upserts all rows in one transaction and creates one audit log. The default
+maximum upload size is 10 MiB and can be changed with `PSGC_IMPORT_MAX_BYTES`.
 
 ## Attendance Record Management
 

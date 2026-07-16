@@ -44,10 +44,12 @@ Expected: hindi makikita ng Program Admin ang `Organizational Units`, `Admin Use
 ## 4. Super Admin Verification
 
 1. Sa `Organizational Units`, mag-deactivate ng unit na walang active child at i-restore ito.
-2. Sa `PSGC Data`, gumawa o mag-update ng test PSGC record gamit ang official numeric code at tamang parent.
-3. Sa `Reports`, piliin ang program at date range.
-4. Buksan ang event summary at i-check ang attendance totals.
-5. Sa `Audit Logs`, i-filter ang `event`, `attendance_record`, `attendance_sheet_export`, o PSGC actions.
-6. I-archive lang ang event kapag closed na ito.
+2. Sa `PSGC Data`, i-download ang official PSA PSGC `.xlsx` masterlist. Piliin ang file, ilagay ang PSA release/version, at pindutin ang `Preview file`.
+3. I-check na tama ang preview counts at walang errors. Pindutin ang `Import masterlist`, then i-confirm ang action.
+4. Subukan din ang invalid test file o file na may missing parent. Dapat errors lang ang lumabas at walang mabago sa PSGC totals.
+5. Sa `Reports`, piliin ang program at date range.
+6. Buksan ang event summary at i-check ang attendance totals.
+7. Sa `Audit Logs`, i-filter ang `event`, `attendance_record`, `attendance_sheet_export`, o PSGC actions.
+8. I-archive lang ang event kapag closed na ito.
 
-Expected: inactive unit ay hindi na available sa bagong assignment pero nananatili ang history nito. Ang PDF ay para sa selected event at valid attendees nito lamang.
+Expected: inactive unit ay hindi na available sa bagong assignment pero nananatili ang history nito. Sa PSGC import, walang data na nase-save sa preview step. Ang valid import ay nag-uupdate o nagdadagdag ng local lookup data at may isang audit log. Ang PDF ay para sa selected event at valid attendees nito lamang.

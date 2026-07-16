@@ -27,6 +27,24 @@ Use a local import/sync process:
 
 This avoids a failure mode where attendees cannot submit attendance because the PSA API or network connection is unavailable.
 
+## Current System Workflow
+
+The Super Admin has an in-app import flow for the official PSA `.xlsx` masterlist:
+
+1. Download the official PSGC Excel masterlist from PSA.
+2. In `PSGC Data`, select the file and enter its PSA release/version.
+3. Use `Preview file`. The system reads the workbook without writing to MySQL.
+4. The preview checks the required headers, numeric PSGC codes, duplicate codes, supported geographic levels, and the region -> province -> city/municipality -> barangay hierarchy.
+5. Only a valid preview enables `Import masterlist`. The confirmation action re-validates the same uploaded file and saves all rows in one database transaction.
+
+The import upserts regions first, then provinces, cities/municipalities, and barangays. It reactivates imported rows and records one `imported_psgc_masterlist` audit log with the file name, SHA-256 checksum, PSA release/version, and row counts.
+
+The official PSA workbook can contain `SubMun` rows and rare blank-level grouping rows. These are valid PSA structural rows, but they are not a fifth address level in this system. The importer uses them only to resolve each affected barangay back to its parent city or municipality, then stores only the normalized four lookup levels.
+
+The importer follows the PSA Revision 1 10-digit coding structure for normal rows: 2 digits for region, 3 digits for province/HUC, 2 digits for city/municipality, and 3 digits for barangay. This is important when resolving city-to-province foreign keys; the old 9-digit coding layout must not be used.
+
+For safety, the current importer does not automatically deactivate rows that are absent from an uploaded file. It also never deletes old PSGC rows, so historical attendance addresses remain valid. A separate, explicitly confirmed reconciliation feature can be added later if DICT needs retirement handling for a complete masterlist.
+
 ## Why Not Live API Calls in the Public Attendance Form
 
 The public attendance page should not call the PSA API every time an attendee selects an address because:
@@ -130,9 +148,9 @@ Check for:
 * Cities/municipalities with missing parent province where province is required
 * Barangays with missing parent city/municipality
 
-### 4. Mark existing rows inactive
+### 4. Retire old rows only through an explicit future reconciliation
 
-Before importing the latest official dataset:
+Do not run the following directly as part of the current admin import. A future reconciliation flow must first verify that the uploaded file is a complete official masterlist and must show the affected row count to the Super Admin:
 
 ```sql
 UPDATE psgc_barangays SET is_active = 0;
@@ -230,7 +248,7 @@ attendance_record_addresses.barangay_code
 
 ## Future Improvement
 
-If PSGC imports become a regular admin feature, add a table such as:
+The current importer records a summary in `audit_logs`. If DICT later needs a searchable import history with file retention and rollback metadata, add a table such as:
 
 ```text
 psgc_import_batches
