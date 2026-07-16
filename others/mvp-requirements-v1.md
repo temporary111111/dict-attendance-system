@@ -256,7 +256,7 @@ Functional requirements:
 * The system shall store attendance records linked to a specific event.
 * The system shall store separated name fields: first name, middle name, last name, and suffix.
 * The system shall store affiliation, designation/category, sex, email, consent fields, submission timestamp, and attendance status.
-* The system shall store a typed signature or private signature image when supplied or required by the event.
+* The system shall store a private PNG signature image captured through the draw pad or uploaded by the attendee when supplied or required by the event.
 * The system shall allow authorized users to view paginated attendance records by event.
 * The system shall allow authorized users to search records and filter them by attendance status.
 * The system shall provide attendance record details without exposing private file paths.
@@ -520,8 +520,8 @@ The supervisor-provided attendance sheet template does not include address field
 * email
 * consent_documentation_publication
 * consent_database_processing
-* signature_text optional
 * signature_image_path optional
+* signature_text legacy field for historical records only
 * submitted_at
 * status
 * duplicate_flag

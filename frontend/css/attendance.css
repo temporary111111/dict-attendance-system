@@ -183,6 +183,35 @@
   touch-action: none;
 }
 
+.signature-methods {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 14px;
+  border: 1px solid #9ba9b7;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.signature-method-button {
+  min-height: 36px;
+  border: 0;
+  border-right: 1px solid #9ba9b7;
+  background: var(--surface);
+  padding: 7px 13px;
+  color: var(--ink-700);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.signature-method-button:last-child { border-right: 0; }
+
+.signature-method-button[aria-pressed="true"] {
+  background: var(--blue-700);
+  color: #fff;
+}
+
 .signature-pad-actions {
   display: flex;
   justify-content: flex-end;
@@ -267,4 +296,6 @@
   .submit-row .primary-button { width: 100%; }
   .consent-confirmation-actions > * { flex: 1 1 auto; }
   .signature-pad-actions .secondary-button { width: 100%; }
+  .signature-methods { width: 100%; }
+  .signature-method-button { flex: 1 1 50%; }
 }

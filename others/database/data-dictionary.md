@@ -170,8 +170,8 @@ Stores one attendance submission for one event.
 | `email` | Email address. Used for duplicate checking within the same event. |
 | `consent_documentation_publication` | Consent for photo/video/audio documentation and possible publication. |
 | `consent_database_processing` | Consent for organizer database/future document processing. |
-| `signature_text` | Typed/e-signature name. Nullable when an image signature is used. |
-| `signature_image_path` | Private captured/uploaded signature image path. Nullable when a typed signature is used. |
+| `signature_text` | Legacy typed signature from historical records. New public submissions do not collect this value. |
+| `signature_image_path` | Private PNG path for a drawn or uploaded signature image. Nullable when the event makes signature optional. |
 | `submitted_at` | When the attendance was submitted. |
 | `attendance_status` | `valid`, `duplicate`, `invalid`, or `void`. |
 | `duplicate_flag` | Marks possible duplicate/spam records for review. |
@@ -180,7 +180,7 @@ Stores one attendance submission for one event.
 
 Important rules:
 
-* A required signature accepts either `signature_text` or `signature_image_path`. Both may be null when the event makes signature optional.
+* A required signature accepts a drawn or uploaded signature image stored through `signature_image_path`. It may be null when the event makes signature optional.
 * Raw signature image paths must not be exposed to clients. Images are served through an authenticated and authorized endpoint.
 * `duplicate_flag` is a separate review signal. Changing `attendance_status` does not automatically change this flag.
 * An actual `attendance_status` change requires a reason and an audit log in the same transaction.

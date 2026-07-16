@@ -21,7 +21,7 @@ Expected: makikita ang QR code at public attendance link. Gumagana ang copied li
 1. Buksan ang generated QR/link sa incognito o ibang browser profile.
 2. Basahin ang `Privacy Notice`, then kumpletuhin ang required fields.
 3. Kung gagamit ng address, piliin ang region, province kung applicable, city/municipality, at barangay nang sunod-sunod.
-4. Kapag naka-show ang `Signature`, gumuhit gamit ang mouse, finger, o stylus. Pindutin ang `Clear drawing`, then gumuhit ulit.
+4. Kapag naka-show ang `Signature`, gumuhit gamit ang mouse, finger, o stylus. Pindutin ang `Clear drawing`, then gumuhit ulit. I-test din ang `Upload image` mode; isang method lang ang kailangan.
 5. I-check ang documentation/publication consent kung required ito sa event.
 6. I-check ang database-processing consent.
 7. Pindutin ang `Submit attendance`, then i-review ang consent confirmation dialog.

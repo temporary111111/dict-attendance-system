@@ -150,7 +150,6 @@ def valid_form_data(*, include_address=True) -> dict:
         "email": "MARIA.REYES@EXAMPLE.COM",
         "consent_documentation_publication": "true",
         "consent_database_processing": "true",
-        "signature_text": "  Maria Santos Reyes  ",
     }
     if include_address:
         data.update(
@@ -243,7 +242,6 @@ def test_optional_configurable_fields_may_be_omitted():
         "designation_category",
         "sex",
         "consent_documentation_publication",
-        "signature_text",
     ):
         data.pop(key, None)
 
@@ -267,7 +265,6 @@ def test_event_policy_requires_configured_signature():
     )
     client = make_client(session)
     data = valid_form_data(include_address=False)
-    data.pop("signature_text")
 
     response = client.post(
         "/api/public/events/public-code/attendance",
@@ -385,9 +382,9 @@ def test_submit_attendance_rejects_mismatched_psgc_hierarchy():
     assert response.json()["error"]["code"] == "INVALID_PSGC_ADDRESS"
 
 
-def test_submit_attendance_requires_typed_or_image_signature():
+def test_submit_attendance_does_not_accept_legacy_typed_signature():
     data = valid_form_data(include_address=False)
-    data["signature_text"] = ""
+    data["signature_text"] = "Maria Santos Reyes"
     client = make_client(
         FakeSession(
             event=make_event(requirement_overrides={"signature": True})

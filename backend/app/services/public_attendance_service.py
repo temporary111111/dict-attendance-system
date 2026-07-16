@@ -42,7 +42,7 @@ class InvalidPSGCAddressError(Exception):
 
 
 class SignatureRequiredError(Exception):
-    """Raised kapag walang typed, drawn, o uploaded signature."""
+    """Raised kapag walang drawn o uploaded signature."""
 
 
 class AttendanceFieldValidationError(Exception):
@@ -140,9 +140,7 @@ def _validate_event_field_requirements(
             if getattr(payload, field_key) is None:
                 missing[field_key] = "This field is required for this event."
 
-    if visibility["signature"] and requirements["signature"] and (
-        payload.signature_text is None and not has_uploaded_signature
-    ):
+    if visibility["signature"] and requirements["signature"] and not has_uploaded_signature:
         raise SignatureRequiredError
     if missing:
         raise AttendanceFieldValidationError(missing)
@@ -255,9 +253,8 @@ def submit_attendance(
             else False
         ),
         consent_database_processing=payload.consent_database_processing,
-        signature_text=(
-            payload.signature_text if visibility["signature"] else None
-        ),
+        # Legacy column ito; new public attendance uses only signature images.
+        signature_text=None,
         signature_image_path=signature_image_path,
         attendance_status="valid",
         duplicate_flag=False,

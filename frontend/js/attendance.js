@@ -45,7 +45,7 @@ function setFieldError(fieldName, message = "") {
   if (["region_code", "province_code", "city_municipality_code", "barangay_code"].includes(fieldName)) {
     normalizedName = "psgc_address";
   }
-  if (["signature_text", "signature_image"].includes(fieldName)) {
+  if (fieldName === "signature_image") {
     normalizedName = "signature";
   }
   const field = root.querySelector(`[data-field="${CSS.escape(normalizedName)}"]`);
@@ -168,7 +168,9 @@ function configureFieldSettings(requirements, visibility) {
 }
 
 function hasDrawnSignature() {
-  return Boolean(signaturePadState?.hasInk);
+  return Boolean(
+    signaturePadState?.mode === "draw" && signaturePadState.hasInk
+  );
 }
 
 function clearDrawnSignature() {
@@ -195,6 +197,22 @@ function initializeSignaturePad() {
     hasInk: false,
     activePointerId: null,
     lastPoint: null,
+    mode: "draw",
+  };
+  const drawModeButton = root.querySelector("#signature-mode-draw");
+  const uploadModeButton = root.querySelector("#signature-mode-upload");
+  const drawPanel = root.querySelector("#signature-draw-panel");
+  const uploadPanel = root.querySelector("#signature-upload-panel");
+  const uploadInput = root.querySelector("#signature-image");
+
+  const setSignatureMode = (mode) => {
+    signaturePadState.mode = mode;
+    const isDrawMode = mode === "draw";
+    drawPanel.hidden = !isDrawMode;
+    uploadPanel.hidden = isDrawMode;
+    uploadInput.disabled = isDrawMode;
+    drawModeButton.setAttribute("aria-pressed", String(isDrawMode));
+    uploadModeButton.setAttribute("aria-pressed", String(!isDrawMode));
   };
 
   const pointFromEvent = (pointerEvent) => {
@@ -238,6 +256,9 @@ function initializeSignaturePad() {
   canvas.addEventListener("pointerup", stopDrawing);
   canvas.addEventListener("pointercancel", stopDrawing);
   clearButton.addEventListener("click", clearDrawnSignature);
+  drawModeButton.addEventListener("click", () => setSignatureMode("draw"));
+  uploadModeButton.addEventListener("click", () => setSignatureMode("upload"));
+  setSignatureMode("draw");
 }
 
 function drawnSignatureBlob() {
@@ -316,7 +337,7 @@ function renderAttendanceForm(event) {
         <div class="field-group" data-field="street_address" data-label-key="street_address"><label for="street-address">${requiredLabel("street_address", requirements)}</label><input id="street-address" name="street_address" maxlength="255" autocomplete="street-address" /><span class="field-error"></span></div>
         <div class="field-group" data-field="postal_code" data-label-key="postal_code"><label for="postal-code">${requiredLabel("postal_code", requirements)}</label><input id="postal-code" name="postal_code" maxlength="10" inputmode="numeric" autocomplete="postal-code" /><span class="field-error"></span></div>
       </div><span class="field-error" data-error-for="psgc_address"></span></section>
-      <section class="form-section" data-field="signature" data-label-key="signature"><h2>${requiredLabel("signature", requirements)}</h2><div class="attendance-grid"><div class="field-group wide-field"><label for="signature-pad">Draw your signature</label><canvas id="signature-pad" class="signature-pad" width="900" height="250" aria-label="Draw your signature using a mouse, finger, or stylus">Your browser does not support digital signature drawing.</canvas><div class="signature-pad-actions"><button id="clear-drawn-signature" class="secondary-button" type="button">Clear drawing</button></div></div><div class="field-group"><label for="signature-text">Typed full name</label><input id="signature-text" name="signature_text" maxlength="150" autocomplete="name" /><span class="field-error"></span></div><div class="field-group"><label for="signature-image">Upload signature image</label><input id="signature-image" name="signature_image" type="file" accept="image/png,image/jpeg" /><span class="field-error"></span></div></div><p class="field-help">Type your name, draw your signature, or upload a PNG/JPEG image. Provide at least one option when a signature is required.</p><span class="field-error" data-error-for="signature"></span></section>
+      <section class="form-section" data-field="signature" data-label-key="signature"><h2>${requiredLabel("signature", requirements)}</h2><div class="signature-methods" role="group" aria-label="Signature method"><button id="signature-mode-draw" class="signature-method-button" type="button" aria-pressed="true">Draw signature</button><button id="signature-mode-upload" class="signature-method-button" type="button" aria-pressed="false">Upload image</button></div><div id="signature-draw-panel" class="field-group"><label for="signature-pad">Draw your signature</label><canvas id="signature-pad" class="signature-pad" width="900" height="250" aria-label="Draw your signature using a mouse, finger, or stylus">Your browser does not support digital signature drawing.</canvas><div class="signature-pad-actions"><button id="clear-drawn-signature" class="secondary-button" type="button">Clear drawing</button></div></div><div id="signature-upload-panel" class="field-group" hidden><label for="signature-image">Upload a PNG or JPEG signature image</label><input id="signature-image" name="signature_image" type="file" accept="image/png,image/jpeg" disabled /><span class="field-error"></span></div><p class="field-help">Choose one signature method. Provide a signature when this field is required.</p><span class="field-error" data-error-for="signature"></span></section>
       <section class="form-section"><h2>Consent</h2><div class="attendance-grid"><div class="wide-field" data-field="consent_documentation_publication" data-label-key="consent_documentation_publication"><label class="checkbox-field" for="consent-documentation-publication"><input id="consent-documentation-publication" name="consent_documentation_publication" type="checkbox" /><span>${requiredLabel("consent_documentation_publication", requirements)}. I consent to having my photos, videos, and audio recorded during the event and included in DICT publications, if needed.</span></label><span class="field-error"></span></div><div class="wide-field" data-field="consent_database_processing" data-label-key="consent_database_processing"><label class="checkbox-field" for="consent-database-processing"><input id="consent-database-processing" name="consent_database_processing" type="checkbox" required /><span>${requiredLabel("consent_database_processing", requirements)}. I consent to the inclusion of my personal information in the organizer's database for future processing of relevant documents.</span></label><span class="field-error"></span></div></div></section>
       <div class="submit-row"><button id="attendance-submit" class="primary-button" type="submit"><span class="button-label">Submit attendance</span><span class="button-spinner"></span></button></div>
     </form>
@@ -357,8 +378,9 @@ function validateBeforeSubmit(requirements, visibility) {
       valid = false;
     }
   }
-  if (visibility.signature && requirements.signature && !form.elements.signature_text.value.trim() && !form.elements.signature_image.files.length && !hasDrawnSignature()) {
-    setFieldError("signature", "Type, draw, or upload your signature.");
+  const uploadedSignatureSelected = signaturePadState?.mode === "upload" && form.elements.signature_image.files.length;
+  if (visibility.signature && requirements.signature && !hasDrawnSignature() && !uploadedSignatureSelected) {
+    setFieldError("signature", "Draw your signature or upload a signature image.");
     valid = false;
   }
   const addressStarted = [form.elements.region_code.value, form.elements.province_code.value, form.elements.city_municipality_code.value, form.elements.barangay_code.value, form.elements.street_address.value.trim(), form.elements.postal_code.value.trim()].some(Boolean);
@@ -388,8 +410,12 @@ async function submitAttendance(event, publicEvent) {
   const formData = new FormData(form);
   formData.set("consent_database_processing", String(form.elements.consent_database_processing.checked));
   formData.set("consent_documentation_publication", String(form.elements.consent_documentation_publication.checked));
-  if (!form.elements.signature_image.files.length) formData.delete("signature_image");
-  if (drawnSignature !== null) formData.set("signature_image", drawnSignature, "drawn-signature.png");
+  formData.delete("signature_image");
+  if (drawnSignature !== null) {
+    formData.set("signature_image", drawnSignature, "drawn-signature.png");
+  } else if (signaturePadState?.mode === "upload" && form.elements.signature_image.files.length) {
+    formData.set("signature_image", form.elements.signature_image.files[0]);
+  }
   try {
     const response = await apiRequest(`/public/events/${encodeURIComponent(publicEvent.event_code)}/attendance`, { method: "POST", auth: false, body: formData });
     const data = response.data;

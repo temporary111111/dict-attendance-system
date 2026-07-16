@@ -32,10 +32,6 @@ TrimmedDesignation = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=150),
 ]
-TrimmedSignatureText = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=150),
-]
 TrimmedPSGCCode = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=10),
@@ -131,7 +127,6 @@ class AttendanceSubmissionRequest(BaseModel):
     email: EmailStr
     consent_documentation_publication: bool | None = None
     consent_database_processing: bool
-    signature_text: TrimmedSignatureText | None = None
     signature_image: UploadFile | None = None
     region_code: TrimmedPSGCCode | None = None
     province_code: TrimmedPSGCCode | None = None
@@ -147,7 +142,6 @@ class AttendanceSubmissionRequest(BaseModel):
         "designation_category",
         "sex",
         "consent_documentation_publication",
-        "signature_text",
         "signature_image",
         "region_code",
         "province_code",

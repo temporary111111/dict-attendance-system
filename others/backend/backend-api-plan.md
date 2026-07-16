@@ -200,7 +200,7 @@ Fixed attendance inputs:
 | Designation or category | `attendance_records.designation_category` |
 | Documentation and publication consent | `attendance_records.consent_documentation_publication` |
 | Database processing consent | `attendance_records.consent_database_processing` |
-| Typed signature or PNG/JPEG image | `attendance_records.signature_text`, `attendance_records.signature_image_path` |
+| Drawn signature or PNG/JPEG image upload | `attendance_records.signature_image_path` |
 
 Optional address fields:
 
@@ -216,17 +216,17 @@ Optional address fields:
 Important rules:
 
 * The public attendance page must be fixed, not dynamically built by admins.
-* Submission uses `multipart/form-data` so text fields and an optional signature image can be sent together.
+* Submission uses `multipart/form-data` so text fields and a drawn or uploaded signature image can be sent together.
 * The event must exist and must be open.
 * `attendance_records.event_id + email` must be unique.
 * If the same email submits again for the same event, the API should return `409 DUPLICATE_ATTENDANCE` and should not create another attendance row under the current schema.
 * The whole address section is optional. If any address value is submitted, region, city or municipality, and barangay are required; province remains optional for non-province PSGC areas.
 * Submitted PSGC codes must exist, be active, and form a matching hierarchy in the local PSGC tables.
 * Database processing consent is locked as required and must be accepted.
-* Affiliation, designation/category, sex, and the documentation/publication consent response are required by default but configurable per event.
+* Affiliation, designation/category, sex, and documentation/publication consent are required by default but configurable per event.
 * Middle name, suffix, signature, PSGC address, street address, and postal code are optional by default but configurable per event.
-* When documentation/publication consent is required, the attendee must answer it; an explicit decline is still a valid response.
-* When signature is required, either a typed signature or uploaded PNG/JPEG signature satisfies it.
+* When documentation/publication consent is required, the attendee must check the consent box. When optional, the attendee may leave it unchecked.
+* When signature is required, the attendee must draw a signature or upload a PNG/JPEG signature image.
 * Uploaded signatures are verified, re-encoded as PNG, and stored in a private directory that is not exposed as static media.
 * The confirmation message should not expose private admin data.
 
