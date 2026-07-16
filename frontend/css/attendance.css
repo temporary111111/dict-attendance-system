@@ -81,6 +81,28 @@
   line-height: 1.55;
 }
 
+.privacy-notice {
+  display: grid;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 22px 0;
+}
+
+.privacy-notice h2,
+.privacy-notice p {
+  margin: 0;
+}
+
+.privacy-notice h2 {
+  font-size: 1rem;
+}
+
+.privacy-notice p {
+  color: var(--ink-700);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
 .event-details {
   display: flex;
   flex-wrap: wrap;
@@ -150,6 +172,23 @@
   accent-color: var(--blue-700);
 }
 
+.signature-pad {
+  display: block;
+  width: 100%;
+  aspect-ratio: 18 / 5;
+  border: 1px solid #9ba9b7;
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.signature-pad-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 .field-help {
   margin: 0;
   color: var(--ink-500);
@@ -174,10 +213,58 @@
 
 .submit-row .primary-button { min-width: 170px; }
 
+.consent-confirmation-dialog {
+  width: min(560px, calc(100vw - 28px));
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink-900);
+  padding: 0;
+}
+
+.consent-confirmation-dialog::backdrop {
+  background: rgba(24, 33, 43, 0.42);
+}
+
+.consent-confirmation-content {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.consent-confirmation-content h2,
+.consent-confirmation-content p {
+  margin: 0;
+}
+
+.consent-confirmation-content p,
+.consent-summary-list {
+  color: var(--ink-700);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.consent-summary-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.consent-confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 2px;
+}
+
 @media (max-width: 640px) {
   .attendance-root { padding-top: 24px; }
   .attendance-grid { grid-template-columns: 1fr; }
   .attendance-grid .wide-field { grid-column: auto; }
   .attendance-event h1 { font-size: 1.35rem; }
   .submit-row .primary-button { width: 100%; }
+  .consent-confirmation-actions > * { flex: 1 1 auto; }
+  .signature-pad-actions .secondary-button { width: 100%; }
 }

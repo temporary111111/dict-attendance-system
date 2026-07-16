@@ -151,7 +151,7 @@ def submit_public_attendance(
             status_code=422,
             detail=error_response(
                 "SIGNATURE_REQUIRED",
-                "Provide a typed or uploaded signature.",
+                "Type, draw, or upload your signature.",
             ),
         )
     except InvalidSignatureImageError:

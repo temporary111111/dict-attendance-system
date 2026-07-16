@@ -172,6 +172,12 @@ def make_jpeg_bytes() -> bytes:
     return buffer.getvalue()
 
 
+def make_png_bytes() -> bytes:
+    buffer = BytesIO()
+    Image.new("RGBA", (900, 250), (255, 255, 255, 0)).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
 def test_submit_attendance_saves_normalized_record_and_psgc_address():
     session = FakeSession(
         event=make_event(),
@@ -420,6 +426,30 @@ def test_submit_attendance_stores_uploaded_signature_privately(tmp_path):
     assert stored_path.endswith(".png")
     assert (tmp_path / stored_path).read_bytes().startswith(b"\x89PNG")
     assert client.get(f"/media/signatures/{stored_path}").status_code == 404
+
+
+def test_submit_attendance_accepts_drawn_signature_png(tmp_path):
+    session = FakeSession(event=make_event())
+    client = make_client(session, signature_directory=tmp_path)
+    data = valid_form_data(include_address=False)
+    data["signature_text"] = ""
+
+    response = client.post(
+        "/api/public/events/public-code/attendance",
+        data=data,
+        files={
+            "signature_image": (
+                "drawn-signature.png",
+                make_png_bytes(),
+                "image/png",
+            )
+        },
+    )
+
+    assert response.status_code == 201
+    stored_path = session.added_attendance.signature_image_path
+    assert stored_path.endswith(".png")
+    assert (tmp_path / stored_path).is_file()
 
 
 def test_submit_attendance_rejects_invalid_signature_image(tmp_path):

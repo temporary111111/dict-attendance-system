@@ -19,13 +19,15 @@ Expected: makikita ang QR code at public attendance link. Gumagana ang copied li
 ## 2. Public Attendee Flow
 
 1. Buksan ang generated QR/link sa incognito o ibang browser profile.
-2. Kumpletuhin ang required fields.
+2. Basahin ang `Privacy Notice`, then kumpletuhin ang required fields.
 3. Kung gagamit ng address, piliin ang region, province kung applicable, city/municipality, at barangay nang sunod-sunod.
-4. I-check ang documentation/publication consent kung required ito sa event.
-5. I-check ang database-processing consent.
-6. Mag-submit ng attendance.
+4. Kapag naka-show ang `Signature`, gumuhit gamit ang mouse, finger, o stylus. Pindutin ang `Clear drawing`, then gumuhit ulit.
+5. I-check ang documentation/publication consent kung required ito sa event.
+6. I-check ang database-processing consent.
+7. Pindutin ang `Submit attendance`, then i-review ang consent confirmation dialog.
+8. Pindutin ang `Confirm and submit`.
 
-Expected: kapag required ang documentation/publication consent, hindi puwedeng mag-submit habang unchecked ito. Puwede itong gawing optional o i-hide ng admin para sa future events. Mandatory ang database-processing consent dahil kailangan ito para ma-store at ma-process ang attendance record. Kapag parehong email ang sinubukang gamitin sa parehong event, dapat duplicate attendance error ang lalabas.
+Expected: kapag required ang documentation/publication consent, hindi puwedeng mag-submit habang unchecked ito. Puwede itong gawing optional o i-hide ng admin para sa future events. Mandatory ang database-processing consent dahil kailangan ito para ma-store at ma-process ang attendance record. Hindi pa nase-save ang record kapag pinili ang `Back and review` o isinara ang dialog. Kapag parehong email ang sinubukang gamitin sa parehong event, dapat duplicate attendance error ang lalabas.
 
 ## 3. Program Admin Flow
 

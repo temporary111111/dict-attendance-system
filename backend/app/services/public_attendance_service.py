@@ -42,7 +42,7 @@ class InvalidPSGCAddressError(Exception):
 
 
 class SignatureRequiredError(Exception):
-    """Raised kapag walang typed o uploaded signature."""
+    """Raised kapag walang typed, drawn, o uploaded signature."""
 
 
 class AttendanceFieldValidationError(Exception):

@@ -20,6 +20,8 @@ const fieldLabels = {
   postal_code: "Postal code",
 };
 
+let signaturePadState = null;
+
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-PH", {
     year: "numeric",
@@ -165,6 +167,119 @@ function configureFieldSettings(requirements, visibility) {
   }
 }
 
+function hasDrawnSignature() {
+  return Boolean(signaturePadState?.hasInk);
+}
+
+function clearDrawnSignature() {
+  if (!signaturePadState) return;
+  const { canvas, context } = signaturePadState;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  signaturePadState.hasInk = false;
+  setFieldError("signature");
+}
+
+function initializeSignaturePad() {
+  const canvas = root.querySelector("#signature-pad");
+  const clearButton = root.querySelector("#clear-drawn-signature");
+  const context = canvas.getContext("2d");
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.lineWidth = 5;
+  context.strokeStyle = "#17202a";
+  context.fillStyle = "#17202a";
+
+  signaturePadState = {
+    canvas,
+    context,
+    hasInk: false,
+    activePointerId: null,
+    lastPoint: null,
+  };
+
+  const pointFromEvent = (pointerEvent) => {
+    const bounds = canvas.getBoundingClientRect();
+    return {
+      x: (pointerEvent.clientX - bounds.left) * (canvas.width / bounds.width),
+      y: (pointerEvent.clientY - bounds.top) * (canvas.height / bounds.height),
+    };
+  };
+  const stopDrawing = (pointerEvent) => {
+    if (signaturePadState.activePointerId !== pointerEvent.pointerId) return;
+    signaturePadState.activePointerId = null;
+    signaturePadState.lastPoint = null;
+    if (canvas.hasPointerCapture?.(pointerEvent.pointerId)) {
+      canvas.releasePointerCapture(pointerEvent.pointerId);
+    }
+  };
+
+  canvas.addEventListener("pointerdown", (pointerEvent) => {
+    if (pointerEvent.pointerType === "mouse" && pointerEvent.button !== 0) return;
+    pointerEvent.preventDefault();
+    const point = pointFromEvent(pointerEvent);
+    signaturePadState.activePointerId = pointerEvent.pointerId;
+    signaturePadState.lastPoint = point;
+    signaturePadState.hasInk = true;
+    canvas.setPointerCapture?.(pointerEvent.pointerId);
+    context.beginPath();
+    context.arc(point.x, point.y, context.lineWidth / 2, 0, Math.PI * 2);
+    context.fill();
+  });
+  canvas.addEventListener("pointermove", (pointerEvent) => {
+    if (signaturePadState.activePointerId !== pointerEvent.pointerId) return;
+    pointerEvent.preventDefault();
+    const point = pointFromEvent(pointerEvent);
+    context.beginPath();
+    context.moveTo(signaturePadState.lastPoint.x, signaturePadState.lastPoint.y);
+    context.lineTo(point.x, point.y);
+    context.stroke();
+    signaturePadState.lastPoint = point;
+  });
+  canvas.addEventListener("pointerup", stopDrawing);
+  canvas.addEventListener("pointercancel", stopDrawing);
+  clearButton.addEventListener("click", clearDrawnSignature);
+}
+
+function drawnSignatureBlob() {
+  if (!hasDrawnSignature()) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    signaturePadState.canvas.toBlob(resolve, "image/png");
+  });
+}
+
+function confirmConsentBeforeSubmitting(publicEvent) {
+  const dialog = root.querySelector("#consent-confirmation-dialog");
+  const publicationSummary = dialog.querySelector("#publication-consent-summary");
+  const publicationConsent = root.querySelector("#consent-documentation-publication");
+  const backButton = dialog.querySelector("#consent-review-button");
+  const confirmButton = dialog.querySelector("#consent-confirm-button");
+  const publicationVisible = publicEvent.attendance_field_visibility.consent_documentation_publication;
+
+  if (!publicationVisible) {
+    publicationSummary.textContent = "This event does not request documentation or publication consent.";
+  } else if (publicationConsent.checked) {
+    publicationSummary.textContent = "You consented to having your photos, videos, and audio recorded during the event and included in DICT publications, if needed.";
+  } else {
+    publicationSummary.textContent = "You are submitting without documentation or publication consent for this event.";
+  }
+
+  return new Promise((resolve) => {
+    const finish = () => {
+      const confirmed = dialog.returnValue === "confirm";
+      backButton.removeEventListener("click", review);
+      confirmButton.removeEventListener("click", confirm);
+      dialog.removeEventListener("close", finish);
+      resolve(confirmed);
+    };
+    const review = () => dialog.close("review");
+    const confirm = () => dialog.close("confirm");
+    backButton.addEventListener("click", review);
+    confirmButton.addEventListener("click", confirm);
+    dialog.addEventListener("close", finish);
+    dialog.showModal();
+  });
+}
+
 function renderAttendanceForm(event) {
   const requirements = event.attendance_field_requirements;
   const visibility = event.attendance_field_visibility;
@@ -174,6 +289,12 @@ function renderAttendanceForm(event) {
       <h1></h1>
       <p class="attendance-description"></p>
       <div class="event-details"><span id="event-date"></span><span id="event-venue"></span></div>
+    </section>
+    <section class="privacy-notice" aria-labelledby="privacy-notice-title">
+      <h2 id="privacy-notice-title">Privacy Notice</h2>
+      <p>The DICT collects your personal data through this digital attendance form to provide verifiable evidence and documentation of your participation in this event, as well as for monitoring and evaluation purposes.</p>
+      <p>Your information will be stored in the DICT database or other secured repositories for three (3) years before being permanently erased from our records.</p>
+      <p>Photos, videos, and audio recordings may be taken throughout the event for documentation and may be used in official DICT publications, if needed. Should you wish to withdraw your consent, please contact the respective event organizers.</p>
     </section>
     <form id="attendance-form" class="attendance-form" novalidate enctype="multipart/form-data">
       <div id="attendance-feedback" class="notice notice-error form-feedback" role="alert" hidden></div>
@@ -195,10 +316,24 @@ function renderAttendanceForm(event) {
         <div class="field-group" data-field="street_address" data-label-key="street_address"><label for="street-address">${requiredLabel("street_address", requirements)}</label><input id="street-address" name="street_address" maxlength="255" autocomplete="street-address" /><span class="field-error"></span></div>
         <div class="field-group" data-field="postal_code" data-label-key="postal_code"><label for="postal-code">${requiredLabel("postal_code", requirements)}</label><input id="postal-code" name="postal_code" maxlength="10" inputmode="numeric" autocomplete="postal-code" /><span class="field-error"></span></div>
       </div><span class="field-error" data-error-for="psgc_address"></span></section>
-      <section class="form-section" data-field="signature" data-label-key="signature"><h2>${requiredLabel("signature", requirements)}</h2><div class="attendance-grid"><div class="field-group"><label for="signature-text">Typed full name</label><input id="signature-text" name="signature_text" maxlength="150" autocomplete="name" /><span class="field-error"></span></div><div class="field-group"><label for="signature-image">Signature image</label><input id="signature-image" name="signature_image" type="file" accept="image/png,image/jpeg" /><span class="field-error"></span></div></div><p class="field-help">Provide either a typed full name or a PNG/JPEG signature image when a signature is required.</p><span class="field-error" data-error-for="signature"></span></section>
-      <section class="form-section"><h2>Consent</h2><div class="attendance-grid"><div class="wide-field" data-field="consent_documentation_publication" data-label-key="consent_documentation_publication"><label class="checkbox-field" for="consent-documentation-publication"><input id="consent-documentation-publication" name="consent_documentation_publication" type="checkbox" /><span>${requiredLabel("consent_documentation_publication", requirements)}. I agree to the documentation and publication of my participation in this event.</span></label><span class="field-error"></span></div><div class="wide-field" data-field="consent_database_processing" data-label-key="consent_database_processing"><label class="checkbox-field" for="consent-database-processing"><input id="consent-database-processing" name="consent_database_processing" type="checkbox" required /><span>${requiredLabel("consent_database_processing", requirements)}. I agree that my attendance information may be stored and processed for this event.</span></label><span class="field-error"></span></div></div></section>
+      <section class="form-section" data-field="signature" data-label-key="signature"><h2>${requiredLabel("signature", requirements)}</h2><div class="attendance-grid"><div class="field-group wide-field"><label for="signature-pad">Draw your signature</label><canvas id="signature-pad" class="signature-pad" width="900" height="250" aria-label="Draw your signature using a mouse, finger, or stylus">Your browser does not support digital signature drawing.</canvas><div class="signature-pad-actions"><button id="clear-drawn-signature" class="secondary-button" type="button">Clear drawing</button></div></div><div class="field-group"><label for="signature-text">Typed full name</label><input id="signature-text" name="signature_text" maxlength="150" autocomplete="name" /><span class="field-error"></span></div><div class="field-group"><label for="signature-image">Upload signature image</label><input id="signature-image" name="signature_image" type="file" accept="image/png,image/jpeg" /><span class="field-error"></span></div></div><p class="field-help">Type your name, draw your signature, or upload a PNG/JPEG image. Provide at least one option when a signature is required.</p><span class="field-error" data-error-for="signature"></span></section>
+      <section class="form-section"><h2>Consent</h2><div class="attendance-grid"><div class="wide-field" data-field="consent_documentation_publication" data-label-key="consent_documentation_publication"><label class="checkbox-field" for="consent-documentation-publication"><input id="consent-documentation-publication" name="consent_documentation_publication" type="checkbox" /><span>${requiredLabel("consent_documentation_publication", requirements)}. I consent to having my photos, videos, and audio recorded during the event and included in DICT publications, if needed.</span></label><span class="field-error"></span></div><div class="wide-field" data-field="consent_database_processing" data-label-key="consent_database_processing"><label class="checkbox-field" for="consent-database-processing"><input id="consent-database-processing" name="consent_database_processing" type="checkbox" required /><span>${requiredLabel("consent_database_processing", requirements)}. I consent to the inclusion of my personal information in the organizer's database for future processing of relevant documents.</span></label><span class="field-error"></span></div></div></section>
       <div class="submit-row"><button id="attendance-submit" class="primary-button" type="submit"><span class="button-label">Submit attendance</span><span class="button-spinner"></span></button></div>
-    </form>`;
+    </form>
+    <dialog id="consent-confirmation-dialog" class="consent-confirmation-dialog" aria-labelledby="consent-confirmation-title">
+      <section class="consent-confirmation-content">
+        <h2 id="consent-confirmation-title">Review your consent</h2>
+        <p>Please review the Privacy Notice and confirm your consent before submitting your attendance.</p>
+        <ul class="consent-summary-list">
+          <li>You consented to the inclusion of your personal information in the organizer's database for future processing of relevant documents.</li>
+          <li id="publication-consent-summary"></li>
+        </ul>
+        <div class="consent-confirmation-actions">
+          <button id="consent-review-button" class="secondary-button" type="button" autofocus>Back and review</button>
+          <button id="consent-confirm-button" class="primary-button" type="button">Confirm and submit</button>
+        </div>
+      </section>
+    </dialog>`;
   root.querySelector(".attendance-program").textContent = event.program.program_name;
   root.querySelector("h1").textContent = event.event_title;
   root.querySelector(".attendance-description").textContent = event.event_description || "";
@@ -206,6 +341,7 @@ function renderAttendanceForm(event) {
   root.querySelector("#event-date").textContent = formatDate(event.event_date);
   root.querySelector("#event-venue").textContent = event.venue;
   configureFieldSettings(requirements, visibility);
+  initializeSignaturePad();
   attachAddressHandlers();
   loadRegions().catch((error) => setFieldError("psgc_address", error.message));
   root.querySelector("#attendance-form").addEventListener("submit", (submitEvent) => submitAttendance(submitEvent, event));
@@ -221,8 +357,8 @@ function validateBeforeSubmit(requirements, visibility) {
       valid = false;
     }
   }
-  if (visibility.signature && requirements.signature && !form.elements.signature_text.value.trim() && !form.elements.signature_image.files.length) {
-    setFieldError("signature", "Provide a typed or uploaded signature.");
+  if (visibility.signature && requirements.signature && !form.elements.signature_text.value.trim() && !form.elements.signature_image.files.length && !hasDrawnSignature()) {
+    setFieldError("signature", "Type, draw, or upload your signature.");
     valid = false;
   }
   const addressStarted = [form.elements.region_code.value, form.elements.province_code.value, form.elements.city_municipality_code.value, form.elements.barangay_code.value, form.elements.street_address.value.trim(), form.elements.postal_code.value.trim()].some(Boolean);
@@ -235,11 +371,17 @@ function validateBeforeSubmit(requirements, visibility) {
 
 async function submitAttendance(event, publicEvent) {
   event.preventDefault();
+  const form = event.currentTarget;
   clearErrors();
   const requirements = publicEvent.attendance_field_requirements;
   const visibility = publicEvent.attendance_field_visibility;
   if (!validateBeforeSubmit(requirements, visibility)) return;
-  const form = event.currentTarget;
+  const drawnSignature = visibility.signature ? await drawnSignatureBlob() : null;
+  if (hasDrawnSignature() && drawnSignature === null) {
+    setFieldError("signature", "Unable to prepare your drawn signature. Please draw it again.");
+    return;
+  }
+  if (!(await confirmConsentBeforeSubmitting(publicEvent))) return;
   const submit = root.querySelector("#attendance-submit");
   submit.disabled = true;
   submit.classList.add("is-loading");
@@ -247,6 +389,7 @@ async function submitAttendance(event, publicEvent) {
   formData.set("consent_database_processing", String(form.elements.consent_database_processing.checked));
   formData.set("consent_documentation_publication", String(form.elements.consent_documentation_publication.checked));
   if (!form.elements.signature_image.files.length) formData.delete("signature_image");
+  if (drawnSignature !== null) formData.set("signature_image", drawnSignature, "drawn-signature.png");
   try {
     const response = await apiRequest(`/public/events/${encodeURIComponent(publicEvent.event_code)}/attendance`, { method: "POST", auth: false, body: formData });
     const data = response.data;
