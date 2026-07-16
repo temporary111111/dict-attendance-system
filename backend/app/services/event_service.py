@@ -17,7 +17,10 @@ from app.models import (
     ProgramAdminAssignment,
     User,
 )
-from app.models.attendance_fields import ATTENDANCE_FIELD_KEYS
+from app.models.attendance_fields import (
+    ATTENDANCE_FIELD_KEYS,
+    DEFAULT_HIDDEN_ATTENDANCE_FIELD_KEYS,
+)
 from app.schemas.events import CreateEventRequest, UpdateEventRequest
 from app.services.qr_code_service import (
     QRCodeGenerationError,
@@ -195,7 +198,9 @@ def create_event(
         EventAttendanceFieldSetting(
             field_key=field.field_key,
             is_required=field.default_is_required,
-            is_visible=True,
+            is_visible=(
+                field.field_key not in DEFAULT_HIDDEN_ATTENDANCE_FIELD_KEYS
+            ),
         )
         for field in field_definitions
     ]

@@ -9,7 +9,7 @@ Gamitin ito pagkatapos naka-run ang backend at frontend servers.
 3. Sa `Admin Users`, gumawa ng Program Admin account.
 4. Sa `Programs`, gumawa ng program at i-assign ang Program Admin sa `Program Admins` action.
 5. Gumawa ng event sa assigned program.
-6. Sa event `Manage`, buksan ang `Fields`. I-set kung aling fields ang ipapakita at kung alin ang required.
+6. Sa event `Manage`, buksan ang `Fields`. Naka-hide by default ang `Signature` sa bagong event; i-set kung aling fields ang ipapakita at kung alin ang required.
 7. I-hide ang isang configurable field, gaya ng `Signature`, at i-save.
 8. Piliin ang `Generate QR/link`, pagkatapos subukan ang `Copy link` at `Download QR`.
 9. Piliin ang `Open attendance`.
@@ -21,11 +21,11 @@ Expected: makikita ang QR code at public attendance link. Gumagana ang copied li
 1. Buksan ang generated QR/link sa incognito o ibang browser profile.
 2. Kumpletuhin ang required fields.
 3. Kung gagamit ng address, piliin ang region, province kung applicable, city/municipality, at barangay nang sunod-sunod.
-4. Piliin ang `Yes` o `No` sa documentation/publication consent.
+4. I-check ang documentation/publication consent kung required ito sa event.
 5. I-check ang database-processing consent.
 6. Mag-submit ng attendance.
 
-Expected: pwedeng `No` ang documentation/publication consent. Mandatory ang database-processing consent dahil kailangan ito para ma-store at ma-process ang attendance record. Kapag parehong email ang sinubukang gamitin sa parehong event, dapat duplicate attendance error ang lalabas.
+Expected: kapag required ang documentation/publication consent, hindi puwedeng mag-submit habang unchecked ito. Puwede itong gawing optional o i-hide ng admin para sa future events. Mandatory ang database-processing consent dahil kailangan ito para ma-store at ma-process ang attendance record. Kapag parehong email ang sinubukang gamitin sa parehong event, dapat duplicate attendance error ang lalabas.
 
 ## 3. Program Admin Flow
 

@@ -255,6 +255,12 @@ def test_create_event_generates_code_and_saves_draft_for_assigned_admin():
     assert field_settings["first_name"] is True
     assert field_settings["affiliation"] is True
     assert field_settings["signature"] is False
+    field_visibility = {
+        setting.field_key: setting.is_visible
+        for setting in session.added_event.attendance_field_settings
+    }
+    assert field_visibility["first_name"] is True
+    assert field_visibility["signature"] is False
     assert field_settings["psgc_address"] is False
     assert session.committed is True
 

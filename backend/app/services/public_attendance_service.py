@@ -119,10 +119,15 @@ def _validate_event_field_requirements(
         "postal_code",
     )
     for field_key in direct_fields:
+        value = getattr(payload, field_key)
+        is_missing = value is None
+        if field_key == "consent_documentation_publication":
+            # Required checkbox ito, kaya hindi sapat na may false value lang.
+            is_missing = value is not True
         if (
             visibility[field_key]
             and requirements[field_key]
-            and getattr(payload, field_key) is None
+            and is_missing
         ):
             missing[field_key] = "This field is required for this event."
 

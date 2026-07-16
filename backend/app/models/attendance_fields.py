@@ -27,6 +27,9 @@ ATTENDANCE_FIELD_KEYS = (
     "postal_code",
 )
 
+# Default lang ito para sa bagong event; puwede pa ring i-show ng admin sa Fields.
+DEFAULT_HIDDEN_ATTENDANCE_FIELD_KEYS = frozenset({"signature"})
+
 
 class AttendanceFormField(Base):
     """System-owned definition; hindi ito admin-created custom field."""

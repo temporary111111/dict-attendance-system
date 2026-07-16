@@ -148,7 +148,7 @@ def valid_form_data(*, include_address=True) -> dict:
         "designation_category": "  Government Official  ",
         "sex": "F",
         "email": "MARIA.REYES@EXAMPLE.COM",
-        "consent_documentation_publication": "false",
+        "consent_documentation_publication": "true",
         "consent_database_processing": "true",
         "signature_text": "  Maria Santos Reyes  ",
     }
@@ -197,7 +197,7 @@ def test_submit_attendance_saves_normalized_record_and_psgc_address():
     }
     attendance = session.added_attendance
     assert attendance.email == "maria.reyes@example.com"
-    assert attendance.consent_documentation_publication is False
+    assert attendance.consent_documentation_publication is True
     assert attendance.duplicate_flag is False
     assert attendance.address.region_code == "0300000000"
     assert attendance.address.street_address == "MacArthur Highway"
@@ -330,6 +330,24 @@ def test_submit_attendance_requires_database_processing_consent():
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_submit_attendance_requires_checked_publication_consent_when_configured():
+    data = valid_form_data(include_address=False)
+    data["consent_documentation_publication"] = "false"
+    client = make_client(FakeSession(event=make_event()))
+
+    response = client.post(
+        "/api/public/events/public-code/attendance",
+        data=data,
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["fields"] == {
+        "consent_documentation_publication": (
+            "This field is required for this event."
+        )
+    }
 
 
 def test_submit_attendance_rejects_incomplete_address():
