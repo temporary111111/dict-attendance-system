@@ -45,6 +45,30 @@ The importer follows the PSA Revision 1 10-digit coding structure for normal row
 
 For safety, the current importer does not automatically deactivate rows that are absent from an uploaded file. It also never deletes old PSGC rows, so historical attendance addresses remain valid. A separate, explicitly confirmed reconciliation feature can be added later if DICT needs retirement handling for a complete masterlist.
 
+## Visual Local Corrections
+
+The Super Admin PSGC page also has a visual, paginated workspace for checking
+the local data without opening MySQL. It supports Region -> Province ->
+City/Municipality -> Barangay browsing, code/name search, and active/inactive
+filtering. It loads only the current result page, not the full masterlist.
+
+Use the PSA workbook reimport as the normal correction path. The visual actions
+are for verified local exceptions:
+
+* A name correction requires a reason and is recorded in `audit_logs`.
+* A record can be deactivated or restored with a reason. Deactivation preserves
+  historical attendance references and hides the row from public address
+  selectors.
+* A code correction requires a unique 10-digit numeric replacement code, a
+  reason, confirmation, no child locations, and no attendance-address
+  references.
+* Permanent deletion has the same dependency rule, plus a reason and
+  confirmation.
+
+Manual parent changes are intentionally not included. If the hierarchy is
+wrong, correct the authoritative PSA source and reimport it so the normalized
+parent-to-child structure stays consistent.
+
 ## Why Not Live API Calls in the Public Attendance Form
 
 The public attendance page should not call the PSA API every time an attendee selects an address because:

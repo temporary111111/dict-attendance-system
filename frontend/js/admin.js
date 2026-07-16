@@ -16,6 +16,13 @@ const state = {
   user: null,
   view: "dashboard",
   auditPage: 1,
+  psgc: {
+    page: 1,
+    search: "",
+    level: "",
+    status: "active",
+    trail: [],
+  },
 };
 
 const views = {
@@ -31,6 +38,12 @@ const views = {
 
 function escapeSelector(value) {
   return CSS.escape(String(value));
+}
+
+function escapeHtml(value) {
+  const element = document.createElement("span");
+  element.textContent = String(value ?? "");
+  return element.innerHTML;
 }
 
 function setText(selector, value, parent = document) {
@@ -1143,21 +1156,398 @@ function showUnitDialog(unit, units) {
   });
 }
 
+const PSGC_LEVEL_LABELS = {
+  region: "Region",
+  province: "Province",
+  city_municipality: "City / municipality",
+  barangay: "Barangay",
+};
+
+function psgcLevelLabel(level) {
+  return PSGC_LEVEL_LABELS[level] || "PSGC location";
+}
+
+function psgcChildrenPath(item) {
+  if (item.level === "region") return `/admin/psgc/regions/${encodeURIComponent(item.code)}/children`;
+  if (item.level === "province") return `/admin/psgc/provinces/${encodeURIComponent(item.code)}/children`;
+  return `/admin/psgc/cities-municipalities/${encodeURIComponent(item.code)}/children`;
+}
+
+function psgcDetailPath(item) {
+  return `/admin/psgc/${item.level}/${encodeURIComponent(item.code)}`;
+}
+
+function psgcErrorMessage(error) {
+  if (error.code !== "PSGC_RECORD_IN_USE") return error.message;
+  const childCount = Number(error.fields?.child_count || 0);
+  const addressCount = Number(error.fields?.attendance_address_reference_count || 0);
+  return `${error.message} Child locations: ${childCount}. Attendance address records: ${addressCount}.`;
+}
+
+function psgcBreadcrumbMarkup() {
+  const crumbs = [{ label: "Regions", index: -1 }, ...state.psgc.trail.map((item, index) => ({ label: item.name, index }))];
+  return crumbs.map((crumb, index) => `${index ? '<span class="psgc-breadcrumb-separator" aria-hidden="true">/</span>' : ""}<button class="psgc-breadcrumb-button" type="button" data-psgc-trail-index="${crumb.index}">${escapeHtml(crumb.label)}</button>`).join("");
+}
+
+async function loadPsgcWorkspace() {
+  const workspace = state.psgc;
+  const query = new URLSearchParams({
+    page: String(workspace.page),
+    pageSize: "25",
+    status: workspace.status,
+  });
+  if (workspace.search) {
+    query.set("query", workspace.search);
+    if (workspace.level) query.set("level", workspace.level);
+    return (await apiRequest(`/admin/psgc/search?${query}`)).data;
+  }
+  const current = workspace.trail.at(-1);
+  if (!current) return (await apiRequest(`/admin/psgc/regions?${query}`)).data;
+  return (await apiRequest(`${psgcChildrenPath(current)}?${query}`)).data;
+}
+
+function renderPsgcPagination(container, pagination) {
+  if (!pagination.total_items) return;
+  const row = document.createElement("div");
+  row.className = "pagination-row";
+  const label = document.createElement("span");
+  label.textContent = `Page ${pagination.page} of ${pagination.total_pages} | ${formatNumber(pagination.total_items)} record${pagination.total_items === 1 ? "" : "s"}`;
+  const actions = document.createElement("div");
+  actions.className = "pagination-actions";
+  const previous = document.createElement("button");
+  previous.className = "secondary-button";
+  previous.type = "button";
+  previous.textContent = "Previous";
+  previous.disabled = pagination.page <= 1;
+  previous.addEventListener("click", () => {
+    state.psgc.page = pagination.page - 1;
+    renderPsgcManagement();
+  });
+  const next = document.createElement("button");
+  next.className = "secondary-button";
+  next.type = "button";
+  next.textContent = "Next";
+  next.disabled = pagination.page >= pagination.total_pages;
+  next.addEventListener("click", () => {
+    state.psgc.page = pagination.page + 1;
+    renderPsgcManagement();
+  });
+  actions.append(previous, next);
+  row.append(label, actions);
+  container.append(row);
+}
+
+async function browsePsgcRecord(item) {
+  if (item.level === "barangay") return;
+  state.psgc.search = "";
+  state.psgc.page = 1;
+  const detail = (await apiRequest(psgcDetailPath(item))).data;
+  state.psgc.trail = detail.path;
+  await renderPsgcManagement();
+}
+
+function renderPsgcWorkspaceTable(container, data, isSearch) {
+  const items = data.items || [];
+  if (!items.length) {
+    renderEmpty(
+      container,
+      "No PSGC records found",
+      isSearch ? "Try a different code, name, level, or status." : "There are no matching locations at this level.",
+    );
+    return;
+  }
+  container.innerHTML = '<table class="data-table"><thead><tr><th>Location</th><th>Level</th><th>PSGC code</th><th>Parent / path</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table>';
+  const tbody = container.querySelector("tbody");
+  for (const item of items) {
+    const tr = document.createElement("tr");
+    const locationCell = document.createElement("td");
+    const name = document.createElement("div");
+    name.className = "primary-cell";
+    name.textContent = item.name;
+    locationCell.append(name);
+    if (item.city_municipality_type) {
+      const type = document.createElement("div");
+      type.className = "secondary-cell";
+      type.textContent = item.city_municipality_type;
+      locationCell.append(type);
+    }
+    tr.append(locationCell, cell(psgcLevelLabel(item.level)), cell(item.code, "psgc-code-cell"));
+    tr.append(cell(item.path_label || item.parent_label || "-", "secondary-cell"));
+    const statusCell = document.createElement("td");
+    statusCell.append(badge(item.is_active ? "active" : "inactive"));
+    tr.append(statusCell);
+    const actionCell = document.createElement("td");
+    const actions = document.createElement("div");
+    actions.className = "psgc-table-actions";
+    if (item.level !== "barangay") {
+      const browse = document.createElement("button");
+      browse.className = "table-button";
+      browse.type = "button";
+      browse.textContent = "Browse";
+      browse.addEventListener("click", () => browsePsgcRecord(item).catch((error) => showToast(psgcErrorMessage(error))));
+      actions.append(browse);
+    }
+    const details = document.createElement("button");
+    details.className = "table-button";
+    details.type = "button";
+    details.textContent = "Details";
+    details.addEventListener("click", () => showPsgcRecordDialog(item));
+    actions.append(details);
+    actionCell.append(actions);
+    tr.append(actionCell);
+    tbody.append(tr);
+  }
+  renderPsgcPagination(container.parentElement, data.pagination);
+}
+
+async function showPsgcRecordDialog(item) {
+  openDialog("PSGC record", '<div class="dialog-stack"><div class="loading-state" role="status"><div class="large-spinner"></div><span>Loading record...</span></div></div>');
+  try {
+    const detail = (await apiRequest(psgcDetailPath(item))).data;
+    const dependencies = detail.dependencies;
+    const canChangeCodeOrDelete = !dependencies.child_count && !dependencies.attendance_address_reference_count;
+    const path = detail.path.map((segment) => escapeHtml(segment.name)).join(" / ");
+    const dependencyMessage = canChangeCodeOrDelete
+      ? "No child location or attendance-address dependency."
+      : `Child locations: ${formatNumber(dependencies.child_count)}. Attendance address records: ${formatNumber(dependencies.attendance_address_reference_count)}.`;
+    openDialog(`${psgcLevelLabel(detail.level)} details`, `
+      <div class="dialog-stack">
+        <p id="dialog-error" class="dialog-error" role="alert"></p>
+        <dl class="psgc-detail-list">
+          <dt>Name</dt><dd>${escapeHtml(detail.name)}</dd>
+          <dt>PSGC code</dt><dd class="psgc-code-cell">${escapeHtml(detail.code)}</dd>
+          <dt>Level</dt><dd>${escapeHtml(psgcLevelLabel(detail.level))}</dd>
+          <dt>Hierarchy</dt><dd>${path}</dd>
+          <dt>Status</dt><dd>${detail.is_active ? "Active" : "Inactive"}</dd>
+          <dt>Dependencies</dt><dd>${dependencyMessage}</dd>
+        </dl>
+        <div class="dialog-actions">
+          ${detail.level !== "barangay" ? '<button id="psgc-browse-children" class="secondary-button" type="button">Browse children</button>' : ""}
+          <button id="psgc-name-action" class="secondary-button" type="button">Correct name</button>
+          <button id="psgc-status-action" class="${detail.is_active ? "danger-button" : "secondary-button"}" type="button">${detail.is_active ? "Deactivate" : "Restore"}</button>
+          <button id="psgc-code-action" class="secondary-button" type="button" ${canChangeCodeOrDelete ? "" : "disabled"}>Correct code</button>
+          <button id="psgc-delete-action" class="danger-button" type="button" ${canChangeCodeOrDelete ? "" : "disabled"}>Delete permanently</button>
+          <button class="secondary-button" type="button" data-close>Close</button>
+        </div>
+      </div>`);
+    dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+    dialogContent.querySelector("#psgc-browse-children")?.addEventListener("click", () => browsePsgcRecord(detail).catch((error) => setDialogError(psgcErrorMessage(error))));
+    dialogContent.querySelector("#psgc-name-action").addEventListener("click", () => showPsgcNameDialog(detail));
+    dialogContent.querySelector("#psgc-status-action").addEventListener("click", () => showPsgcStatusDialog(detail));
+    dialogContent.querySelector("#psgc-code-action")?.addEventListener("click", () => showPsgcCodeDialog(detail));
+    dialogContent.querySelector("#psgc-delete-action")?.addEventListener("click", () => showPsgcDeleteDialog(detail));
+  } catch (error) {
+    openDialog("PSGC record", `<div class="dialog-stack"><p id="dialog-error" class="dialog-error" role="alert">${escapeHtml(psgcErrorMessage(error))}</p><div class="dialog-actions"><button class="secondary-button" type="button" data-close>Close</button></div></div>`);
+    dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  }
+}
+
+function bindPsgcMutation(form, endpoint, payloadFromForm, successMessage) {
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submit = form.querySelector('[type="submit"]');
+    setButtonBusy(submit, true);
+    setDialogError();
+    try {
+      await apiRequest(endpoint, { method: "PATCH", body: payloadFromForm() });
+      closeDialog();
+      showToast(successMessage);
+      await renderPsgcManagement();
+    } catch (error) {
+      setDialogError(psgcErrorMessage(error));
+    } finally {
+      setButtonBusy(submit, false);
+    }
+  });
+}
+
+function showPsgcNameDialog(detail) {
+  openDialog("Correct PSGC name", `
+    <form id="psgc-name-form" class="dialog-form">
+      <p id="dialog-error" class="dialog-error" role="alert"></p>
+      <div class="field-group"><label for="psgc-corrected-name">Verified name</label><input id="psgc-corrected-name" name="name" maxlength="150" required value="${escapeHtml(detail.name)}" /></div>
+      <div class="field-group"><label for="psgc-name-reason">Reason</label><textarea id="psgc-name-reason" name="reason" minlength="3" maxlength="500" required></textarea></div>
+      <div class="dialog-actions"><button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save name</span><span class="button-spinner"></span></button></div>
+    </form>`);
+  const form = dialogContent.querySelector("#psgc-name-form");
+  dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  bindPsgcMutation(form, `${psgcDetailPath(detail)}/name`, () => ({ name: form.elements.name.value, reason: form.elements.reason.value }), "PSGC name updated.");
+}
+
+function showPsgcStatusDialog(detail) {
+  const nextActive = !detail.is_active;
+  openDialog(`${nextActive ? "Restore" : "Deactivate"} PSGC record`, `
+    <form id="psgc-status-form" class="dialog-form">
+      <p id="dialog-error" class="dialog-error" role="alert"></p>
+      <div class="field-group"><label for="psgc-status-reason">Reason</label><textarea id="psgc-status-reason" name="reason" minlength="3" maxlength="500" required></textarea></div>
+      <div class="dialog-actions"><button class="secondary-button" type="button" data-close>Cancel</button><button class="${nextActive ? "primary-button" : "danger-button"}" type="submit"><span class="button-label">${nextActive ? "Restore record" : "Deactivate record"}</span><span class="button-spinner"></span></button></div>
+    </form>`);
+  const form = dialogContent.querySelector("#psgc-status-form");
+  dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  bindPsgcMutation(form, `${psgcDetailPath(detail)}/status`, () => ({ is_active: nextActive, reason: form.elements.reason.value }), `PSGC record ${nextActive ? "restored" : "deactivated"}.`);
+}
+
+function showPsgcCodeDialog(detail) {
+  openDialog("Correct PSGC code", `
+    <form id="psgc-code-form" class="dialog-form">
+      <p id="dialog-error" class="dialog-error" role="alert"></p>
+      <div class="field-group"><label for="psgc-new-code">Verified 10-digit code</label><input id="psgc-new-code" name="new_code" inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" required /></div>
+      <div class="field-group"><label for="psgc-code-reason">Reason</label><textarea id="psgc-code-reason" name="reason" minlength="3" maxlength="500" required></textarea></div>
+      <label class="checkbox-field"><input name="confirmed" type="checkbox" required /> I verified that this row has no child location or attendance-address dependency.</label>
+      <div class="dialog-actions"><button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save code</span><span class="button-spinner"></span></button></div>
+    </form>`);
+  const form = dialogContent.querySelector("#psgc-code-form");
+  dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  bindPsgcMutation(form, `${psgcDetailPath(detail)}/code`, () => ({ new_code: form.elements.new_code.value, reason: form.elements.reason.value, confirmed: form.elements.confirmed.checked }), "PSGC code updated.");
+}
+
+function showPsgcDeleteDialog(detail) {
+  openDialog("Delete PSGC record permanently", `
+    <form id="psgc-delete-form" class="dialog-form">
+      <p id="dialog-error" class="dialog-error" role="alert"></p>
+      <p class="psgc-warning">This removes ${escapeHtml(detail.name)} from the local PSGC lookup data.</p>
+      <div class="field-group"><label for="psgc-delete-reason">Reason</label><textarea id="psgc-delete-reason" name="reason" minlength="3" maxlength="500" required></textarea></div>
+      <label class="checkbox-field"><input name="confirmed" type="checkbox" required /> I understand that this action cannot be undone.</label>
+      <div class="dialog-actions"><button class="secondary-button" type="button" data-close>Cancel</button><button class="danger-button" type="submit"><span class="button-label">Delete permanently</span><span class="button-spinner"></span></button></div>
+    </form>`);
+  const form = dialogContent.querySelector("#psgc-delete-form");
+  dialogContent.querySelector("[data-close]").addEventListener("click", closeDialog);
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submit = form.querySelector('[type="submit"]');
+    setButtonBusy(submit, true);
+    setDialogError();
+    try {
+      await apiRequest(psgcDetailPath(detail), {
+        method: "DELETE",
+        body: { reason: form.elements.reason.value, confirmed: form.elements.confirmed.checked },
+      });
+      closeDialog();
+      showToast("PSGC record permanently deleted.");
+      await renderPsgcManagement();
+    } catch (error) {
+      setDialogError(psgcErrorMessage(error));
+    } finally {
+      setButtonBusy(submit, false);
+    }
+  });
+}
+
+function setupPsgcImport() {
+  const importForm = document.querySelector("#psgc-import-form");
+  const importFile = importForm.elements.file;
+  const sourceVersion = importForm.elements.source_version;
+  const previewButton = document.querySelector("#psgc-preview-button");
+  const importButton = document.querySelector("#psgc-import-button");
+  const importFeedback = document.querySelector("#psgc-import-feedback");
+  const importPreview = document.querySelector("#psgc-import-preview");
+  const importStatus = document.querySelector("#psgc-import-status");
+  const importErrors = document.querySelector("#psgc-import-errors");
+  let readyImport = null;
+
+  const resetImportPreview = () => {
+    readyImport = null;
+    importPreview.hidden = true;
+    importFeedback.hidden = true;
+    importButton.hidden = true;
+    importButton.disabled = true;
+  };
+  const showImportFeedback = (message) => {
+    importFeedback.textContent = message;
+    importFeedback.hidden = false;
+  };
+  const makeImportFormData = () => {
+    const data = new FormData();
+    data.append("source_version", sourceVersion.value.trim());
+    data.append("file", importFile.files[0]);
+    return data;
+  };
+  const showImportPreview = (preview, message) => {
+    const counts = preview.counts || {};
+    setText("#psgc-import-regions", formatNumber(counts.regions || 0));
+    setText("#psgc-import-provinces", formatNumber(counts.provinces || 0));
+    setText("#psgc-import-cities", formatNumber(counts.cities_municipalities || 0));
+    setText("#psgc-import-barangays", formatNumber(counts.barangays || 0));
+    importStatus.textContent = preview.valid ? `${message} Ready to import ${preview.file_name}.` : "No data was saved. Correct the listed file issues, then preview again.";
+    importErrors.replaceChildren();
+    for (const error of preview.errors || []) {
+      const item = document.createElement("li");
+      item.textContent = error;
+      importErrors.append(item);
+    }
+    importErrors.hidden = !(preview.errors || []).length;
+    importPreview.hidden = false;
+    readyImport = preview.valid ? preview : null;
+    importButton.hidden = !readyImport;
+    importButton.disabled = !readyImport;
+  };
+  importFile.addEventListener("change", resetImportPreview);
+  sourceVersion.addEventListener("input", resetImportPreview);
+  importForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!importFile.files[0]) {
+      showImportFeedback("Choose the official PSGC Excel file first.");
+      return;
+    }
+    setButtonBusy(previewButton, true);
+    importFeedback.hidden = true;
+    try {
+      const response = await apiRequest("/admin/psgc/imports/preview", { method: "POST", body: makeImportFormData() });
+      showImportPreview(response.data, response.message);
+    } catch (error) {
+      showImportFeedback(error.message);
+    } finally {
+      setButtonBusy(previewButton, false);
+    }
+  });
+  importButton.addEventListener("click", async () => {
+    if (!readyImport || !importFile.files[0]) return;
+    if (!window.confirm("Import this validated PSGC masterlist into the local lookup data?")) return;
+    setButtonBusy(importButton, true);
+    importFeedback.hidden = true;
+    try {
+      const response = await apiRequest("/admin/psgc/imports/apply", { method: "POST", body: makeImportFormData() });
+      showToast(response.message);
+      await renderPsgcManagement();
+    } catch (error) {
+      showImportFeedback(error.message);
+    } finally {
+      setButtonBusy(importButton, false);
+    }
+  });
+}
+
 async function renderPsgcManagement() {
   renderLoading();
   try {
-    const [summaryResponse, regionsResponse] = await Promise.all([
+    const [summaryResponse, workspaceData] = await Promise.all([
       apiRequest("/admin/psgc/summary"),
-      apiRequest("/psgc/regions"),
+      loadPsgcWorkspace(),
     ]);
     const summary = summaryResponse.data;
+    const isSearch = Boolean(state.psgc.search);
+    const current = state.psgc.trail.at(-1);
     root.innerHTML = `
-      <section class="view-intro"><div><h2>PSGC Reference Data</h2><p>Add or update lookup records through their official PSGC codes.</p></div></section>
+      <section class="view-intro"><div><h2>PSGC Reference Data</h2><p>Local Philippine Standard Geographic Code reference records.</p></div></section>
       <section class="summary-grid" aria-label="PSGC totals">
         <article class="summary-card"><span class="summary-label">Regions</span><strong class="summary-value">${formatNumber(summary.regions)}</strong></article>
         <article class="summary-card green"><span class="summary-label">Provinces</span><strong class="summary-value">${formatNumber(summary.provinces)}</strong></article>
         <article class="summary-card amber"><span class="summary-label">Cities / municipalities</span><strong class="summary-value">${formatNumber(summary.cities_municipalities)}</strong></article>
         <article class="summary-card"><span class="summary-label">Barangays</span><strong class="summary-value">${formatNumber(summary.barangays)}</strong></article>
+      </section>
+      <section class="panel psgc-workspace-panel">
+        <header class="panel-header"><h3>${isSearch ? "PSGC search results" : "PSGC hierarchy"}</h3></header>
+        <div class="panel-body psgc-workspace-body">
+          <form id="psgc-search-form" class="toolbar psgc-toolbar">
+            <div class="field-group search-field"><label for="psgc-search">Search</label><input id="psgc-search" name="search" type="search" value="${escapeHtml(state.psgc.search)}" placeholder="PSGC code or location name" /></div>
+            <div class="field-group"><label for="psgc-level-filter">Level</label><select id="psgc-level-filter" name="level"><option value="">All levels</option><option value="region" ${state.psgc.level === "region" ? "selected" : ""}>Regions</option><option value="province" ${state.psgc.level === "province" ? "selected" : ""}>Provinces</option><option value="city_municipality" ${state.psgc.level === "city_municipality" ? "selected" : ""}>Cities / municipalities</option><option value="barangay" ${state.psgc.level === "barangay" ? "selected" : ""}>Barangays</option></select></div>
+            <div class="field-group"><label for="psgc-status-filter">Status</label><select id="psgc-status-filter" name="status"><option value="active" ${state.psgc.status === "active" ? "selected" : ""}>Active</option><option value="inactive" ${state.psgc.status === "inactive" ? "selected" : ""}>Inactive</option><option value="all" ${state.psgc.status === "all" ? "selected" : ""}>All</option></select></div>
+            <div class="psgc-toolbar-actions"><button class="primary-button" type="submit">Search</button><button id="psgc-clear-search" class="secondary-button" type="button">Clear</button></div>
+          </form>
+          <nav class="psgc-breadcrumb" aria-label="PSGC hierarchy">${psgcBreadcrumbMarkup()}</nav>
+          <div class="psgc-current-level"><span>${isSearch ? "Search results" : `${current ? psgcLevelLabel(current.level) : "Regions"}`}</span><small>${isSearch ? "Open a result to inspect or browse its children." : "Select a location to move down the hierarchy."}</small></div>
+          <div id="psgc-workspace-table" class="table-wrap"></div>
+        </div>
       </section>
       <section class="panel psgc-import-panel">
         <header class="panel-header"><h3>Import PSA PSGC masterlist</h3></header>
@@ -1180,205 +1570,37 @@ async function renderPsgcManagement() {
             <ul id="psgc-import-errors" class="psgc-import-errors" hidden></ul>
           </section>
         </form>
-      </section>
-      <section class="panel psgc-management-panel">
-        <header class="panel-header"><h3>Add or update a PSGC record</h3></header>
-        <form id="psgc-form" class="panel-body dialog-form">
-          <div id="psgc-feedback" class="notice notice-error" role="alert" hidden></div>
-          <div class="form-grid">
-            <div class="field-group full-span"><label for="psgc-level">Record type</label><select id="psgc-level" name="level"><option value="region">Region</option><option value="province">Province</option><option value="city">City or municipality</option><option value="barangay">Barangay</option></select></div>
-            <div class="field-group full-span" data-psgc-parent="region"><label for="psgc-region">Region</label><select id="psgc-region" name="region_code"></select></div>
-            <div class="field-group full-span" data-psgc-parent="province"><label for="psgc-province">Province</label><select id="psgc-province" name="province_code"></select></div>
-            <div class="field-group full-span" data-psgc-parent="city"><label for="psgc-city">City or municipality</label><select id="psgc-city" name="city_municipality_code"></select></div>
-            <div class="field-group"><label for="psgc-code">Official PSGC code</label><input id="psgc-code" name="code" inputmode="numeric" pattern="[0-9]+" maxlength="10" required /></div>
-            <div class="field-group"><label for="psgc-type">City/municipality type</label><select id="psgc-type" name="city_municipality_type"><option value="city">City</option><option value="municipality">Municipality</option></select></div>
-            <div class="field-group full-span"><label for="psgc-name">Official name</label><input id="psgc-name" name="name" maxlength="150" required /></div>
-          </div>
-          <p class="field-help">Saving an existing code updates its name or hierarchy and reactivates it.</p>
-          <div class="dialog-actions"><button class="primary-button" type="submit"><span class="button-label">Save PSGC record</span><span class="button-spinner"></span></button></div>
-        </form>
       </section>`;
-    const form = document.querySelector("#psgc-form");
-    const importForm = document.querySelector("#psgc-import-form");
-    const importFile = importForm.elements.file;
-    const sourceVersion = importForm.elements.source_version;
-    const previewButton = document.querySelector("#psgc-preview-button");
-    const importButton = document.querySelector("#psgc-import-button");
-    const importFeedback = document.querySelector("#psgc-import-feedback");
-    const importPreview = document.querySelector("#psgc-import-preview");
-    const importStatus = document.querySelector("#psgc-import-status");
-    const importErrors = document.querySelector("#psgc-import-errors");
-    let readyImport = null;
-
-    const resetImportPreview = () => {
-      readyImport = null;
-      importPreview.hidden = true;
-      importFeedback.hidden = true;
-      importButton.hidden = true;
-      importButton.disabled = true;
-    };
-    const showImportFeedback = (message) => {
-      importFeedback.textContent = message;
-      importFeedback.hidden = false;
-    };
-    const makeImportFormData = () => {
-      const data = new FormData();
-      data.append("source_version", sourceVersion.value.trim());
-      data.append("file", importFile.files[0]);
-      return data;
-    };
-    const showImportPreview = (preview, message) => {
-      const counts = preview.counts || {};
-      document.querySelector("#psgc-import-regions").textContent = formatNumber(counts.regions || 0);
-      document.querySelector("#psgc-import-provinces").textContent = formatNumber(counts.provinces || 0);
-      document.querySelector("#psgc-import-cities").textContent = formatNumber(counts.cities_municipalities || 0);
-      document.querySelector("#psgc-import-barangays").textContent = formatNumber(counts.barangays || 0);
-      importStatus.textContent = preview.valid ? `${message} Ready to import ${preview.file_name}.` : "No data was saved. Correct the listed file issues, then preview again.";
-      importErrors.replaceChildren();
-      for (const error of preview.errors || []) {
-        const item = document.createElement("li");
-        item.textContent = error;
-        importErrors.append(item);
-      }
-      importErrors.hidden = !(preview.errors || []).length;
-      importPreview.hidden = false;
-      readyImport = preview.valid ? preview : null;
-      importButton.hidden = !readyImport;
-      importButton.disabled = !readyImport;
-    };
-    importFile.addEventListener("change", resetImportPreview);
-    sourceVersion.addEventListener("input", resetImportPreview);
-    importForm.addEventListener("submit", async (event) => {
+    renderPsgcWorkspaceTable(document.querySelector("#psgc-workspace-table"), workspaceData, isSearch);
+    setupPsgcImport();
+    document.querySelector("#psgc-search-form").addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (!importFile.files[0]) {
-        showImportFeedback("Choose the official PSGC Excel file first.");
-        return;
-      }
-      setButtonBusy(previewButton, true);
-      importFeedback.hidden = true;
-      try {
-        const response = await apiRequest("/admin/psgc/imports/preview", {
-          method: "POST",
-          body: makeImportFormData(),
-        });
-        showImportPreview(response.data, response.message);
-      } catch (error) {
-        showImportFeedback(error.message);
-      } finally {
-        setButtonBusy(previewButton, false);
-      }
+      const form = event.currentTarget;
+      state.psgc.search = form.elements.search.value.trim();
+      state.psgc.level = form.elements.level.value;
+      state.psgc.status = form.elements.status.value;
+      state.psgc.page = 1;
+      await renderPsgcManagement();
     });
-    importButton.addEventListener("click", async () => {
-      if (!readyImport || !importFile.files[0]) return;
-      const confirmed = window.confirm("Import this validated PSGC masterlist into the local lookup data?");
-      if (!confirmed) return;
-      setButtonBusy(importButton, true);
-      importFeedback.hidden = true;
-      try {
-        const response = await apiRequest("/admin/psgc/imports/apply", {
-          method: "POST",
-          body: makeImportFormData(),
-        });
-        showToast(response.message);
-        renderPsgcManagement();
-      } catch (error) {
-        showImportFeedback(error.message);
-      } finally {
-        setButtonBusy(importButton, false);
-      }
+    document.querySelector("#psgc-clear-search").addEventListener("click", async () => {
+      state.psgc.search = "";
+      state.psgc.level = "";
+      state.psgc.page = 1;
+      await renderPsgcManagement();
     });
-    const level = form.elements.level;
-    const region = form.elements.region_code;
-    const province = form.elements.province_code;
-    const city = form.elements.city_municipality_code;
-    const type = form.elements.city_municipality_type;
-
-    const fillSelect = (select, items, valueKey, labelKey, placeholder) => {
-      select.innerHTML = "";
-      const empty = document.createElement("option");
-      empty.value = "";
-      empty.textContent = placeholder;
-      select.append(empty);
-      for (const item of items) {
-        const option = document.createElement("option");
-        option.value = item[valueKey];
-        option.textContent = item[labelKey];
-        select.append(option);
-      }
-    };
-    fillSelect(region, regionsResponse.data, "region_code", "region_name", "Select region");
-    fillSelect(province, [], "province_code", "province_name", "Select province (if applicable)");
-    fillSelect(city, [], "city_municipality_code", "city_municipality_name", "Select city or municipality");
-
-    const loadProvinces = async () => {
-      fillSelect(province, [], "province_code", "province_name", "Select province (if applicable)");
-      fillSelect(city, [], "city_municipality_code", "city_municipality_name", "Select city or municipality");
-      if (!region.value) return;
-      const response = await apiRequest(`/psgc/provinces?regionCode=${encodeURIComponent(region.value)}`);
-      fillSelect(province, response.data, "province_code", "province_name", "Select province (if applicable)");
-      await loadCities();
-    };
-    const loadCities = async () => {
-      fillSelect(city, [], "city_municipality_code", "city_municipality_name", "Select city or municipality");
-      if (!region.value) return;
-      const query = new URLSearchParams({ regionCode: region.value });
-      if (province.value) query.set("provinceCode", province.value);
-      const response = await apiRequest(`/psgc/cities-municipalities?${query}`);
-      fillSelect(city, response.data, "city_municipality_code", "city_municipality_name", "Select city or municipality");
-    };
-    region.addEventListener("change", () => loadProvinces().catch((error) => showPsgcError(error.message)));
-    province.addEventListener("change", () => loadCities().catch((error) => showPsgcError(error.message)));
-
-    const updateForm = () => {
-      const selected = level.value;
-      document.querySelector('[data-psgc-parent="region"]').hidden = selected === "region";
-      document.querySelector('[data-psgc-parent="province"]').hidden = !["city", "barangay"].includes(selected);
-      document.querySelector('[data-psgc-parent="city"]').hidden = selected !== "barangay";
-      type.closest(".field-group").hidden = selected !== "city";
-      region.required = selected !== "region";
-      city.required = selected === "barangay";
-      form.elements.code.value = "";
-      form.elements.name.value = "";
-    };
-    const showPsgcError = (message) => {
-      const feedback = document.querySelector("#psgc-feedback");
-      feedback.textContent = message;
-      feedback.hidden = false;
-    };
-    level.addEventListener("change", updateForm);
-    updateForm();
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const submit = form.querySelector('[type="submit"]');
-      const selected = level.value;
-      const code = form.elements.code.value;
-      const name = form.elements.name.value;
-      let path;
-      let payload;
-      if (selected === "region") {
-        path = "/admin/psgc/regions";
-        payload = { region_code: code, region_name: name };
-      } else if (selected === "province") {
-        path = "/admin/psgc/provinces";
-        payload = { province_code: code, province_name: name, region_code: region.value };
-      } else if (selected === "city") {
-        path = "/admin/psgc/cities-municipalities";
-        payload = { city_municipality_code: code, city_municipality_name: name, city_municipality_type: type.value, region_code: region.value, province_code: province.value || null };
-      } else {
-        path = "/admin/psgc/barangays";
-        payload = { barangay_code: code, barangay_name: name, city_municipality_code: city.value };
-      }
-      setButtonBusy(submit, true);
-      document.querySelector("#psgc-feedback").hidden = true;
-      try {
-        const response = await apiRequest(path, { method: "POST", body: payload });
-        showToast(response.message);
-        renderPsgcManagement();
-      } catch (error) {
-        showPsgcError(error.message);
-      } finally {
-        setButtonBusy(submit, false);
-      }
+    document.querySelector("#psgc-status-filter").addEventListener("change", async (event) => {
+      state.psgc.status = event.currentTarget.value;
+      state.psgc.page = 1;
+      await renderPsgcManagement();
+    });
+    document.querySelectorAll("[data-psgc-trail-index]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const index = Number(button.dataset.psgcTrailIndex);
+        state.psgc.trail = index < 0 ? [] : state.psgc.trail.slice(0, index + 1);
+        state.psgc.search = "";
+        state.psgc.page = 1;
+        await renderPsgcManagement();
+      });
     });
   } catch (error) {
     renderError(error, renderPsgcManagement);

@@ -47,9 +47,15 @@ Expected: hindi makikita ng Program Admin ang `Organizational Units`, `Admin Use
 2. Sa `PSGC Data`, i-download ang official PSA PSGC `.xlsx` masterlist. Piliin ang file, ilagay ang PSA release/version, at pindutin ang `Preview file`.
 3. I-check na tama ang preview counts at walang errors. Pindutin ang `Import masterlist`, then i-confirm ang action.
 4. Subukan din ang invalid test file o file na may missing parent. Dapat errors lang ang lumabas at walang mabago sa PSGC totals.
-5. Sa `Reports`, piliin ang program at date range.
-6. Buksan ang event summary at i-check ang attendance totals.
-7. Sa `Audit Logs`, i-filter ang `event`, `attendance_record`, `attendance_sheet_export`, o PSGC actions.
-8. I-archive lang ang event kapag closed na ito.
+5. Sa PSGC hierarchy, buksan ang `Region V`, then `Albay`. I-check na lumalabas ang cities/municipalities kapag nag-browse sa province.
+6. Gamitin ang search para maghanap ng PSGC code at partial location name. I-check na lumalabas ang full hierarchy path sa search result.
+7. Buksan ang `Details` ng isang safe test record. Mag-correct ng name at maglagay ng reason. I-check ang result sa `Audit Logs`.
+8. Mag-deactivate ng safe test record, i-filter sa `Inactive`, then i-restore ito. Hindi dapat mawala ang row sa database history.
+9. Subukang palitan ang code o i-delete ang PSGC row na may child locations o attendance-address reference. Dapat naka-block ito at may child/address count na explanation.
+10. Sa dependency-free test row lang, subukan ang code correction at permanent delete. Dapat kailangan ng reason at confirmation checkbox.
+11. Sa `Reports`, piliin ang program at date range.
+12. Buksan ang event summary at i-check ang attendance totals.
+13. Sa `Audit Logs`, i-filter ang `event`, `attendance_record`, `attendance_sheet_export`, o PSGC actions.
+14. I-archive lang ang event kapag closed na ito.
 
-Expected: inactive unit ay hindi na available sa bagong assignment pero nananatili ang history nito. Sa PSGC import, walang data na nase-save sa preview step. Ang valid import ay nag-uupdate o nagdadagdag ng local lookup data at may isang audit log. Ang PDF ay para sa selected event at valid attendees nito lamang.
+Expected: inactive unit ay hindi na available sa bagong assignment pero nananatili ang history nito. Sa PSGC import, walang data na nase-save sa preview step. Ang valid import ay nag-uupdate o nagdadagdag ng local lookup data at may isang audit log. Ang PSGC visual workspace ay isang page lang kada request, kaya hindi nito nilo-load lahat ng barangays sa browser. Name, status, code, at permanent-delete actions ay may audit reason. Ang code correction at delete ay hindi puwedeng sumira sa PSGC hierarchy o existing attendance addresses. Ang PDF ay para sa selected event at valid attendees nito lamang.

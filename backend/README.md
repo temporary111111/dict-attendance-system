@@ -216,6 +216,38 @@ and the complete PSGC parent hierarchy. Apply validates the same file again,
 then upserts all rows in one transaction and creates one audit log. The default
 maximum upload size is 10 MiB and can be changed with `PSGC_IMPORT_MAX_BYTES`.
 
+## PSGC Visual Management
+
+The same Super Admin-only route group also provides a paginated local PSGC
+workspace. It is meant for browsing and verified local corrections, while the
+official PSA workbook import remains the normal source of truth.
+
+```text
+GET /api/admin/psgc/regions
+GET /api/admin/psgc/regions/{regionCode}/children
+GET /api/admin/psgc/provinces/{provinceCode}/children
+GET /api/admin/psgc/cities-municipalities/{cityMunicipalityCode}/children
+GET /api/admin/psgc/search
+GET /api/admin/psgc/{level}/{code}
+PATCH /api/admin/psgc/{level}/{code}/name
+PATCH /api/admin/psgc/{level}/{code}/status
+PATCH /api/admin/psgc/{level}/{code}/code
+DELETE /api/admin/psgc/{level}/{code}
+```
+
+List and search routes accept `page`, `pageSize` (maximum `100`), `status`
+(`active`, `inactive`, or `all`), and an optional search term. Search may also
+filter by `level`: `region`, `province`, `city_municipality`, or `barangay`.
+
+Every manual change requires a reason and creates an audit log. Deactivate or
+restore is the standard removal action. Code correction and permanent delete
+also require explicit confirmation, a unique numeric 10-digit code where
+applicable, and zero child-location and attendance-address dependencies. A
+blocked operation returns `409 PSGC_RECORD_IN_USE` with dependency counts.
+Manual parent changes are not available; hierarchy corrections should be made
+through a corrected PSA reimport. Inactive rows stay available for historical
+references but are excluded from public attendance address selectors.
+
 ## Attendance Record Management
 
 Authenticated admins can review event attendance through:
