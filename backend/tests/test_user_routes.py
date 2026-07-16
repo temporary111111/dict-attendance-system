@@ -144,6 +144,18 @@ def test_create_user_hashes_password_and_returns_safe_account_data():
     )
 
 
+def test_create_user_accepts_a_test_domain_email_for_local_qa_accounts():
+    session = FakeSession(role=make_role(), org_unit=make_org_unit())
+    client = make_client(session)
+    payload = valid_payload()
+    payload["email"] = "qa.program.admin@dict.test"
+
+    response = client.post("/api/users", json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["data"]["email"] == "qa.program.admin@dict.test"
+
+
 def test_create_user_rejects_duplicate_email():
     session = FakeSession(
         existing_user_id=9,

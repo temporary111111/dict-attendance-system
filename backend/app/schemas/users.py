@@ -2,9 +2,9 @@
 
 from typing import Annotated, Literal
 
+from email_validator import EmailNotValidError, validate_email
 from pydantic import (
     BaseModel,
-    EmailStr,
     Field,
     StringConstraints,
     field_validator,
@@ -17,11 +17,23 @@ TrimmedFullName = Annotated[
 ]
 
 
+def normalize_admin_email(email: str) -> str:
+    """Normalizes real and local `.test` email addresses for admin accounts."""
+    try:
+        return validate_email(
+            email.strip(),
+            check_deliverability=False,
+            test_environment=True,
+        ).normalized
+    except EmailNotValidError as error:
+        raise ValueError(str(error)) from error
+
+
 class CreateUserRequest(BaseModel):
     """Fields na kailangan ng Super Admin sa paggawa ng admin account."""
 
     full_name: TrimmedFullName
-    email: EmailStr = Field(max_length=150)
+    email: str = Field(max_length=150)
     password: str = Field(min_length=8, max_length=72)
     role_id: int = Field(gt=0)
     org_unit_id: int | None = Field(default=None, gt=0)
@@ -34,12 +46,17 @@ class CreateUserRequest(BaseModel):
             raise ValueError("Password must not exceed 72 UTF-8 bytes.")
         return password
 
+    @field_validator("email")
+    @classmethod
+    def validate_email_address(cls, email: str) -> str:
+        return normalize_admin_email(email)
+
 
 class UpdateUserRequest(BaseModel):
     """Optional profile fields; supplied null is allowed only for org unit."""
 
     full_name: TrimmedFullName | None = None
-    email: EmailStr | None = Field(default=None, max_length=150)
+    email: str | None = Field(default=None, max_length=150)
     role_id: int | None = Field(default=None, gt=0)
     org_unit_id: int | None = Field(default=None, gt=0)
 
@@ -50,6 +67,11 @@ class UpdateUserRequest(BaseModel):
         if value is None:
             raise ValueError(f"{info.field_name} cannot be null.")
         return value
+
+    @field_validator("email")
+    @classmethod
+    def validate_email_address(cls, email: str | None) -> str | None:
+        return normalize_admin_email(email) if email is not None else None
 
     @model_validator(mode="after")
     def require_at_least_one_field(self):
