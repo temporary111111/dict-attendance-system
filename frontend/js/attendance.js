@@ -35,7 +35,7 @@ function requiredLabel(key, requirements) {
 }
 
 function renderError(title, message) {
-  root.innerHTML = `<section class="attendance-error"><div class="state-symbol" aria-hidden="true">!</div><strong></strong><span></span></section>`;
+  root.innerHTML = `<section class="attendance-error" role="alert"><div class="state-symbol" aria-hidden="true">!</div><strong></strong><span></span></section>`;
   root.querySelector("strong").textContent = title;
   root.querySelector("span").textContent = message;
 }
@@ -50,10 +50,18 @@ function setFieldError(fieldName, message = "") {
   }
   const field = root.querySelector(`[data-field="${CSS.escape(normalizedName)}"]`);
   if (!field) return;
-  const input = field.querySelector("input, select, textarea");
+  const input = normalizedName === "signature"
+    ? field.querySelector(".signature-method-button")
+    : field.querySelector("input, select, textarea");
   if (input) input.setAttribute("aria-invalid", message ? "true" : "false");
   const error = field.querySelector(`[data-error-for="${CSS.escape(normalizedName)}"]`) || field.querySelector(":scope > .field-error");
-  if (error) error.textContent = message;
+  if (error) {
+    error.id ||= `field-error-${normalizedName.replaceAll("_", "-")}`;
+    error.setAttribute("aria-live", "polite");
+    error.textContent = message;
+    if (input) input.setAttribute("aria-describedby", error.id);
+  }
+  return input;
 }
 
 function clearErrors() {
@@ -73,6 +81,12 @@ function resetSelect(select, placeholder, disabled = true) {
   option.textContent = placeholder;
   select.append(option);
   select.disabled = disabled;
+  select.removeAttribute("aria-busy");
+}
+
+function setSelectLoading(select, message) {
+  resetSelect(select, message, true);
+  select.setAttribute("aria-busy", "true");
 }
 
 function appendOptions(select, items, valueKey, labelBuilder) {
@@ -82,14 +96,20 @@ function appendOptions(select, items, valueKey, labelBuilder) {
     option.textContent = labelBuilder(item);
     select.append(option);
   }
-  select.disabled = false;
+  select.disabled = items.length === 0;
+  select.removeAttribute("aria-busy");
 }
 
 async function loadRegions() {
   const region = root.querySelector("#region-code");
-  resetSelect(region, "Select region", true);
-  const response = await apiRequest("/psgc/regions", { auth: false });
-  appendOptions(region, response.data, "region_code", (item) => item.region_name);
+  setSelectLoading(region, "Loading regions...");
+  try {
+    const response = await apiRequest("/psgc/regions", { auth: false });
+    appendOptions(region, response.data, "region_code", (item) => item.region_name);
+  } catch (error) {
+    resetSelect(region, "Unable to load regions");
+    throw error;
+  }
 }
 
 async function loadProvincesAndCities() {
@@ -102,10 +122,12 @@ async function loadProvincesAndCities() {
   resetSelect(barangay, "Select barangay");
   if (!region.value) return;
   try {
+    setSelectLoading(province, "Loading provinces...");
     const response = await apiRequest(`/psgc/provinces?regionCode=${encodeURIComponent(region.value)}`, { auth: false });
     appendOptions(province, response.data, "province_code", (item) => item.province_name);
     await loadCities();
   } catch (error) {
+    resetSelect(province, "Unable to load provinces");
     setFieldError("psgc_address", error.message);
   }
 }
@@ -121,9 +143,11 @@ async function loadCities() {
   const query = new URLSearchParams({ regionCode: region.value });
   if (province.value) query.set("provinceCode", province.value);
   try {
+    setSelectLoading(city, "Loading cities or municipalities...");
     const response = await apiRequest(`/psgc/cities-municipalities?${query}`, { auth: false });
     appendOptions(city, response.data, "city_municipality_code", (item) => `${item.city_municipality_name} (${item.city_municipality_type})`);
   } catch (error) {
+    resetSelect(city, "Unable to load cities or municipalities");
     setFieldError("psgc_address", error.message);
   }
 }
@@ -134,9 +158,11 @@ async function loadBarangays() {
   resetSelect(barangay, "Select barangay");
   if (!city.value) return;
   try {
+    setSelectLoading(barangay, "Loading barangays...");
     const response = await apiRequest(`/psgc/barangays?cityMunicipalityCode=${encodeURIComponent(city.value)}`, { auth: false });
     appendOptions(barangay, response.data, "barangay_code", (item) => item.barangay_name);
   } catch (error) {
+    resetSelect(barangay, "Unable to load barangays");
     setFieldError("psgc_address", error.message);
   }
 }
@@ -368,13 +394,26 @@ function renderAttendanceForm(event) {
   root.querySelector("#attendance-form").addEventListener("submit", (submitEvent) => submitAttendance(submitEvent, event));
 }
 
+function focusFirstInvalidField() {
+  const field = root.querySelector('[aria-invalid="true"]');
+  if (!field) return;
+  field.focus({ preventScroll: true });
+  field.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function requiredFieldMessage(input) {
+  if (input.type === "checkbox") return "This consent is required before you can submit attendance.";
+  if (input.type === "email" && input.validity.typeMismatch) return "Enter a valid email address.";
+  return "This field is required.";
+}
+
 function validateBeforeSubmit(requirements, visibility) {
   let valid = true;
   const form = root.querySelector("#attendance-form");
   for (const input of form.querySelectorAll("input[required], select[required], textarea[required]")) {
     if (!input.checkValidity()) {
       const field = input.closest("[data-field]")?.dataset.field;
-      if (field) setFieldError(field, "This field is required.");
+      if (field) setFieldError(field, requiredFieldMessage(input));
       valid = false;
     }
   }
@@ -388,6 +427,7 @@ function validateBeforeSubmit(requirements, visibility) {
     setFieldError("psgc_address", "Select region, city or municipality, and barangay.");
     valid = false;
   }
+  if (!valid) focusFirstInvalidField();
   return valid;
 }
 
@@ -407,6 +447,7 @@ async function submitAttendance(event, publicEvent) {
   const submit = root.querySelector("#attendance-submit");
   submit.disabled = true;
   submit.classList.add("is-loading");
+  submit.setAttribute("aria-busy", "true");
   const formData = new FormData(form);
   formData.set("consent_database_processing", String(form.elements.consent_database_processing.checked));
   formData.set("consent_documentation_publication", String(form.elements.consent_documentation_publication.checked));
@@ -419,17 +460,21 @@ async function submitAttendance(event, publicEvent) {
   try {
     const response = await apiRequest(`/public/events/${encodeURIComponent(publicEvent.event_code)}/attendance`, { method: "POST", auth: false, body: formData });
     const data = response.data;
-    root.innerHTML = '<section class="attendance-success"><div class="attendance-success-mark" aria-hidden="true">OK</div><strong>Attendance submitted</strong><span id="success-name"></span><span id="success-detail"></span></section>';
+    root.innerHTML = '<section class="attendance-success" role="status"><div class="attendance-success-mark" aria-hidden="true">OK</div><strong>Attendance submitted</strong><span id="success-name"></span><span id="success-detail"></span></section>';
     root.querySelector("#success-name").textContent = data.attendee_name;
     root.querySelector("#success-detail").textContent = `Submitted on ${new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(data.submitted_at))}.`;
   } catch (error) {
     const feedback = root.querySelector("#attendance-feedback");
     feedback.textContent = error.message;
     feedback.hidden = false;
+    feedback.tabIndex = -1;
     for (const [field, message] of Object.entries(error.fields || {})) setFieldError(field, message);
+    feedback.focus({ preventScroll: true });
+    feedback.scrollIntoView({ behavior: "smooth", block: "center" });
   } finally {
     submit.disabled = false;
     submit.classList.remove("is-loading");
+    submit.setAttribute("aria-busy", "false");
   }
 }
 

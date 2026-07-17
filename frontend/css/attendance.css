@@ -194,7 +194,7 @@
 }
 
 .signature-method-button {
-  min-height: 36px;
+  min-height: 40px;
   border: 0;
   border-right: 1px solid #9ba9b7;
   background: var(--surface);
@@ -248,6 +248,7 @@
   border-radius: 6px;
   background: var(--surface);
   color: var(--ink-900);
+  overflow: auto;
   padding: 0;
 }
 
@@ -289,10 +290,16 @@
 }
 
 @media (max-width: 640px) {
-  .attendance-root { padding-top: 24px; }
+  .attendance-header {
+    min-height: 64px;
+    padding: 10px 18px;
+  }
+  .attendance-root { padding: 24px 18px 42px; }
   .attendance-grid { grid-template-columns: 1fr; }
   .attendance-grid .wide-field { grid-column: auto; }
   .attendance-event h1 { font-size: 1.35rem; }
+  .event-details { display: grid; gap: 5px; }
+  .form-section { padding-bottom: 22px; }
   .submit-row .primary-button { width: 100%; }
   .consent-confirmation-actions > * { flex: 1 1 auto; }
   .signature-pad-actions .secondary-button { width: 100%; }

@@ -6,6 +6,7 @@ const emailInput = document.querySelector("#email");
 const passwordInput = document.querySelector("#password");
 const rememberInput = document.querySelector("#remember");
 const submitButton = document.querySelector("#login-button");
+const passwordToggle = document.querySelector("#toggle-password");
 const errorBox = document.querySelector("#login-error");
 const sessionMessage = document.querySelector("#session-message");
 const connectionDot = document.querySelector("#connection-dot");
@@ -18,17 +19,21 @@ function setFieldError(input, message) {
 
 function validate() {
   let valid = true;
+  let firstInvalid = null;
   setFieldError(emailInput, "");
   setFieldError(passwordInput, "");
 
   if (!emailInput.validity.valid) {
     setFieldError(emailInput, "Enter a valid admin email address.");
     valid = false;
+    firstInvalid = emailInput;
   }
   if (!passwordInput.value) {
     setFieldError(passwordInput, "Enter your password.");
     valid = false;
+    firstInvalid ||= passwordInput;
   }
+  firstInvalid?.focus();
   return valid;
 }
 
@@ -38,6 +43,7 @@ function setSubmitting(isSubmitting) {
   emailInput.disabled = isSubmitting;
   passwordInput.disabled = isSubmitting;
   rememberInput.disabled = isSubmitting;
+  passwordToggle.disabled = isSubmitting;
 }
 
 async function checkBackend() {
@@ -51,10 +57,11 @@ async function checkBackend() {
   }
 }
 
-document.querySelector("#toggle-password").addEventListener("click", (event) => {
+passwordToggle.addEventListener("click", (event) => {
   const showing = passwordInput.type === "text";
   passwordInput.type = showing ? "password" : "text";
   event.currentTarget.textContent = showing ? "Show" : "Hide";
+  event.currentTarget.setAttribute("aria-pressed", String(!showing));
 });
 
 form.addEventListener("submit", async (event) => {

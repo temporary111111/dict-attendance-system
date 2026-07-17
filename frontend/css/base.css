@@ -37,7 +37,8 @@ body {
 body,
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   letter-spacing: 0;
 }
@@ -72,6 +73,7 @@ button:disabled {
 
 .field-group {
   display: grid;
+  min-width: 0;
   gap: 7px;
 }
 
@@ -89,7 +91,9 @@ button:disabled {
 }
 
 input,
-select {
+select,
+textarea {
+  min-width: 0;
   width: 100%;
   min-height: 44px;
   border: 1px solid #b9c4cf;
@@ -100,12 +104,22 @@ select {
 }
 
 input:hover,
-select:hover {
+select:hover,
+textarea:hover {
   border-color: #8c9baa;
 }
 
-input[aria-invalid="true"] {
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
   border-color: var(--red-700);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: #f1f4f6;
+  color: var(--ink-500);
 }
 
 .field-error {
@@ -122,7 +136,10 @@ input[aria-invalid="true"] {
 }
 
 .primary-button {
+  display: inline-flex;
   min-height: 44px;
+  align-items: center;
+  justify-content: center;
   border-radius: 6px;
   background: var(--blue-700);
   color: #fff;
@@ -135,7 +152,10 @@ input[aria-invalid="true"] {
 }
 
 .secondary-button {
+  display: inline-flex;
   min-height: 40px;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface);
@@ -202,6 +222,17 @@ input[aria-invalid="true"] {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

@@ -49,15 +49,16 @@
                 inputmode="email"
                 autocomplete="username"
                 maxlength="150"
+                aria-describedby="email-error"
                 required
               />
-              <span id="email-error" class="field-error"></span>
+              <span id="email-error" class="field-error" aria-live="polite"></span>
             </div>
 
             <div class="field-group">
               <div class="label-row">
                 <label for="password">Password</label>
-                <button id="toggle-password" class="text-button" type="button">Show</button>
+                <button id="toggle-password" class="text-button" type="button" aria-controls="password" aria-pressed="false">Show</button>
               </div>
               <input
                 id="password"
@@ -66,9 +67,10 @@
                 autocomplete="current-password"
                 minlength="8"
                 maxlength="72"
+                aria-describedby="password-error"
                 required
               />
-              <span id="password-error" class="field-error"></span>
+              <span id="password-error" class="field-error" aria-live="polite"></span>
             </div>
 
             <label class="checkbox-row" for="remember">

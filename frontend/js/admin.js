@@ -6,6 +6,7 @@ const appLoading = document.querySelector("#app-loading");
 const root = document.querySelector("#view-root");
 const pageTitle = document.querySelector("#page-title");
 const refreshButton = document.querySelector("#refresh-button");
+const menuButton = document.querySelector("#menu-button");
 const sidebar = document.querySelector("#sidebar");
 const scrim = document.querySelector("#sidebar-scrim");
 const dialog = document.querySelector("#workspace-dialog");
@@ -103,9 +104,12 @@ function cell(text, className = "") {
   return td;
 }
 
-function showToast(message) {
+function showToast(message, type = "info") {
   const toast = document.createElement("div");
-  toast.className = "toast";
+  toast.className = `toast toast-${type}`;
+  toast.role = "status";
+  toast.setAttribute("aria-live", "polite");
+  toast.setAttribute("aria-atomic", "true");
   toast.textContent = message;
   document.querySelector("#toast-region").append(toast);
   window.setTimeout(() => toast.remove(), 3500);
@@ -128,6 +132,13 @@ function openDialog(title, content) {
   dialogTitle.textContent = title;
   dialogContent.innerHTML = content;
   if (!dialog.open) dialog.showModal();
+  dialog.scrollTop = 0;
+  window.requestAnimationFrame(() => {
+    const target = dialogContent.querySelector(
+      "[autofocus], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled)",
+    );
+    target?.focus();
+  });
 }
 
 function closeDialog() {
@@ -137,6 +148,7 @@ function closeDialog() {
 function setButtonBusy(button, busy) {
   button.disabled = busy;
   button.classList.toggle("is-loading", busy);
+  button.setAttribute("aria-busy", String(busy));
 }
 
 async function copyText(value) {
@@ -1815,6 +1827,7 @@ async function renderAuditLogs() {
 function closeSidebar() {
   sidebar.classList.remove("open");
   scrim.hidden = true;
+  menuButton.setAttribute("aria-expanded", "false");
 }
 
 function navigate(requestedView) {
@@ -1826,7 +1839,10 @@ function navigate(requestedView) {
   window.location.hash = requestedView;
   pageTitle.textContent = views[requestedView].title;
   for (const item of document.querySelectorAll(".nav-item")) {
-    item.classList.toggle("active", item.dataset.view === requestedView);
+    const active = item.dataset.view === requestedView;
+    item.classList.toggle("active", active);
+    if (active) item.setAttribute("aria-current", "page");
+    else item.removeAttribute("aria-current");
   }
   closeSidebar();
   root.focus({ preventScroll: true });
@@ -1853,16 +1869,22 @@ for (const item of document.querySelectorAll(".nav-item")) {
   item.addEventListener("click", () => navigate(item.dataset.view));
 }
 document.querySelector("#logout-button").addEventListener("click", logout);
-document.querySelector("#menu-button").addEventListener("click", () => {
+menuButton.setAttribute("aria-controls", "sidebar");
+menuButton.setAttribute("aria-expanded", "false");
+menuButton.addEventListener("click", () => {
   sidebar.classList.add("open");
   scrim.hidden = false;
+  menuButton.setAttribute("aria-expanded", "true");
 });
 scrim.addEventListener("click", closeSidebar);
 refreshButton.addEventListener("click", async () => {
-  refreshButton.disabled = true;
-  await views[state.view].load();
-  refreshButton.disabled = false;
-  showToast("View refreshed.");
+  setButtonBusy(refreshButton, true);
+  try {
+    await views[state.view].load();
+    showToast("View refreshed.");
+  } finally {
+    setButtonBusy(refreshButton, false);
+  }
 });
 window.addEventListener("hashchange", () => {
   const requested = window.location.hash.slice(1) || "dashboard";
