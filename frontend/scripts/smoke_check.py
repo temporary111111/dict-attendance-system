@@ -32,7 +32,7 @@ class LocalReferenceParser(HTMLParser):
 
 def local_path(source: Path, reference: str) -> Path | None:
     parsed = urlparse(reference)
-    if parsed.scheme or reference.startswith(("#", "data:")):
+    if parsed.scheme or reference.startswith(("#", "data:", "/")):
         return None
     return (source.parent / parsed.path).resolve()
 

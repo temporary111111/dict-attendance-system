@@ -7,6 +7,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
+from pathlib import Path
+
 from app.api.router import api_router
 from app.core.config import Settings, get_settings
 from app.core.cors import configure_cors
@@ -34,6 +36,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Separate ang frontend sa backend, kaya kailangan configurable ang CORS.
     configure_cors(app, current_settings)
     app.include_router(api_router, prefix=current_settings.api_prefix)
+    # Dito naka-serve ang self-hosted Material Symbols icon font (WOFF2 + CSS).
+    app.mount(
+        "/static",
+        StaticFiles(
+            directory=Path("static"),
+            check_dir=False,
+        ),
+        name="static",
+    )
     # Dito kinukuha ng frontend ang generated QR PNG gamit ang stored public path.
     app.mount(
         current_settings.qr_code_url_prefix,
