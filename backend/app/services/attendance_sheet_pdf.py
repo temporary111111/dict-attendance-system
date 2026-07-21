@@ -155,7 +155,6 @@ def _logos_cell(
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ALIGN", (0, 0), (0, 0), "CENTER"),
                 ("ALIGN", (1, 0), (1, 0), "CENTER"),
-                ("LINEAFTER", (0, 0), (0, 0), 0.45, colors.HexColor("#333333")),
                 ("LEFTPADDING", (0, 0), (-1, -1), 2),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 2),
                 ("TOPPADDING", (0, 0), (-1, -1), 1),
