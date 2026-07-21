@@ -35,7 +35,7 @@ function requiredLabel(key, requirements) {
 }
 
 function renderError(title, message) {
-  root.innerHTML = `<section class="attendance-error" role="alert"><div class="state-symbol" aria-hidden="true">!</div><strong></strong><span></span></section>`;
+  root.innerHTML = `<section class="attendance-error" role="alert"><div class="state-symbol" aria-hidden="true"><span class="material-symbols-outlined">error_outline</span></div><strong></strong><span></span></section>`;
   root.querySelector("strong").textContent = title;
   root.querySelector("span").textContent = message;
 }
@@ -467,7 +467,7 @@ async function submitAttendance(event, publicEvent) {
   try {
     const response = await apiRequest(`/public/events/${encodeURIComponent(publicEvent.event_code)}/attendance`, { method: "POST", auth: false, body: formData });
     const data = response.data;
-    root.innerHTML = '<section class="attendance-success" role="status"><div class="attendance-success-mark" aria-hidden="true">OK</div><strong id="success-greeting"></strong><span id="success-message"></span><span id="success-detail"></span></section>';
+    root.innerHTML = '<section class="attendance-success" role="status"><div class="attendance-success-mark" aria-hidden="true"><span class="material-symbols-outlined">check_circle</span></div><strong id="success-greeting"></strong><span id="success-message"></span><span id="success-detail"></span></section>';
     root.querySelector("#success-greeting").textContent = `Thank you, ${data.attendee_name}!`;
     root.querySelector("#success-message").innerHTML = `Your attendance for <strong>${publicEvent.event_title}</strong> has been recorded.`;
     root.querySelector("#success-detail").textContent = new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(data.submitted_at));

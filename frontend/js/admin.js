@@ -218,7 +218,7 @@ function renderLoading() {
 function renderError(error, retry) {
   root.innerHTML = `
     <div class="panel error-state">
-      <div class="state-symbol" aria-hidden="true">!</div>
+      <div class="state-symbol" aria-hidden="true"><span class="material-symbols-outlined">error_outline</span></div>
       <strong>Unable to load this view</strong>
       <span id="view-error-message"></span>
       <button id="retry-view" class="secondary-button" type="button">Try again</button>
@@ -230,7 +230,7 @@ function renderError(error, retry) {
 function renderEmpty(container, title, message) {
   container.innerHTML = `
     <div class="empty-state">
-      <div class="state-symbol" aria-hidden="true">−</div>
+      <div class="state-symbol" aria-hidden="true"><span class="material-symbols-outlined">inventory_2</span></div>
       <strong></strong>
       <span></span>
     </div>`;
@@ -407,10 +407,10 @@ async function showProgramDialog(program = null) {
           <div class="logo-upload-area" id="logo-upload-area">
             <div class="logo-preview-wrap" id="logo-preview-wrap" hidden>
               <img id="logo-preview" class="logo-preview" src="" alt="Program logo preview" />
-              <button id="remove-logo" class="logo-remove-button" type="button" aria-label="Remove logo" title="Remove logo">✕</button>
+              <button id="remove-logo" class="logo-remove-button" type="button" aria-label="Remove logo" title="Remove logo"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
             </div>
             <label class="logo-upload-label" id="logo-upload-label" for="program-logo">
-              <span class="logo-upload-icon" aria-hidden="true">⬆</span>
+              <span class="logo-upload-icon material-symbols-outlined" aria-hidden="true">upload</span>
               <span id="logo-upload-text">Click to upload logo</span>
               <span class="logo-upload-hint">PNG or JPEG · max 2 MB</span>
             </label>
@@ -1074,7 +1074,7 @@ async function loadProgramReport(programId) {
       tbody.append(row);
     }
   } catch (error) {
-    container.innerHTML = '<section class="panel error-state"><div class="state-symbol">!</div><strong>Unable to load this report</strong><span id="report-error-message"></span></section>';
+    container.innerHTML = '<section class="panel error-state"><div class="state-symbol"><span class="material-symbols-outlined">error_outline</span></div><strong>Unable to load this report</strong><span id="report-error-message"></span></section>';
     setText("#report-error-message", error.message, container);
   }
 }
@@ -1836,7 +1836,7 @@ async function loadAuditTable() {
     }
     container.innerHTML = `
       <div class="table-wrap"><table class="data-table"><thead><tr><th>Date and time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Description</th></tr></thead><tbody></tbody></table></div>
-      <div class="pagination-row"><span id="audit-page-info"></span><div class="pagination-actions"><button id="audit-prev" class="secondary-button" type="button" title="Previous page">←</button><button id="audit-next" class="secondary-button" type="button" title="Next page">→</button></div></div>`;
+      <div class="pagination-row"><span id="audit-page-info"></span><div class="pagination-actions"><button id="audit-prev" class="secondary-button" type="button" title="Previous page"><span class="material-symbols-outlined" aria-hidden="true">chevron_left</span></button><button id="audit-next" class="secondary-button" type="button" title="Next page"><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></button></div></div>`;
     const tbody = container.querySelector("tbody");
     for (const item of items) {
       const tr = document.createElement("tr");
