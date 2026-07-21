@@ -396,20 +396,79 @@ async function showProgramDialog(program = null) {
 
   openDialog(
     program ? "Manage program" : "Add program",
-    `<form id="program-form" class="dialog-form">
+    `<form id="program-form" class="dialog-form" enctype="multipart/form-data">
       <p id="dialog-error" class="dialog-error" role="alert"></p>
       <div class="form-grid">
         <div class="field-group full-span"><label for="program-name">Program name</label><input id="program-name" name="program_name" maxlength="200" required /></div>
         <div class="field-group full-span"><label for="program-unit">Owning office or unit</label><select id="program-unit" name="owning_unit_id" required></select></div>
         <div class="field-group full-span"><label for="program-description">Description</label><textarea id="program-description" name="description" maxlength="5000"></textarea></div>
+        <div class="field-group full-span">
+          <label for="program-logo">Program logo <span class="field-hint">(PNG or JPEG, max 2 MB)</span></label>
+          <div class="logo-upload-area" id="logo-upload-area">
+            <div class="logo-preview-wrap" id="logo-preview-wrap" hidden>
+              <img id="logo-preview" class="logo-preview" src="" alt="Program logo preview" />
+              <button id="remove-logo" class="logo-remove-button" type="button" aria-label="Remove logo" title="Remove logo">✕</button>
+            </div>
+            <label class="logo-upload-label" id="logo-upload-label" for="program-logo">
+              <span class="logo-upload-icon" aria-hidden="true">⬆</span>
+              <span id="logo-upload-text">Click to upload logo</span>
+              <span class="logo-upload-hint">PNG or JPEG · max 2 MB</span>
+            </label>
+            <input id="program-logo" name="logo" type="file" accept="image/png,image/jpeg" class="logo-file-input" />
+          </div>
+        </div>
       </div>
       <div class="dialog-actions">${program ? `<button id="manage-program-admins" class="secondary-button" type="button">Program Admins</button><button id="program-status-action" class="danger-button" type="button">${program.program_status === "active" ? "Archive program" : "Restore program"}</button>` : ""}<button class="secondary-button" type="button" data-close>Cancel</button><button class="primary-button" type="submit"><span class="button-label">Save program</span><span class="button-spinner"></span></button></div>
     </form>`,
   );
   const form = dialogContent.querySelector("#program-form");
   const unitSelect = form.elements.owning_unit_id;
+  const logoInput = form.querySelector("#program-logo");
+  const logoPreviewWrap = form.querySelector("#logo-preview-wrap");
+  const logoPreview = form.querySelector("#logo-preview");
+  const logoUploadLabel = form.querySelector("#logo-upload-label");
+  const logoUploadText = form.querySelector("#logo-upload-text");
+  const removeLogoButton = form.querySelector("#remove-logo");
+
+  // Tracks whether the user explicitly wants to remove the existing logo.
+  let pendingRemoveLogo = false;
+
+  function showLogoPreview(src, filename) {
+    logoPreview.src = src;
+    logoPreviewWrap.hidden = false;
+    logoUploadLabel.hidden = true;
+    logoUploadText.textContent = filename || "Logo selected";
+  }
+
+  function clearLogoPreview() {
+    logoPreview.src = "";
+    logoPreviewWrap.hidden = true;
+    logoUploadLabel.hidden = false;
+    logoUploadText.textContent = "Click to upload logo";
+    logoInput.value = "";
+    pendingRemoveLogo = false;
+  }
+
+  // Show existing logo preview when editing.
+  if (program?.logo_url) {
+    showLogoPreview(`${getApiOrigin()}${program.logo_url}`, "Current logo");
+  }
+
+  logoInput.addEventListener("change", () => {
+    const file = logoInput.files[0];
+    if (!file) return;
+    pendingRemoveLogo = false;
+    const url = URL.createObjectURL(file);
+    showLogoPreview(url, file.name);
+  });
+
+  removeLogoButton.addEventListener("click", () => {
+    clearLogoPreview();
+    if (program?.logo_url) pendingRemoveLogo = true;
+  });
+
   try {
-    const units = (await apiRequest("/organizational-units?includeInactive=true")).data;
+    const units = (await apiRequest("/organizational-units")).data;
     for (const unit of units) {
       const option = document.createElement("option");
       option.value = unit.org_unit_id;
@@ -448,15 +507,22 @@ async function showProgramDialog(program = null) {
     const save = form.querySelector('[type="submit"]');
     setButtonBusy(save, true);
     setDialogError();
-    const payload = {
-      program_name: form.elements.program_name.value,
-      owning_unit_id: Number(form.elements.owning_unit_id.value),
-      description: form.elements.description.value.trim() || null,
-    };
+    // Always use FormData since the backend now accepts multipart/form-data.
+    const formData = new FormData();
+    formData.set("program_name", form.elements.program_name.value);
+    formData.set("owning_unit_id", String(Number(form.elements.owning_unit_id.value)));
+    const desc = form.elements.description.value.trim();
+    if (desc) formData.set("description", desc);
+    const logoFile = logoInput.files[0];
+    if (logoFile) {
+      formData.set("logo", logoFile);
+    } else if (pendingRemoveLogo) {
+      formData.set("remove_logo", "true");
+    }
     try {
       await apiRequest(program ? `/programs/${program.program_id}` : "/programs", {
         method: program ? "PATCH" : "POST",
-        body: payload,
+        body: formData,
       });
       closeDialog();
       showToast(program ? "Program updated." : "Program created.");
@@ -468,6 +534,7 @@ async function showProgramDialog(program = null) {
     }
   });
 }
+
 
 async function showProgramAdmins(program) {
   openDialog("Program Admin assignments", `<div class="dialog-stack"><p id="dialog-error" class="dialog-error" role="alert"></p><form id="assignment-form" class="toolbar"><div class="field-group search-field"><label for="assignment-user">Program Admin</label><select id="assignment-user" name="user_id" required></select></div><button class="primary-button" type="submit">Assign</button></form><div id="assignment-results" class="table-wrap"></div><div class="dialog-actions"><button class="secondary-button" type="button" data-back>Back to program</button></div></div>`);

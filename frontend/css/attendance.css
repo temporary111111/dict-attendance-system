@@ -12,9 +12,30 @@
   padding: 12px clamp(18px, 5vw, 76px);
 }
 
-.attendance-header img {
+.attendance-header-logos {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.attendance-dict-logo {
   display: block;
   width: min(270px, 100%);
+}
+
+.attendance-logo-divider {
+  width: 1px;
+  height: 40px;
+  background: #ccd4db;
+  flex-shrink: 0;
+}
+
+.attendance-program-logo {
+  display: block;
+  max-height: 44px;
+  max-width: 160px;
+  width: auto;
+  object-fit: contain;
 }
 
 .attendance-root {

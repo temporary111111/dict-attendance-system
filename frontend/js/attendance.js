@@ -1,4 +1,4 @@
-import { apiRequest } from "./api.js";
+import { apiRequest, getApiOrigin } from "./api.js";
 
 const root = document.querySelector("#attendance-root");
 const eventCode = new URLSearchParams(window.location.search).get("event")?.trim();
@@ -489,6 +489,18 @@ async function initialize() {
     if (!event.accepting_attendance) {
       renderError("Attendance is not open", "This event is currently not accepting attendance submissions.");
       return;
+    }
+    // Show program logo side-by-side with the DICT logo if available.
+    const programLogoUrl = event.program?.logo_url;
+    if (programLogoUrl) {
+      const programLogoEl = document.querySelector("#attendance-program-logo");
+      const dividerEl = document.querySelector("#attendance-logo-divider");
+      if (programLogoEl && dividerEl) {
+        programLogoEl.src = `${getApiOrigin()}${programLogoUrl}`;
+        programLogoEl.alt = `${event.program.program_name} logo`;
+        programLogoEl.hidden = false;
+        dividerEl.hidden = false;
+      }
     }
     renderAttendanceForm(event);
   } catch (error) {

@@ -91,6 +91,7 @@ def make_program(program_id=3, *, status="active"):
         program_id=program_id,
         program_name="Free Wi-Fi for All",
         program_status=status,
+        logo_path=None,
     )
 
 

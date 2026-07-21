@@ -59,7 +59,8 @@ def make_event(event_status="open"):
         program=SimpleNamespace(
             owning_unit=SimpleNamespace(
                 unit_name="DICT Regional Office No. V - Bicol"
-            )
+            ),
+            logo_path=None,
         ),
         event_title="Digital Inclusion Orientation",
         venue="DICT Regional Office",
@@ -97,7 +98,7 @@ def test_export_route_returns_private_pdf_attachment(tmp_path, monkeypatch):
     monkeypatch.setattr(
         attendance_sheet_service,
         "render_attendance_sheet_pdf",
-        lambda event, rows, *, logo_path: b"%PDF-route-test",
+        lambda event, rows, *, logo_path, **kwargs: b"%PDF-route-test",
     )
     client = make_client(
         FakeSession(event=make_event("draft")),
@@ -150,7 +151,7 @@ def test_export_route_allows_assigned_program_admin(tmp_path, monkeypatch):
     monkeypatch.setattr(
         attendance_sheet_service,
         "render_attendance_sheet_pdf",
-        lambda event, rows, *, logo_path: b"%PDF-assigned",
+        lambda event, rows, *, logo_path, **kwargs: b"%PDF-assigned",
     )
     client = make_client(
         FakeSession(event=make_event("archived"), assignment_id=17),
@@ -165,7 +166,7 @@ def test_export_route_allows_assigned_program_admin(tmp_path, monkeypatch):
 
 
 def test_export_route_maps_pdf_generation_failure(monkeypatch):
-    def fail_render(event, rows, *, logo_path):
+    def fail_render(event, rows, *, logo_path, **kwargs):
         raise AttendanceSheetPDFError
 
     monkeypatch.setattr(
@@ -190,7 +191,7 @@ def test_export_route_maps_persistence_failure(tmp_path, monkeypatch):
     monkeypatch.setattr(
         attendance_sheet_service,
         "render_attendance_sheet_pdf",
-        lambda event, rows, *, logo_path: b"%PDF-test",
+        lambda event, rows, *, logo_path, **kwargs: b"%PDF-test",
     )
     session = FakeSession(event=make_event(), fail_commit=True)
     client = make_client(

@@ -13,6 +13,7 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
+from app.core.config import Settings, get_settings
 from app.core.responses import error_response, success_response
 from app.db.session import get_db
 from app.schemas.public_attendance import (
@@ -37,7 +38,10 @@ from app.services.signature_service import InvalidSignatureImageError
 router = APIRouter(prefix="/public/events", tags=["public attendance"])
 
 
-def _public_event_data(event) -> dict[str, Any]:
+def _public_event_data(event, settings: Settings) -> dict[str, Any]:
+    logo_url = None
+    if event.program.logo_path:
+        logo_url = f"{settings.program_logo_url_prefix}/{event.program.logo_path}"
     return {
         "event_code": event.event_code,
         "event_title": event.event_title,
@@ -51,6 +55,7 @@ def _public_event_data(event) -> dict[str, Any]:
         "program": {
             "program_id": event.program.program_id,
             "program_name": event.program.program_name,
+            "logo_url": logo_url,
         },
     }
 
@@ -59,6 +64,7 @@ def _public_event_data(event) -> dict[str, Any]:
 def get_public_event_record(
     event_code: Annotated[str, Path(min_length=1, max_length=100)],
     db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> dict[str, Any]:
     try:
         event = get_public_event(db, event_code)
@@ -70,7 +76,7 @@ def get_public_event_record(
                 "Public event was not found.",
             ),
         )
-    return success_response(_public_event_data(event), "Public event retrieved.")
+    return success_response(_public_event_data(event, settings), "Public event retrieved.")
 
 
 def _attendee_name(attendance) -> str:

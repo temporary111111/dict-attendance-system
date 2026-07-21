@@ -78,6 +78,7 @@ def make_event(event_status="closed", event_code="EVENT-2026"):
         program_id=3,
         program_name="Free Wi-Fi for All",
         owning_unit=unit,
+        logo_path=None,
     )
     return SimpleNamespace(
         event_id=5,
@@ -126,6 +127,7 @@ def generate(
         5,
         current_user or make_user(),
         logo_path=Path("app/assets/dict-logo.png"),
+        program_logo_directory=tmp_path / "program_logos",
         signature_directory=tmp_path / "signatures",
         ip_address="127.0.0.1",
         user_agent="pytest-client",
@@ -140,7 +142,7 @@ def test_super_admin_can_export_every_event_status(
 ):
     captured = {}
 
-    def fake_render(event, rows, *, logo_path):
+    def fake_render(event, rows, *, logo_path, **kwargs):
         captured["event"] = event
         captured["rows"] = rows
         captured["logo_path"] = logo_path
@@ -192,7 +194,7 @@ def test_assigned_program_admin_can_export(tmp_path, monkeypatch):
     monkeypatch.setattr(
         attendance_sheet_service,
         "render_attendance_sheet_pdf",
-        lambda event, rows, *, logo_path: b"%PDF-test",
+        lambda event, rows, *, logo_path, **kwargs: b"%PDF-test",
     )
     session = FakeSession(
         event=make_event("open"),
@@ -235,7 +237,7 @@ def test_service_safely_resolves_signature_image(tmp_path, monkeypatch):
     image_path.write_bytes(b"safe-png-placeholder")
     captured = {}
 
-    def fake_render(event, rows, *, logo_path):
+    def fake_render(event, rows, *, logo_path, **kwargs):
         captured["row"] = rows[0]
         return b"%PDF-test"
 
@@ -256,7 +258,7 @@ def test_service_safely_resolves_signature_image(tmp_path, monkeypatch):
 
 
 def test_renderer_failure_writes_no_history(tmp_path, monkeypatch):
-    def fail_render(event, rows, *, logo_path):
+    def fail_render(event, rows, *, logo_path, **kwargs):
         raise AttendanceSheetPDFError
 
     monkeypatch.setattr(attendance_sheet_service, "render_attendance_sheet_pdf", fail_render)
@@ -274,7 +276,7 @@ def test_history_failure_rolls_back(tmp_path, monkeypatch, failure):
     monkeypatch.setattr(
         attendance_sheet_service,
         "render_attendance_sheet_pdf",
-        lambda event, rows, *, logo_path: b"%PDF-test",
+        lambda event, rows, *, logo_path, **kwargs: b"%PDF-test",
     )
     session = FakeSession(
         event=make_event(),
@@ -295,7 +297,7 @@ def test_filename_sanitizes_unsafe_event_code(tmp_path, monkeypatch):
     monkeypatch.setattr(
         attendance_sheet_service,
         "render_attendance_sheet_pdf",
-        lambda event, rows, *, logo_path: b"%PDF-test",
+        lambda event, rows, *, logo_path, **kwargs: b"%PDF-test",
     )
     session = FakeSession(event=make_event(event_code="Event / Orientation 2026"))
 

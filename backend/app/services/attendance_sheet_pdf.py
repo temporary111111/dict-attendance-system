@@ -118,22 +118,75 @@ def _event_date(value: date) -> str:
     return f"{value.strftime('%B')} {value.day}, {value.year}"
 
 
+def _logos_cell(
+    dict_logo_path: Path,
+    program_logo_path: Path | None,
+    styles: dict[str, ParagraphStyle],
+) -> object:
+    """Dalawang logo side-by-side kung may program logo; DICT logo lang kung wala."""
+    if program_logo_path is None or not program_logo_path.is_file():
+        return ReportLabImage(str(dict_logo_path), width=42 * mm, height=21.42 * mm)
+
+    # Each logo gets roughly half the column (column is ~0.35 of total width).
+    # Target height: 18mm to fit comfortably in the 26mm row span.
+    dict_img = ReportLabImage(str(dict_logo_path), width=40 * mm, height=20.4 * mm)
+
+    try:
+        with PILImage.open(program_logo_path) as src:
+            pw, ph = src.size
+        # Scale program logo to fit max 40mm wide × 20mm tall.
+        scale = min((40 * mm) / pw, (20 * mm) / ph)
+        prog_img = ReportLabImage(
+            str(program_logo_path),
+            width=pw * scale,
+            height=ph * scale,
+        )
+    except (OSError, ValueError):
+        # Fallback: mostra lang ang DICT logo kung may issue sa program logo file.
+        return ReportLabImage(str(dict_logo_path), width=42 * mm, height=21.42 * mm)
+
+    logos_table = Table(
+        [[dict_img, prog_img]],
+        colWidths=[42 * mm, 42 * mm],
+    )
+    logos_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ALIGN", (0, 0), (0, 0), "CENTER"),
+                ("ALIGN", (1, 0), (1, 0), "CENTER"),
+                ("LINEAFTER", (0, 0), (0, 0), 0.45, colors.HexColor("#333333")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 2),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+                ("TOPPADDING", (0, 0), (-1, -1), 1),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
+            ]
+        )
+    )
+    return logos_table
+
+
 def _header_story(
     event: AttendanceSheetEvent,
     logo_path: Path,
     styles: dict[str, ParagraphStyle],
     width: float,
+    *,
+    program_logo_path: Path | None = None,
 ) -> list[object]:
-    logo = ReportLabImage(str(logo_path), width=42 * mm, height=21.42 * mm)
+    logos_cell = _logos_cell(logo_path, program_logo_path, styles)
     event_value = Paragraph(
         f"{escape(event.office_name)}<br/>"
         f"<b>{escape(event.event_title)}</b>",
         styles["event"],
     )
+    # Kapag may program logo, dagdag ang column width para magkasya ang dalawang logo.
+    logo_col_width = (0.40 if program_logo_path else 0.35) * width
+    event_col_width = width - logo_col_width - 0.11 * width - 0.07 * width
     header = Table(
         [
             [
-                logo,
+                logos_cell,
                 _text("TITLE OF EVENT/SEMINAR/MEETING:", styles["header"]),
                 _text("VENUE:", styles["header"]),
                 _text("DATE:", styles["header"]),
@@ -145,7 +198,7 @@ def _header_story(
                 _text(_event_date(event.event_date), styles["small_center"]),
             ],
         ],
-        colWidths=[0.35 * width, 0.47 * width, 0.11 * width, 0.07 * width],
+        colWidths=[logo_col_width, event_col_width, 0.11 * width, 0.07 * width],
         rowHeights=[8 * mm, 18 * mm],
     )
     header.setStyle(
@@ -299,11 +352,19 @@ def _draw_page_header(
     event: AttendanceSheetEvent,
     logo_path: Path,
     styles: dict[str, ParagraphStyle],
+    *,
+    program_logo_path: Path | None = None,
 ) -> None:
     """Inuulit ang event context sa bawat printed page."""
     canvas.saveState()
     y_position = landscape(A4)[1] - 7 * mm
-    for flowable in _header_story(event, logo_path, styles, document.width):
+    for flowable in _header_story(
+        event,
+        logo_path,
+        styles,
+        document.width,
+        program_logo_path=program_logo_path,
+    ):
         _, height = flowable.wrap(document.width, document.topMargin)
         y_position -= height
         flowable.drawOn(canvas, document.leftMargin, y_position)
@@ -315,6 +376,7 @@ def render_attendance_sheet_pdf(
     rows: list[AttendanceSheetRow],
     *,
     logo_path: Path,
+    program_logo_path: Path | None = None,
 ) -> bytes:
     """Gumagawa ng in-memory PDF; walang database o file write dito."""
     try:
@@ -346,6 +408,7 @@ def render_attendance_sheet_pdf(
                 event,
                 logo_path,
                 styles,
+                program_logo_path=program_logo_path,
             )
 
         document.build(

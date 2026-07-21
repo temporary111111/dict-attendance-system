@@ -91,6 +91,7 @@ def generate_attendance_sheet_export(
     current_user: User,
     *,
     logo_path: Path,
+    program_logo_directory: Path,
     signature_directory: Path,
     ip_address: str | None,
     user_agent: str | None,
@@ -126,6 +127,12 @@ def generate_attendance_sheet_export(
         venue=event.venue,
         event_date=event.event_date,
     )
+    # Resolve program logo path from the stored filename.
+    program_logo_path: Path | None = None
+    if event.program.logo_path:
+        candidate = program_logo_directory / event.program.logo_path
+        if candidate.is_file():
+            program_logo_path = candidate
     rows = [
         AttendanceSheetRow(
             row_number=index,
@@ -151,6 +158,7 @@ def generate_attendance_sheet_export(
             event_data,
             rows,
             logo_path=logo_path,
+            program_logo_path=program_logo_path,
         )
     except AttendanceSheetPDFError as exc:
         raise AttendanceSheetGenerationError from exc

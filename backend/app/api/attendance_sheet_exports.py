@@ -48,6 +48,7 @@ def generate_event_attendance_sheet(
             event_id,
             current_user,
             logo_path=LOGO_PATH,
+            program_logo_directory=request.app.state.settings.program_logo_directory,
             signature_directory=request.app.state.settings.signature_directory,
             ip_address=client_ip,
             user_agent=request.headers.get("user-agent"),

@@ -32,6 +32,7 @@ class ProgramData(BaseModel):
     created_by_user_id: int
     program_name: str
     description: str | None
+    logo_url: str | None
     program_status: Literal["active", "archived"]
 
 

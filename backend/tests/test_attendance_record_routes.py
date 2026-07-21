@@ -88,6 +88,7 @@ def make_program(program_id=3):
     return SimpleNamespace(
         program_id=program_id,
         program_name="Free Wi-Fi for All",
+        logo_path=None,
     )
 
 

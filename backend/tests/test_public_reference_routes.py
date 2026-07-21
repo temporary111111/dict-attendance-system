@@ -72,6 +72,7 @@ def make_public_event(status="open"):
         program=SimpleNamespace(
             program_id=3,
             program_name="Free Wi-Fi for All",
+            logo_path=None,
         ),
     )
 

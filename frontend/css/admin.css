@@ -1093,3 +1093,104 @@
     flex-direction: column;
   }
 }
+
+/* ── Program logo upload ───────────────────────────────────────────────── */
+
+.field-hint {
+  color: var(--ink-500);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.logo-upload-area {
+  position: relative;
+  min-height: 110px;
+  border: 2px dashed #b9c4cf;
+  border-radius: 8px;
+  background: var(--canvas);
+  overflow: hidden;
+  transition: border-color 0.18s;
+}
+
+.logo-upload-area:focus-within {
+  border-color: var(--blue-700);
+}
+
+.logo-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.logo-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 110px;
+  padding: 18px;
+  cursor: pointer;
+  text-align: center;
+  pointer-events: none;
+}
+
+.logo-upload-icon {
+  font-size: 1.6rem;
+  color: var(--ink-400);
+}
+
+.logo-upload-label span:not(.logo-upload-icon):not(.logo-upload-hint) {
+  color: var(--blue-700);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.logo-upload-hint {
+  color: var(--ink-500);
+  font-size: 0.78rem;
+}
+
+.logo-preview-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  padding: 12px;
+}
+
+.logo-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 88px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.logo-remove-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-700);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  z-index: 1;
+}
+
+.logo-remove-button:hover {
+  background: var(--red-100, #fee2e2);
+  border-color: var(--red-400, #f87171);
+  color: var(--red-700, #b91c1c);
+}

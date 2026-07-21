@@ -120,6 +120,8 @@ def create_program(
     db: Session,
     payload: CreateProgramRequest,
     current_super_admin_id: int,
+    *,
+    logo_filename: str | None = None,
 ) -> ProgramResult:
     owning_unit = _get_active_owning_unit(db, payload.owning_unit_id)
     if _program_name_is_in_use(
@@ -134,6 +136,7 @@ def create_program(
         created_by_user_id=current_super_admin_id,
         program_name=payload.program_name,
         description=payload.description,
+        logo_path=logo_filename,
         program_status="active",
     )
     db.add(program)
@@ -146,6 +149,9 @@ def update_program(
     db: Session,
     program_id: int,
     payload: UpdateProgramRequest,
+    *,
+    logo_filename: str | None = None,
+    remove_logo: bool = False,
 ) -> ProgramResult:
     program = db.get(Program, program_id)
     if program is None:
@@ -176,6 +182,10 @@ def update_program(
         program.program_name = target_name
     if "description" in supplied_fields:
         program.description = payload.description
+    if logo_filename is not None:
+        program.logo_path = logo_filename
+    elif remove_logo:
+        program.logo_path = None
 
     _commit_program_write(db)
     db.refresh(program)

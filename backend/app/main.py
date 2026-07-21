@@ -43,6 +43,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ),
         name="qr-codes",
     )
+    # Dito kinukuha ng frontend at PDF renderer ang program logo images.
+    app.mount(
+        current_settings.program_logo_url_prefix,
+        StaticFiles(
+            directory=current_settings.program_logo_directory,
+            check_dir=False,
+        ),
+        name="program-logos",
+    )
     return app
 
 

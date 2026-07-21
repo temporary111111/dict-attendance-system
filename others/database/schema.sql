@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS programs (
   created_by_user_id BIGINT UNSIGNED NOT NULL,
   program_name VARCHAR(200) NOT NULL,
   description TEXT NULL,
+  logo_path VARCHAR(500) DEFAULT NULL,
   program_status ENUM('active', 'archived') NOT NULL DEFAULT 'active',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

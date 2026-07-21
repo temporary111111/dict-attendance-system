@@ -59,6 +59,7 @@ class Program(Base, TimestampMixin):
     )
     program_name: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+    logo_path: Mapped[str | None] = mapped_column(String(500))
     program_status: Mapped[str] = mapped_column(
         Enum("active", "archived", name="program_status"),
         nullable=False,

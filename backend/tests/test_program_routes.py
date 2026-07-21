@@ -99,6 +99,7 @@ def make_program(
         created_by_user_id=1,
         program_name=program_name,
         description=description,
+        logo_path=None,
         program_status=program_status,
         owning_unit=unit,
     )
@@ -143,6 +144,7 @@ def test_list_programs_returns_all_programs_for_super_admin():
                 "created_by_user_id": 1,
                 "program_name": "Free Wi-Fi for All",
                 "description": "Public internet connectivity program.",
+                "logo_url": None,
                 "program_status": "active",
             }
         ],
@@ -181,6 +183,7 @@ def test_create_program_normalizes_and_saves_active_program():
         "created_by_user_id": 1,
         "program_name": "Free Wi-Fi for All",
         "description": "Public internet connectivity program.",
+        "logo_url": None,
         "program_status": "active",
     }
     assert session.added_program.created_by_user_id == 1
