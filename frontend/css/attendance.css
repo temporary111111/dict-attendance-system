@@ -21,9 +21,10 @@
 .attendance-dict-logo,
 .attendance-program-logo {
   display: block;
-  height: 44px;
+  max-width: 270px;
+  max-height: 60px;
   width: auto;
-  object-fit: contain;
+  height: auto;
 }
 
 .attendance-root {
