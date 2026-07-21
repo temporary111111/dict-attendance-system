@@ -135,9 +135,11 @@
   place-items: center;
   border-radius: 50%;
   background: var(--blue-100);
-  color: var(--blue-800);
-  font-size: 0.75rem;
-  font-weight: 850;
+  color: var(--blue-500);
+}
+
+.user-avatar .material-symbols-outlined {
+  font-size: 24px;
 }
 
 .user-meta {

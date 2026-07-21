@@ -1920,7 +1920,6 @@ function initializeUser(user) {
   state.user = user;
   setText("#sidebar-user-name", user.full_name);
   setText("#sidebar-user-role", formatRole(user.role.role_name));
-  setText("#user-initials", initials(user.full_name));
   const showSuperAdminNavigation = user.role.role_name === "super_admin";
   document.querySelector("#units-nav").hidden = !showSuperAdminNavigation;
   document.querySelector("#users-nav").hidden = !showSuperAdminNavigation;
