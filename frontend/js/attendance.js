@@ -89,7 +89,14 @@ function setSelectLoading(select, message) {
   select.setAttribute("aria-busy", "true");
 }
 
-function appendOptions(select, items, valueKey, labelBuilder) {
+function populateSelect(select, items, valueKey, labelBuilder, placeholder) {
+  select.innerHTML = "";
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = placeholder;
+  placeholderOption.disabled = true;
+  placeholderOption.selected = true;
+  select.append(placeholderOption);
   for (const item of items) {
     const option = document.createElement("option");
     option.value = item[valueKey];
@@ -105,7 +112,7 @@ async function loadRegions() {
   setSelectLoading(region, "Loading regions...");
   try {
     const response = await apiRequest("/psgc/regions", { auth: false });
-    appendOptions(region, response.data, "region_code", (item) => item.region_name);
+    populateSelect(region, response.data, "region_code", (item) => item.region_name, "Select region");
   } catch (error) {
     resetSelect(region, "Unable to load regions");
     throw error;
@@ -124,7 +131,7 @@ async function loadProvincesAndCities() {
   try {
     setSelectLoading(province, "Loading provinces...");
     const response = await apiRequest(`/psgc/provinces?regionCode=${encodeURIComponent(region.value)}`, { auth: false });
-    appendOptions(province, response.data, "province_code", (item) => item.province_name);
+    populateSelect(province, response.data, "province_code", (item) => item.province_name, "Select province (if applicable)");
     await loadCities();
   } catch (error) {
     resetSelect(province, "Unable to load provinces");
@@ -145,7 +152,7 @@ async function loadCities() {
   try {
     setSelectLoading(city, "Loading cities or municipalities...");
     const response = await apiRequest(`/psgc/cities-municipalities?${query}`, { auth: false });
-    appendOptions(city, response.data, "city_municipality_code", (item) => `${item.city_municipality_name} (${item.city_municipality_type})`);
+    populateSelect(city, response.data, "city_municipality_code", (item) => `${item.city_municipality_name} (${item.city_municipality_type})`, "Select city or municipality");
   } catch (error) {
     resetSelect(city, "Unable to load cities or municipalities");
     setFieldError("psgc_address", error.message);
@@ -160,7 +167,7 @@ async function loadBarangays() {
   try {
     setSelectLoading(barangay, "Loading barangays...");
     const response = await apiRequest(`/psgc/barangays?cityMunicipalityCode=${encodeURIComponent(city.value)}`, { auth: false });
-    appendOptions(barangay, response.data, "barangay_code", (item) => item.barangay_name);
+    populateSelect(barangay, response.data, "barangay_code", (item) => item.barangay_name, "Select barangay");
   } catch (error) {
     resetSelect(barangay, "Unable to load barangays");
     setFieldError("psgc_address", error.message);
