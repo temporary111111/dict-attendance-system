@@ -23,13 +23,6 @@
   width: min(270px, 100%);
 }
 
-.attendance-logo-divider {
-  width: 1px;
-  height: 40px;
-  background: #ccd4db;
-  flex-shrink: 0;
-}
-
 .attendance-program-logo {
   display: block;
   max-height: 44px;

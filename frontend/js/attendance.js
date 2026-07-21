@@ -494,12 +494,10 @@ async function initialize() {
     const programLogoUrl = event.program?.logo_url;
     if (programLogoUrl) {
       const programLogoEl = document.querySelector("#attendance-program-logo");
-      const dividerEl = document.querySelector("#attendance-logo-divider");
-      if (programLogoEl && dividerEl) {
+      if (programLogoEl) {
         programLogoEl.src = `${getApiOrigin()}${programLogoUrl}`;
         programLogoEl.alt = `${event.program.program_name} logo`;
         programLogoEl.hidden = false;
-        dividerEl.hidden = false;
       }
     }
     renderAttendanceForm(event);

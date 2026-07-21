@@ -49,6 +49,7 @@ TrimmedPostalCode = Annotated[
 class PublicEventProgramData(BaseModel):
     program_id: int
     program_name: str
+    logo_url: str | None = None
 
 
 class PublicEventData(BaseModel):

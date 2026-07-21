@@ -98,6 +98,7 @@ def test_get_public_event_returns_safe_open_event_details_without_auth():
             "program": {
                 "program_id": 3,
                 "program_name": "Free Wi-Fi for All",
+                "logo_url": None,
             },
         },
         "message": "Public event retrieved.",
