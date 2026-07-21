@@ -18,15 +18,10 @@
   gap: 14px;
 }
 
-.attendance-dict-logo {
-  display: block;
-  width: min(270px, 100%);
-}
-
+.attendance-dict-logo,
 .attendance-program-logo {
   display: block;
-  max-height: 44px;
-  max-width: 160px;
+  height: 44px;
   width: auto;
   object-fit: contain;
 }
