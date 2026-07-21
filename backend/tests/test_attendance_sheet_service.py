@@ -73,7 +73,12 @@ def make_user(role_name="super_admin", user_id=1):
 
 
 def make_event(event_status="closed", event_code="EVENT-2026"):
-    unit = SimpleNamespace(unit_name="DICT Regional Office No. V - Bicol")
+    unit = SimpleNamespace(
+        unit_name="DICT Regional Office No. V - Bicol",
+        org_unit_id=10,
+        parent_unit_id=None,
+        parent=None,
+    )
     program = SimpleNamespace(
         program_id=3,
         program_name="Free Wi-Fi for All",

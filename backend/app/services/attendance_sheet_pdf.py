@@ -48,6 +48,7 @@ class AttendanceSheetEvent:
     event_title: str
     venue: str
     event_date: date
+    root_office_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -174,8 +175,13 @@ def _header_story(
     program_logo_path: Path | None = None,
 ) -> list[object]:
     logos_cell = _logos_cell(logo_path, program_logo_path, styles)
+    office_lines = ""
+    if event.root_office_name:
+        office_lines = f"{escape(event.root_office_name)}<br/>{escape(event.office_name)}"
+    else:
+        office_lines = escape(event.office_name)
     event_value = Paragraph(
-        f"{escape(event.office_name)}<br/>"
+        f"{office_lines}<br/>"
         f"<b>{escape(event.event_title)}</b>",
         styles["event"],
     )

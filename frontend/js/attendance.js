@@ -460,9 +460,10 @@ async function submitAttendance(event, publicEvent) {
   try {
     const response = await apiRequest(`/public/events/${encodeURIComponent(publicEvent.event_code)}/attendance`, { method: "POST", auth: false, body: formData });
     const data = response.data;
-    root.innerHTML = '<section class="attendance-success" role="status"><div class="attendance-success-mark" aria-hidden="true">OK</div><strong>Attendance submitted</strong><span id="success-name"></span><span id="success-detail"></span></section>';
-    root.querySelector("#success-name").textContent = data.attendee_name;
-    root.querySelector("#success-detail").textContent = `Submitted on ${new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(data.submitted_at))}.`;
+    root.innerHTML = '<section class="attendance-success" role="status"><div class="attendance-success-mark" aria-hidden="true">OK</div><strong id="success-greeting"></strong><span id="success-message"></span><span id="success-detail"></span></section>';
+    root.querySelector("#success-greeting").textContent = `Thank you, ${data.attendee_name}!`;
+    root.querySelector("#success-message").innerHTML = `Your attendance for <strong>${publicEvent.event_title}</strong> has been recorded.`;
+    root.querySelector("#success-detail").textContent = new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(data.submitted_at));
   } catch (error) {
     const feedback = root.querySelector("#attendance-feedback");
     feedback.textContent = error.message;
@@ -486,11 +487,8 @@ async function initialize() {
   try {
     const event = (await apiRequest(`/public/events/${encodeURIComponent(eventCode)}`, { auth: false })).data;
     document.title = `${event.event_title} | DICT Attendance`;
-    if (!event.accepting_attendance) {
-      renderError("Attendance is not open", "This event is currently not accepting attendance submissions.");
-      return;
-    }
-    // Show program logo side-by-side with the DICT logo if available.
+
+    // Show program logo kahit closed/draft ang event
     const programLogoUrl = event.program?.logo_url;
     if (programLogoUrl) {
       const programLogoEl = document.querySelector("#attendance-program-logo");
@@ -499,6 +497,11 @@ async function initialize() {
         programLogoEl.alt = `${event.program.program_name} logo`;
         programLogoEl.hidden = false;
       }
+    }
+
+    if (!event.accepting_attendance) {
+      renderError("Attendance is not open", "This event is currently not accepting attendance submissions.");
+      return;
     }
     renderAttendanceForm(event);
   } catch (error) {

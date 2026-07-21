@@ -121,11 +121,24 @@ def generate_attendance_sheet_export(
             )
         ).all()
     )
+    owning_unit = event.program.owning_unit
+    # Hanapin ang root unit sa hierarchy
+    root_office_name = None
+    current = owning_unit
+    while current.parent_unit_id is not None:
+        if current.parent is not None:
+            current = current.parent
+        else:
+            break
+    if current.org_unit_id != owning_unit.org_unit_id:
+        root_office_name = current.unit_name
+
     event_data = AttendanceSheetEvent(
-        office_name=event.program.owning_unit.unit_name,
+        office_name=owning_unit.unit_name,
         event_title=event.event_title,
         venue=event.venue,
         event_date=event.event_date,
+        root_office_name=root_office_name,
     )
     # Resolve program logo path from the stored filename.
     program_logo_path: Path | None = None
