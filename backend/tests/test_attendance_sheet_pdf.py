@@ -98,6 +98,21 @@ def test_renderer_generates_one_page_for_zero_valid_records():
     assert [line.strip() for line in text.splitlines()].count("X") == 0
 
 
+def test_renderer_keeps_the_attendance_table_close_to_its_title():
+    page = PdfReader(BytesIO(render([make_row()]))).pages[0]
+    text_positions: dict[str, float] = {}
+
+    def capture_position(text, canvas_matrix, _text_matrix, _font, _size):
+        normalized = text.strip()
+        if normalized in {"ATTENDANCE SHEET", "NAME"}:
+            text_positions[normalized] = canvas_matrix[5]
+
+    page.extract_text(visitor_text=capture_position)
+
+    vertical_distance = text_positions["ATTENDANCE SHEET"] - text_positions["NAME"]
+    assert vertical_distance < 12 * 2.83465
+
+
 def test_renderer_paginates_27_standard_rows_and_repeats_complete_header():
     rows = [make_row(number=index) for index in range(1, 28)]
 

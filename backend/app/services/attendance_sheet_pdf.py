@@ -391,7 +391,7 @@ def render_attendance_sheet_pdf(
             pagesize=landscape(A4),
             leftMargin=8 * mm,
             rightMargin=8 * mm,
-            topMargin=64 * mm,
+            topMargin=54 * mm,
             bottomMargin=7 * mm,
             title=f"Attendance Sheet - {event.event_title}",
             author="Department of Information and Communications Technology",
