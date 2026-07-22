@@ -1345,10 +1345,9 @@
 }
 
 .nav-symbol {
-  font-size: 19px;
-  font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 20;
-  line-height: 1;
-  text-align: center;
+  width: 19px;
+  height: 19px;
+  display: block;
 }
 
 .nav-item.active .nav-symbol {

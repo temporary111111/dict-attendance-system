@@ -68,12 +68,10 @@ class UiUxRegressionTests(unittest.TestCase):
         admin_html = (FRONTEND_ROOT / "admin.html").read_text(encoding="utf-8")
         admin_css = (FRONTEND_ROOT / "css" / "admin.css").read_text(encoding="utf-8")
 
-        self.assertIn('>grid_view</span>', admin_html)
-        self.assertIn('>content_paste</span>', admin_html)
-        self.assertIn('>bar_chart</span>', admin_html)
-        self.assertIn('>admin_panel_settings</span>', admin_html)
-        self.assertIn('.nav-symbol {\n  font-size: 19px;', admin_css)
-        self.assertIn('font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 20;', admin_css)
+        self.assertEqual(admin_html.count('<svg class="nav-symbol"'), 8)
+        self.assertNotIn('nav-symbol material-symbols-outlined', admin_html)
+        self.assertIn('viewBox="0 0 24 24"', admin_html)
+        self.assertIn('.nav-symbol {\n  width: 19px;\n  height: 19px;', admin_css)
         self.assertIn(".nav-item.active .nav-symbol", admin_css)
         self.assertIn(":root[data-theme=\"dark\"] .nav-item.active .nav-symbol", admin_css)
 
