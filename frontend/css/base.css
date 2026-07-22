@@ -6,6 +6,9 @@
   --blue-500: #2d7fbd;
   --blue-100: #dcecf9;
   --blue-50: #f2f8fd;
+  --primary-action: #16569a;
+  --primary-action-hover: #123f78;
+  --primary-action-text: #ffffff;
   --ink-900: #18212b;
   --ink-700: #3f4b59;
   --ink-500: #687585;
@@ -43,6 +46,9 @@
   --blue-500: #4c96cf;
   --blue-100: #203b52;
   --blue-50: #1c3041;
+  --primary-action: #266a9f;
+  --primary-action-hover: #1f5b89;
+  --primary-action-text: #ffffff;
   --ink-900: #edf1f4;
   --ink-700: #c7d0d8;
   --ink-500: #98a5b0;
@@ -184,14 +190,14 @@ textarea:disabled {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  background: var(--blue-700);
-  color: #fff;
+  background: var(--primary-action);
+  color: var(--primary-action-text);
   padding: 10px 16px;
   font-weight: 750;
 }
 
 .primary-button:hover:not(:disabled) {
-  background: var(--blue-800);
+  background: var(--primary-action-hover);
 }
 
 .secondary-button {

@@ -1,10 +1,34 @@
 """Static regression checks para sa importanteng UI/UX safeguards."""
 
 from pathlib import Path
+import re
 import unittest
 
 
 FRONTEND_ROOT = Path(__file__).resolve().parents[1]
+
+
+def get_css_properties(css: str, selector: str) -> dict[str, str]:
+    """Kunin ang direct CSS variables ng isang simpleng selector block."""
+    match = re.search(rf"{re.escape(selector)}\s*\{{([^}}]*)\}}", css, re.DOTALL)
+    if not match:
+        return {}
+
+    return dict(re.findall(r"(--[\w-]+)\s*:\s*([^;]+);", match.group(1)))
+
+
+def contrast_ratio(first_hex: str, second_hex: str) -> float:
+    """I-compute ang WCAG contrast ratio ng dalawang hex colors."""
+    def luminance(hex_color: str) -> float:
+        channels = [int(hex_color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
+        linear = [
+            channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
+            for channel in channels
+        ]
+        return (0.2126 * linear[0]) + (0.7152 * linear[1]) + (0.0722 * linear[2])
+
+    lighter, darker = sorted((luminance(first_hex), luminance(second_hex)), reverse=True)
+    return (lighter + 0.05) / (darker + 0.05)
 
 
 class UiUxRegressionTests(unittest.TestCase):
@@ -46,6 +70,30 @@ class UiUxRegressionTests(unittest.TestCase):
         self.assertIn(':root[data-theme="dark"]', base_css)
         self.assertIn("--surface-raised:", base_css)
         self.assertIn("--focus-ring:", base_css)
+
+    def test_primary_buttons_keep_accessible_contrast_in_both_themes(self) -> None:
+        base_css = (FRONTEND_ROOT / "css" / "base.css").read_text(encoding="utf-8")
+
+        for selector in (":root", ':root[data-theme="dark"]'):
+            properties = get_css_properties(base_css, selector)
+            self.assertIn("--primary-action", properties)
+            self.assertIn("--primary-action-text", properties)
+            self.assertGreaterEqual(
+                contrast_ratio(
+                    properties["--primary-action"].strip(),
+                    properties["--primary-action-text"].strip(),
+                ),
+                4.5,
+            )
+
+        self.assertIn("background: var(--primary-action);", base_css)
+        self.assertIn("color: var(--primary-action-text);", base_css)
+
+    def test_admin_tables_stay_readable_inside_narrow_viewports(self) -> None:
+        admin_css = (FRONTEND_ROOT / "css" / "admin.css").read_text(encoding="utf-8")
+
+        self.assertIn(".data-table {\n  min-width: 680px;", admin_css)
+        self.assertIn("#recent-events .data-table {\n  min-width: 0;", admin_css)
 
     def test_icon_metric_layout_is_scoped_to_dashboard_cards(self) -> None:
         admin_css = (FRONTEND_ROOT / "css" / "admin.css").read_text(encoding="utf-8")
