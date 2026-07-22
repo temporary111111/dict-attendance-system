@@ -72,13 +72,27 @@ def make_user(role_name="super_admin", user_id=1):
     )
 
 
-def make_event(event_status="closed", event_code="EVENT-2026"):
-    unit = SimpleNamespace(
-        unit_name="DICT Regional Office No. V - Bicol",
-        org_unit_id=10,
-        parent_unit_id=None,
-        parent=None,
+def make_organizational_unit(
+    unit_name="DICT Regional Office No. V - Bicol",
+    *,
+    org_unit_id=10,
+    parent=None,
+):
+    return SimpleNamespace(
+        unit_name=unit_name,
+        org_unit_id=org_unit_id,
+        parent_unit_id=parent.org_unit_id if parent is not None else None,
+        parent=parent,
     )
+
+
+def make_event(
+    event_status="closed",
+    event_code="EVENT-2026",
+    *,
+    owning_unit=None,
+):
+    unit = owning_unit or make_organizational_unit()
     program = SimpleNamespace(
         program_id=3,
         program_name="Free Wi-Fi for All",
@@ -169,6 +183,7 @@ def test_super_admin_can_export_every_event_status(
     assert result.export.total_records == 1
     assert result.filename == "attendance-sheet-EVENT-2026.pdf"
     assert captured["event"].office_name == "DICT Regional Office No. V - Bicol"
+    assert captured["event"].root_office_name is None
     assert captured["rows"][0].attendee_name == "Maria Santos Reyes"
     assert captured["rows"][0].row_number == 1
     statements = "\n".join(session.statements)
@@ -193,6 +208,36 @@ def test_super_admin_can_export_every_event_status(
     }
     assert audit.ip_address == "127.0.0.1"
     assert audit.user_agent == "pytest-client"
+
+
+def test_child_owning_unit_includes_root_office_name_in_pdf_header(
+    tmp_path,
+    monkeypatch,
+):
+    captured = {}
+
+    def fake_render(event, rows, *, logo_path, **kwargs):
+        captured["event"] = event
+        return b"%PDF-test"
+
+    monkeypatch.setattr(attendance_sheet_service, "render_attendance_sheet_pdf", fake_render)
+    root_unit = make_organizational_unit(
+        "DICT Regional Office No. V - Bicol",
+        org_unit_id=10,
+    )
+    child_unit = make_organizational_unit(
+        "Free Wi-Fi for All Project Management Office",
+        org_unit_id=11,
+        parent=root_unit,
+    )
+    session = FakeSession(event=make_event(owning_unit=child_unit))
+
+    generate(session, tmp_path)
+
+    assert captured["event"].root_office_name == "DICT Regional Office No. V - Bicol"
+    assert captured["event"].office_name == (
+        "Free Wi-Fi for All Project Management Office"
+    )
 
 
 def test_assigned_program_admin_can_export(tmp_path, monkeypatch):

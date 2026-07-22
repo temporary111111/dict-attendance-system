@@ -52,14 +52,26 @@ class FakeSession:
         self.rolled_back = True
 
 
+def make_organizational_unit(
+    unit_name="DICT Regional Office No. V - Bicol",
+    *,
+    org_unit_id=10,
+    parent=None,
+):
+    return SimpleNamespace(
+        unit_name=unit_name,
+        org_unit_id=org_unit_id,
+        parent_unit_id=parent.org_unit_id if parent is not None else None,
+        parent=parent,
+    )
+
+
 def make_event(event_status="open"):
     return SimpleNamespace(
         event_id=5,
         program_id=3,
         program=SimpleNamespace(
-            owning_unit=SimpleNamespace(
-                unit_name="DICT Regional Office No. V - Bicol"
-            ),
+            owning_unit=make_organizational_unit(),
             logo_path=None,
         ),
         event_title="Digital Inclusion Orientation",

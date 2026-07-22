@@ -7,7 +7,7 @@ Hindi kailangang ilagay o i-serve ng FastAPI ang frontend files.
 
 * Login with stateless JWT access token
 * Role-scoped dashboard summary
-* Program creation and editing for Super Admin
+* Program creation and editing for Super Admin, with an optional program logo
 * Organizational unit and admin-user management for Super Admin
 * Program Admin assignment and revocation within each program
 * Event creation, editing, QR/link generation, and attendance lifecycle actions
@@ -39,7 +39,8 @@ Open:
 http://127.0.0.1:5500/
 ```
 
-The generated event QR code opens this public route:
+With the default backend setting, the generated event QR code opens this public
+route:
 
 ```text
 http://127.0.0.1:5500/attendance.html?event=EVENT_CODE
@@ -55,7 +56,11 @@ window.APP_CONFIG = Object.freeze({
 });
 ```
 
-The frontend origin must also be allowed in backend `CORS_ORIGINS`.
+`apiBaseUrl` is environment-specific. It must point to the machine running the
+FastAPI backend, not necessarily the machine serving the frontend files. The
+current `.131` value matches `js/config.js`; use `127.0.0.1` for a same-machine
+local setup or the backend machine's LAN IP for a LAN setup. The frontend origin
+must also be allowed in backend `CORS_ORIGINS`.
 
 ## Access Token Storage
 

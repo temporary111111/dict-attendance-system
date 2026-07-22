@@ -29,10 +29,16 @@ Get-Content .\others\database\seed-core.sql | mysql -u root -p dict_attendance_s
 Get-Content .\others\database\smoke-test.sql | mysql -u root -p dict_attendance_system
 ```
 
-Existing database migration:
+Existing database migrations:
+
+If the database was created using the latest `schema.sql`, do not run these
+migrations. For an existing database, run only the missing migrations once, in
+this order:
 
 ```powershell
 Get-Content .\others\database\migrations\2026-07-13-add-attendance-field-settings.sql | mysql -u root -p dict_attendance_system
+Get-Content .\others\database\migrations\2026-07-14-add-attendance-field-visibility.sql | mysql -u root -p dict_attendance_system
+Get-Content .\others\database\migrations\2026-07-21-add-program-logo.sql | mysql -u root -p dict_attendance_system
 ```
 
 `cmd.exe` example:

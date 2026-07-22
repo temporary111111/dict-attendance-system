@@ -26,6 +26,8 @@ Use this order kapag may magkaibang guidance sa project files:
 - Attendance records are never hard deleted; review uses `valid`, `duplicate`,
   `invalid`, or `void` status with an audit log.
 - The DICT attendance sheet is generated output, not a runtime-imported entity.
+- Programs may have an optional PNG/JPEG logo. When configured, it appears on
+  the public attendance page and generated attendance-sheet PDF.
 
 ## Historical Files
 

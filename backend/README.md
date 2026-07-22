@@ -122,6 +122,13 @@ list or view programs where they have an active assignment. Programs use
 remain in the database; assigning the same Program Admin again reactivates the
 existing unique assignment row.
 
+Programs may have one optional logo. To upload a logo, a Super Admin sends
+`multipart/form-data` to `POST /api/programs` or `PATCH /api/programs/{programId}`
+with a `logo` file. Only PNG and JPEG files are accepted, and the default limit
+is 2 MiB. Send `remove_logo=true` in a program update to remove the current
+logo. Program responses include `logo_url`, or `null` when no logo is set.
+The public attendance page and generated PDF use this URL/file when available.
+
 Event management endpoints:
 
 ```text
@@ -159,6 +166,18 @@ QR_CODE_URL_PREFIX=/media/qr-codes
 
 `PUBLIC_ATTENDANCE_URL_TEMPLATE` must contain `{event_code}`. Refreshing an
 attendance link rotates the code and replaces the locally stored QR PNG.
+
+Program logo storage uses these environment settings:
+
+```text
+PROGRAM_LOGO_DIRECTORY=storage/program_logos
+PROGRAM_LOGO_MAX_BYTES=2097152
+PROGRAM_LOGO_URL_PREFIX=/media/program-logos
+```
+
+`PROGRAM_LOGO_URL_PREFIX` is served as public media so an external attendee's
+browser can display the optional logo on the attendance page. The uploaded
+program-logo filename is stored in MySQL; the original client filename is not.
 
 ## Public Attendance
 
@@ -282,6 +301,9 @@ time. It follows the fixed DICT layout with the event header, privacy notice,
 affiliation, designation/category, sex, email, consent, and signature columns.
 Generation is allowed for every event status. Super Admins can export any
 event, while Program Admins need an active assignment to the event's program.
+
+When the program has an available logo, the PDF header shows it beside the DICT
+logo. Without one, the header shows only the DICT logo.
 
 Each request returns a private, non-cacheable PDF attachment. The server does
 not retain the generated file: `attendance_sheet_exports.file_path` remains

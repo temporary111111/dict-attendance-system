@@ -86,6 +86,7 @@ Examples:
 | `created_by_user_id` | Admin who created the program. References `users.user_id`. |
 | `program_name` | Program name. |
 | `description` | Optional program description. |
+| `logo_path` | Optional stored filename of the program logo. The file itself is kept in configured backend storage. |
 | `program_status` | `active` or `archived`. |
 | `created_at` | When the program was created. |
 | `updated_at` | When the program was last updated. |

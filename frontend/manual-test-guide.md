@@ -7,14 +7,15 @@ Gamitin ito pagkatapos naka-run ang backend at frontend servers.
 1. Mag-login bilang Super Admin sa `http://127.0.0.1:5500/`.
 2. Sa `Organizational Units`, gumawa o i-check ang office/division na gagamitin.
 3. Sa `Admin Users`, gumawa ng Program Admin account.
-4. Sa `Programs`, gumawa ng program at i-assign ang Program Admin sa `Program Admins` action.
-5. Gumawa ng event sa assigned program.
-6. Sa event `Manage`, buksan ang `Fields`. Naka-hide by default ang `Signature` sa bagong event; i-set kung aling fields ang ipapakita at kung alin ang required.
-7. I-hide ang isang configurable field, gaya ng `Signature`, at i-save.
-8. Piliin ang `Generate QR/link`, pagkatapos subukan ang `Copy link` at `Download QR`.
-9. Piliin ang `Open attendance`.
+4. Sa `Programs`, gumawa ng program at mag-upload ng optional program logo. PNG o JPEG lang ito at dapat hindi lalampas sa 2 MB. I-save, buksan ulit ang `Manage`, at palitan ang logo gamit ang ibang valid image.
+5. I-assign ang Program Admin sa `Program Admins` action.
+6. Gumawa ng event sa assigned program.
+7. Sa event `Manage`, buksan ang `Fields`. Naka-hide by default ang `Signature` sa bagong event; i-set kung aling fields ang ipapakita at kung alin ang required.
+8. I-hide ang isang configurable field, gaya ng `Signature`, at i-save.
+9. Piliin ang `Generate QR/link`, pagkatapos subukan ang `Copy link` at `Download QR`.
+10. Piliin ang `Open attendance`.
 
-Expected: makikita ang QR code at public attendance link. Gumagana ang copied link at PNG download. Hindi lalabas sa public form ang hidden field. Hindi dapat mag-open ang attendance kung wala pang generated link/QR.
+Expected: makikita ang QR code at public attendance link. Gumagana ang copied link at PNG download. Hindi lalabas sa public form ang hidden field. Hindi dapat mag-open ang attendance kung wala pang generated link/QR. Kapag may logo ang program, ito ay lalabas sa tabi ng DICT logo sa public attendance header.
 
 ## 2. Public Attendee Flow
 
@@ -59,3 +60,13 @@ Expected: hindi makikita ng Program Admin ang `Organizational Units`, `Admin Use
 14. I-archive lang ang event kapag closed na ito.
 
 Expected: inactive unit ay hindi na available sa bagong assignment pero nananatili ang history nito. Sa PSGC import, walang data na nase-save sa preview step. Ang valid import ay nag-uupdate o nagdadagdag ng local lookup data at may isang audit log. Ang PSGC visual workspace ay isang page lang kada request, kaya hindi nito nilo-load lahat ng barangays sa browser. Name, status, code, at permanent-delete actions ay may audit reason. Ang code correction at delete ay hindi puwedeng sumira sa PSGC hierarchy o existing attendance addresses. Ang PDF ay para sa selected event at valid attendees nito lamang.
+
+## 5. Program Logo Verification
+
+1. Gamit ang event ng program na may logo, i-refresh ang public attendance link.
+2. I-check na magkatabi ang DICT logo at ang current program logo sa header.
+3. Mag-generate ng bagong attendance-sheet PDF at i-check na parehong logo ang nasa PDF header.
+4. Bumalik sa `Programs`, buksan ang `Manage`, pindutin ang `X` (remove) button sa logo preview, at i-save.
+5. I-refresh ang public attendance link at mag-generate ulit ng PDF.
+
+Expected: ang replacement logo ang lalabas sa public page at bagong PDF. Pagkatapos alisin ang logo, DICT logo na lang ang makikita sa public page at bagong PDF. Hindi dapat maapektuhan ang existing attendance records kapag nagpalit o nag-alis ng program logo.
