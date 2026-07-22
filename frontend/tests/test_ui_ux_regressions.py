@@ -64,6 +64,19 @@ class UiUxRegressionTests(unittest.TestCase):
         self.assertIn("prefers-color-scheme: dark", theme_js)
         self.assertIn("dict-attendance-admin-theme", theme_js)
 
+    def test_sidebar_navigation_uses_outlined_dict_style_icons(self) -> None:
+        admin_html = (FRONTEND_ROOT / "admin.html").read_text(encoding="utf-8")
+        admin_css = (FRONTEND_ROOT / "css" / "admin.css").read_text(encoding="utf-8")
+
+        self.assertIn('>grid_view</span>', admin_html)
+        self.assertIn('>content_paste</span>', admin_html)
+        self.assertIn('>bar_chart</span>', admin_html)
+        self.assertIn('>admin_panel_settings</span>', admin_html)
+        self.assertIn('.nav-symbol {\n  font-size: 19px;', admin_css)
+        self.assertIn('font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 20;', admin_css)
+        self.assertIn(".nav-item.active .nav-symbol", admin_css)
+        self.assertIn(":root[data-theme=\"dark\"] .nav-item.active .nav-symbol", admin_css)
+
     def test_admin_and_public_themes_use_separate_storage_keys(self) -> None:
         theme_js = (FRONTEND_ROOT / "js" / "theme.js").read_text(encoding="utf-8")
         admin_js = (FRONTEND_ROOT / "js" / "admin.js").read_text(encoding="utf-8")

@@ -1346,6 +1346,17 @@
 
 .nav-symbol {
   font-size: 19px;
+  font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 20;
+  line-height: 1;
+  text-align: center;
+}
+
+.nav-item.active .nav-symbol {
+  color: var(--blue-700);
+}
+
+:root[data-theme="dark"] .nav-item.active .nav-symbol {
+  color: #9bd0f5;
 }
 
 .sidebar-user {
