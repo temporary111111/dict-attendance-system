@@ -1492,7 +1492,7 @@
   border-top-color: var(--line);
 }
 
-.summary-icon {
+.summary-icon.material-symbols-outlined {
   display: grid;
   width: 38px;
   height: 38px;

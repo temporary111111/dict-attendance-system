@@ -54,6 +54,7 @@ class UiUxRegressionTests(unittest.TestCase):
         self.assertIn('class="summary-grid dashboard-summary-grid"', admin_js)
         self.assertIn(".dashboard-summary-grid .summary-card {", admin_css)
         self.assertIn("grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));", admin_css)
+        self.assertIn(".summary-icon.material-symbols-outlined {", admin_css)
 
     def test_empty_state_message_does_not_replace_the_material_icon(self) -> None:
         admin_js = (FRONTEND_ROOT / "js" / "admin.js").read_text(encoding="utf-8")
