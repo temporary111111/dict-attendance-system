@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <title>Event Attendance | DICT</title>
     <link rel="icon" type="image/png" href="./assets/favicon.png" />
     <link rel="stylesheet" href="./css/base.css" />
@@ -13,9 +13,14 @@
   </head>
   <body class="attendance-page">
     <header class="attendance-header">
-      <div class="attendance-header-logos">
-        <img class="attendance-dict-logo" src="./assets/dict-header.png" alt="Department of Information and Communications Technology" />
-        <img class="attendance-program-logo" id="attendance-program-logo" src="" alt="" hidden />
+      <div class="attendance-header-inner">
+        <div class="attendance-header-logos">
+          <img class="attendance-dict-logo" src="./assets/dict-header.png" alt="Department of Information and Communications Technology" />
+          <img class="attendance-program-logo" id="attendance-program-logo" src="" alt="" hidden />
+        </div>
+        <button id="attendance-theme-toggle" class="icon-button attendance-theme-toggle" type="button" title="Use dark theme" aria-label="Use dark theme" aria-pressed="false">
+          <span class="material-symbols-outlined" aria-hidden="true">dark_mode</span>
+        </button>
       </div>
     </header>
     <main id="attendance-root" class="attendance-root" aria-live="polite">

@@ -1,6 +1,6 @@
 import { apiDownload, apiRequest, getApiOrigin } from "./api.js";
 import { logout, requireAdmin } from "./auth.js";
-import { initializeThemeToggle } from "./theme.js";
+import { initializeThemeToggle, THEME_STORAGE_KEYS } from "./theme.js";
 
 const app = document.querySelector("#admin-app");
 const appLoading = document.querySelector("#app-loading");
@@ -1989,7 +1989,7 @@ desktopSidebar.addEventListener("change", () => {
   closeSidebar();
   setSidebarCollapsed(readSidebarPreference());
 });
-initializeThemeToggle(themeToggle);
+initializeThemeToggle(themeToggle, THEME_STORAGE_KEYS.admin);
 setSidebarCollapsed(readSidebarPreference());
 scrim.addEventListener("click", closeSidebar);
 refreshButton.addEventListener("click", async () => {

@@ -1,5 +1,6 @@
 import { apiRequest, getApiOrigin, saveSession } from "./api.js";
 import { requireGuest } from "./auth.js";
+import { initializeThemeToggle, THEME_STORAGE_KEYS } from "./theme.js";
 
 const form = document.querySelector("#login-form");
 const emailInput = document.querySelector("#email");
@@ -11,6 +12,7 @@ const errorBox = document.querySelector("#login-error");
 const sessionMessage = document.querySelector("#session-message");
 const connectionDot = document.querySelector("#connection-dot");
 const connectionText = document.querySelector("#connection-text");
+const themeToggle = document.querySelector("#login-theme-toggle");
 
 function setFieldError(input, message) {
   input.setAttribute("aria-invalid", message ? "true" : "false");
@@ -60,7 +62,12 @@ async function checkBackend() {
 passwordToggle.addEventListener("click", (event) => {
   const showing = passwordInput.type === "text";
   passwordInput.type = showing ? "password" : "text";
-  event.currentTarget.textContent = showing ? "Show" : "Hide";
+  const nextLabel = showing ? "Show password" : "Hide password";
+  event.currentTarget.querySelector(".material-symbols-outlined").textContent = showing
+    ? "visibility"
+    : "visibility_off";
+  event.currentTarget.setAttribute("aria-label", nextLabel);
+  event.currentTarget.title = nextLabel;
   event.currentTarget.setAttribute("aria-pressed", String(!showing));
 });
 
@@ -101,5 +108,6 @@ if (params.has("expired")) {
   sessionMessage.hidden = false;
 }
 
+initializeThemeToggle(themeToggle, THEME_STORAGE_KEYS.admin);
 await requireGuest();
 await checkBackend();

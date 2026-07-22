@@ -4,16 +4,28 @@
 }
 
 .attendance-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 3px solid var(--primary-action);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.attendance-header-inner {
   display: flex;
-  min-height: 76px;
+  width: min(1120px, 100%);
+  min-height: 70px;
   align-items: center;
-  border-bottom: 3px solid var(--blue-700);
-  background: var(--surface);
-  padding: 12px clamp(18px, 5vw, 76px);
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 auto;
+  padding: 10px clamp(18px, 4vw, 48px);
 }
 
 .attendance-header-logos {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 14px;
 }
@@ -21,17 +33,33 @@
 .attendance-dict-logo,
 .attendance-program-logo {
   display: block;
-  max-width: 270px;
-  max-height: 60px;
+  max-width: min(260px, 50vw);
+  max-height: 46px;
   width: auto;
   height: auto;
+  object-fit: contain;
+}
+
+.attendance-program-logo {
+  border-left: 1px solid var(--line);
+  padding-left: 14px;
+}
+
+.attendance-theme-toggle {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+}
+
+.attendance-theme-toggle .material-symbols-outlined {
+  font-size: 20px;
 }
 
 .attendance-root {
-  width: min(960px, 100%);
-  min-height: calc(100vh - 76px);
+  width: min(920px, 100%);
+  min-height: calc(100vh - 73px);
   margin: 0 auto;
-  padding: 34px clamp(18px, 5vw, 54px) 58px;
+  padding: 34px clamp(18px, 5vw, 48px) 60px;
 }
 
 .attendance-state,
@@ -43,7 +71,7 @@
   justify-items: center;
   gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 7px;
   background: var(--surface);
   padding: 28px;
   color: var(--ink-500);
@@ -51,12 +79,14 @@
 }
 
 .attendance-error strong,
-.attendance-success strong { color: var(--ink-900); }
+.attendance-success strong {
+  color: var(--ink-900);
+}
 
 .attendance-success-mark {
   display: grid;
-  width: 54px;
-  height: 54px;
+  width: 52px;
+  height: 52px;
   place-items: center;
   border-radius: 50%;
   background: var(--green-100);
@@ -64,40 +94,52 @@
 }
 
 .attendance-success-mark .material-symbols-outlined {
-  font-size: 36px;
+  font-size: 34px;
 }
 
 .attendance-event {
   border-bottom: 1px solid var(--line);
-  padding-bottom: 22px;
+  padding: 0 0 22px;
 }
 
 .attendance-program {
   margin: 0 0 8px;
   color: var(--blue-700);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .attendance-event h1 {
   margin: 0;
-  font-size: 1.65rem;
-  line-height: 1.25;
+  font-size: 1.7rem;
+  line-height: 1.22;
 }
 
 .attendance-description {
   max-width: 760px;
   margin: 10px 0 0;
   color: var(--ink-700);
-  line-height: 1.55;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.event-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 15px 0 0;
+  color: var(--ink-500);
+  font-size: 0.8rem;
+  font-weight: 650;
 }
 
 .privacy-notice {
   display: grid;
-  gap: 10px;
+  gap: 9px;
   border-bottom: 1px solid var(--line);
-  padding: 22px 0;
+  border-left: 3px solid var(--blue-600);
+  padding: 20px 0 20px 16px;
 }
 
 .privacy-notice h2,
@@ -106,39 +148,32 @@
 }
 
 .privacy-notice h2 {
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .privacy-notice p {
   color: var(--ink-700);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   line-height: 1.55;
-}
-
-.event-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px 20px;
-  margin: 16px 0 0;
-  color: var(--ink-500);
-  font-size: 0.85rem;
 }
 
 .attendance-form {
   display: grid;
-  gap: 25px;
-  margin-top: 26px;
+  gap: 0;
+  margin-top: 8px;
 }
 
 .form-section {
-  padding-bottom: 25px;
   border-bottom: 1px solid var(--line);
+  padding: 24px 0;
 }
 
-.form-section:last-of-type { border-bottom: 0; }
+.form-section:last-of-type {
+  border-bottom: 0;
+}
 
 .form-section h2 {
-  margin: 0 0 16px;
+  margin: 0 0 15px;
   font-size: 1rem;
 }
 
@@ -148,16 +183,13 @@
   gap: 15px;
 }
 
-.attendance-grid .wide-field { grid-column: 1 / -1; }
+.attendance-grid .wide-field {
+  grid-column: 1 / -1;
+}
 
 .attendance-form textarea {
-  width: 100%;
-  min-height: 92px;
+  min-height: 94px;
   resize: vertical;
-  border: 1px solid #b9c4cf;
-  border-radius: 6px;
-  background: var(--surface);
-  padding: 10px 12px;
 }
 
 .attendance-form input[type="file"] {
@@ -165,15 +197,34 @@
   padding: 8px;
 }
 
-.required-mark { color: var(--red-700); }
+.required-mark {
+  color: var(--red-700);
+}
+
+.address-note,
+.field-help {
+  margin: 0 0 14px;
+  color: var(--ink-500);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.field-help {
+  margin: 10px 0 0;
+  font-size: 0.76rem;
+}
 
 .checkbox-field {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
   align-items: start;
   gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-muted);
   color: var(--ink-700);
-  font-size: 0.88rem;
+  padding: 13px;
+  font-size: 0.86rem;
   line-height: 1.5;
 }
 
@@ -181,18 +232,7 @@
   width: 18px;
   min-height: 18px;
   margin: 2px 0 0;
-  accent-color: var(--blue-700);
-}
-
-.signature-pad {
-  display: block;
-  width: 100%;
-  aspect-ratio: 18 / 5;
-  border: 1px solid #9ba9b7;
-  border-radius: 4px;
-  background: var(--surface);
-  cursor: crosshair;
-  touch-action: none;
+  accent-color: var(--primary-action);
 }
 
 .signature-methods {
@@ -200,28 +240,41 @@
   width: fit-content;
   max-width: 100%;
   margin: 0 0 14px;
-  border: 1px solid #9ba9b7;
-  border-radius: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .signature-method-button {
   min-height: 40px;
   border: 0;
-  border-right: 1px solid #9ba9b7;
+  border-right: 1px solid var(--line-strong);
   background: var(--surface);
-  padding: 7px 13px;
   color: var(--ink-700);
+  padding: 7px 13px;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
-.signature-method-button:last-child { border-right: 0; }
+.signature-method-button:last-child {
+  border-right: 0;
+}
 
 .signature-method-button[aria-pressed="true"] {
-  background: var(--blue-700);
-  color: #fff;
+  background: var(--primary-action);
+  color: var(--primary-action-text);
+}
+
+.signature-pad {
+  display: block;
+  width: 100%;
+  aspect-ratio: 18 / 5;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: crosshair;
+  touch-action: none;
 }
 
 .signature-pad-actions {
@@ -230,42 +283,35 @@
   margin-top: 8px;
 }
 
-.field-help {
-  margin: 0;
-  color: var(--ink-500);
-  font-size: 0.77rem;
-  line-height: 1.45;
+.form-feedback {
+  margin: 16px 0 0;
 }
-
-.address-note {
-  margin: 0 0 14px;
-  color: var(--ink-500);
-  font-size: 0.84rem;
-}
-
-.form-feedback { margin: 0; }
 
 .submit-row {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
 }
 
-.submit-row .primary-button { min-width: 170px; }
+.submit-row .primary-button {
+  min-width: 178px;
+}
 
 .consent-confirmation-dialog {
   width: min(560px, calc(100vw - 28px));
+  max-height: calc(100vh - 28px);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 7px;
   background: var(--surface);
   color: var(--ink-900);
+  box-shadow: var(--shadow);
   overflow: auto;
   padding: 0;
 }
 
 .consent-confirmation-dialog::backdrop {
-  background: rgba(24, 33, 43, 0.42);
+  background: var(--overlay);
 }
 
 .consent-confirmation-content {
@@ -282,15 +328,15 @@
 .consent-confirmation-content p,
 .consent-summary-list {
   color: var(--ink-700);
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 .consent-summary-list {
   display: grid;
   gap: 10px;
   margin: 0;
-  padding-left: 22px;
+  padding-left: 21px;
 }
 
 .consent-confirmation-actions {
@@ -301,20 +347,70 @@
   padding-top: 2px;
 }
 
+:root[data-theme="dark"] .attendance-header {
+  border-color: var(--primary-action);
+}
+
 @media (max-width: 640px) {
-  .attendance-header {
+  .attendance-header-inner {
     min-height: 64px;
-    padding: 10px 18px;
+    padding: 9px 18px;
   }
-  .attendance-root { padding: 24px 18px 42px; }
-  .attendance-grid { grid-template-columns: 1fr; }
-  .attendance-grid .wide-field { grid-column: auto; }
-  .attendance-event h1 { font-size: 1.35rem; }
-  .event-details { display: grid; gap: 5px; }
-  .form-section { padding-bottom: 22px; }
-  .submit-row .primary-button { width: 100%; }
-  .consent-confirmation-actions > * { flex: 1 1 auto; }
-  .signature-pad-actions .secondary-button { width: 100%; }
-  .signature-methods { width: 100%; }
-  .signature-method-button { flex: 1 1 50%; }
+
+  .attendance-dict-logo,
+  .attendance-program-logo {
+    max-width: min(220px, 58vw);
+    max-height: 40px;
+  }
+
+  .attendance-program-logo {
+    padding-left: 10px;
+  }
+
+  .attendance-root {
+    min-height: calc(100vh - 67px);
+    padding: 25px 18px 44px;
+  }
+
+  .attendance-event h1 {
+    font-size: 1.4rem;
+  }
+
+  .event-details {
+    display: grid;
+    gap: 5px;
+  }
+
+  .privacy-notice {
+    padding-left: 13px;
+  }
+
+  .form-section {
+    padding: 22px 0;
+  }
+
+  .attendance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-grid .wide-field {
+    grid-column: auto;
+  }
+
+  .signature-methods {
+    width: 100%;
+  }
+
+  .signature-method-button {
+    flex: 1 1 50%;
+  }
+
+  .signature-pad-actions .secondary-button,
+  .submit-row .primary-button {
+    width: 100%;
+  }
+
+  .consent-confirmation-actions > * {
+    flex: 1 1 auto;
+  }
 }

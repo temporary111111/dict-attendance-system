@@ -62,7 +62,56 @@ class UiUxRegressionTests(unittest.TestCase):
         self.assertIn("sidebar-collapsed", admin_css)
         self.assertIn("dict-attendance-sidebar-collapsed", admin_js)
         self.assertIn("prefers-color-scheme: dark", theme_js)
-        self.assertIn("dict-attendance-theme", theme_js)
+        self.assertIn("dict-attendance-admin-theme", theme_js)
+
+    def test_admin_and_public_themes_use_separate_storage_keys(self) -> None:
+        theme_js = (FRONTEND_ROOT / "js" / "theme.js").read_text(encoding="utf-8")
+        admin_js = (FRONTEND_ROOT / "js" / "admin.js").read_text(encoding="utf-8")
+
+        self.assertIn('admin: "dict-attendance-admin-theme"', theme_js)
+        self.assertIn('public: "dict-attendance-public-theme"', theme_js)
+        self.assertIn("initializeThemeToggle(button, storageKey)", theme_js)
+        self.assertNotIn('const THEME_STORAGE_KEY = "dict-attendance-theme"', theme_js)
+        self.assertIn(
+            "initializeThemeToggle(themeToggle, THEME_STORAGE_KEYS.admin)",
+            admin_js,
+        )
+
+    def test_login_uses_admin_theme_and_accessible_icon_controls(self) -> None:
+        login_html = (FRONTEND_ROOT / "index.html").read_text(encoding="utf-8")
+        login_js = (FRONTEND_ROOT / "js" / "login.js").read_text(encoding="utf-8")
+
+        self.assertIn('<meta name="color-scheme" content="light dark" />', login_html)
+        self.assertIn('id="login-theme-toggle"', login_html)
+        self.assertIn('aria-label="Use dark theme"', login_html)
+        self.assertIn('aria-label="Show password"', login_html)
+        self.assertIn('class="material-symbols-outlined" aria-hidden="true">visibility</span>', login_html)
+        self.assertIn('initializeThemeToggle(themeToggle, THEME_STORAGE_KEYS.admin)', login_js)
+
+    def test_login_icon_controls_keep_symbol_fallbacks_inside_the_button(self) -> None:
+        login_css = (FRONTEND_ROOT / "css" / "login.css").read_text(encoding="utf-8")
+
+        self.assertIn(".login-theme-toggle,\n.password-toggle {", login_css)
+        self.assertIn("  display: grid;", login_css)
+        self.assertIn("  overflow: hidden;", login_css)
+
+    def test_public_attendance_has_an_isolated_accessible_theme_toggle(self) -> None:
+        attendance_html = (FRONTEND_ROOT / "attendance.html").read_text(encoding="utf-8")
+        attendance_js = (FRONTEND_ROOT / "js" / "attendance.js").read_text(encoding="utf-8")
+        attendance_css = (FRONTEND_ROOT / "css" / "attendance.css").read_text(encoding="utf-8")
+
+        self.assertIn('<meta name="color-scheme" content="light dark" />', attendance_html)
+        self.assertIn('id="attendance-theme-toggle"', attendance_html)
+        self.assertIn('aria-label="Use dark theme"', attendance_html)
+        self.assertIn('initializeThemeToggle(themeToggle, THEME_STORAGE_KEYS.public)', attendance_js)
+        self.assertIn(':root[data-theme="dark"] .attendance-header', attendance_css)
+
+    def test_signature_pad_uses_the_active_theme_ink_color(self) -> None:
+        attendance_js = (FRONTEND_ROOT / "js" / "attendance.js").read_text(encoding="utf-8")
+
+        self.assertIn('getPropertyValue("--ink-900")', attendance_js)
+        self.assertIn("context.strokeStyle = signatureInkColor();", attendance_js)
+        self.assertIn("context.fillStyle = signatureInkColor();", attendance_js)
 
     def test_dark_theme_defines_shared_surface_tokens(self) -> None:
         base_css = (FRONTEND_ROOT / "css" / "base.css").read_text(encoding="utf-8")

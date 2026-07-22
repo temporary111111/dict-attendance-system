@@ -1,7 +1,9 @@
 import { apiRequest, getApiOrigin } from "./api.js";
+import { initializeThemeToggle, THEME_STORAGE_KEYS } from "./theme.js";
 
 const root = document.querySelector("#attendance-root");
 const eventCode = new URLSearchParams(window.location.search).get("event")?.trim();
+const themeToggle = document.querySelector("#attendance-theme-toggle");
 
 const fieldLabels = {
   first_name: "First name",
@@ -21,6 +23,10 @@ const fieldLabels = {
 };
 
 let signaturePadState = null;
+
+function signatureInkColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue("--ink-900").trim() || "#17202a";
+}
 
 function formatDate(value) {
   return new Intl.DateTimeFormat("en-PH", {
@@ -221,8 +227,6 @@ function initializeSignaturePad() {
   context.lineCap = "round";
   context.lineJoin = "round";
   context.lineWidth = 5;
-  context.strokeStyle = "#17202a";
-  context.fillStyle = "#17202a";
 
   signaturePadState = {
     canvas,
@@ -272,6 +276,8 @@ function initializeSignaturePad() {
     signaturePadState.lastPoint = point;
     signaturePadState.hasInk = true;
     canvas.setPointerCapture?.(pointerEvent.pointerId);
+    context.strokeStyle = signatureInkColor();
+    context.fillStyle = signatureInkColor();
     context.beginPath();
     context.arc(point.x, point.y, context.lineWidth / 2, 0, Math.PI * 2);
     context.fill();
@@ -516,4 +522,5 @@ async function initialize() {
   }
 }
 
+initializeThemeToggle(themeToggle, THEME_STORAGE_KEYS.public);
 await initialize();

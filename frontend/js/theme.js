@@ -1,9 +1,13 @@
-const THEME_STORAGE_KEY = "dict-attendance-theme";
+export const THEME_STORAGE_KEYS = Object.freeze({
+  admin: "dict-attendance-admin-theme",
+  public: "dict-attendance-public-theme",
+});
+
 const systemDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
 
-function readStoredTheme() {
+function readStoredTheme(storageKey) {
   try {
-    const value = window.localStorage.getItem(THEME_STORAGE_KEY);
+    const value = window.localStorage.getItem(storageKey);
     return value === "light" || value === "dark" ? value : null;
   } catch {
     return null;
@@ -15,12 +19,12 @@ function applyTheme(theme) {
   document.documentElement.style.colorScheme = theme;
 }
 
-function resolvedTheme(preference = readStoredTheme()) {
+function resolvedTheme(preference) {
   return preference || (systemDarkMode.matches ? "dark" : "light");
 }
 
-export function initializeThemeToggle(button) {
-  let preference = readStoredTheme();
+export function initializeThemeToggle(button, storageKey) {
+  let preference = readStoredTheme(storageKey);
 
   function updateButton(theme) {
     const dark = theme === "dark";
@@ -42,7 +46,7 @@ export function initializeThemeToggle(button) {
     const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     preference = nextTheme;
     try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+      window.localStorage.setItem(storageKey, nextTheme);
     } catch {
       // Gumagana pa rin ang toggle kahit blocked ang browser storage.
     }
@@ -53,5 +57,3 @@ export function initializeThemeToggle(button) {
     if (!preference) setTheme(event.matches ? "dark" : "light");
   });
 }
-
-applyTheme(resolvedTheme());
