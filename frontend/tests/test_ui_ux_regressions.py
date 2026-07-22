@@ -77,15 +77,16 @@ class UiUxRegressionTests(unittest.TestCase):
         self.assertIn(".nav-item.active .nav-symbol", admin_css)
         self.assertIn(":root[data-theme=\"dark\"] .nav-item.active .nav-symbol", admin_css)
 
-    def test_sidebar_brand_uses_full_logo_when_expanded_and_icon_when_collapsed(self) -> None:
+    def test_sidebar_brand_uses_icon_and_white_wordmark_text(self) -> None:
         admin_html = (FRONTEND_ROOT / "admin.html").read_text(encoding="utf-8")
         admin_css = (FRONTEND_ROOT / "css" / "admin.css").read_text(encoding="utf-8")
 
-        self.assertIn('class="sidebar-brand-header-logo" src="./assets/dict-header.png"', admin_html)
         self.assertIn('class="sidebar-brand-icon-logo" src="./assets/dict-icon.png"', admin_html)
-        self.assertIn(".sidebar-brand .sidebar-brand-header-logo {", admin_css)
+        self.assertIn("<strong>DICT</strong><small>Attendance System</small>", admin_html)
+        self.assertNotIn("sidebar-brand-header-logo", admin_html)
         self.assertIn(".sidebar-brand .sidebar-brand-icon-logo {", admin_css)
-        self.assertIn(".sidebar-collapsed .sidebar-brand-header-logo", admin_css)
+        self.assertIn('font-family: "Arial Narrow", "Aptos Narrow", Arial, sans-serif;', admin_css)
+        self.assertIn("letter-spacing: 0.08em;", admin_css)
         self.assertIn(".sidebar-collapsed .sidebar-brand-icon-logo", admin_css)
 
     def test_admin_and_public_themes_use_separate_storage_keys(self) -> None:

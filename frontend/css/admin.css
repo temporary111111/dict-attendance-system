@@ -1241,10 +1241,11 @@
 }
 
 .sidebar-brand {
-  min-height: 128px;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  gap: 5px;
+  min-height: 78px;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  align-content: initial;
+  gap: 11px;
   border-color: rgba(255, 255, 255, 0.14);
   color: #fff;
   padding: 14px 16px;
@@ -1255,23 +1256,21 @@
 }
 
 .sidebar-brand-mark {
-  display: block;
-}
-
-.sidebar-brand .sidebar-brand-header-logo {
-  display: block;
-  width: min(184px, 100%);
-  height: auto;
+  width: 40px;
 }
 
 .sidebar-brand .sidebar-brand-icon-logo {
-  display: none;
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
 }
 
 .sidebar-brand .sidebar-brand-copy {
   display: grid;
   min-width: 0;
-  gap: 4px;
+  gap: 2px;
   color: #fff;
 }
 
@@ -1283,8 +1282,12 @@
 }
 
 .sidebar-brand-copy strong {
-  font-size: 0.92rem;
-  line-height: 1.1;
+  color: #fff;
+  font-family: "Arial Narrow", "Aptos Narrow", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
 }
 
 .sidebar-brand-copy small {
@@ -1713,10 +1716,6 @@
 
   .sidebar-collapsed .sidebar-brand-mark {
     width: 40px;
-  }
-
-  .sidebar-collapsed .sidebar-brand-header-logo {
-    display: none;
   }
 
   .sidebar-collapsed .sidebar-brand-icon-logo {
