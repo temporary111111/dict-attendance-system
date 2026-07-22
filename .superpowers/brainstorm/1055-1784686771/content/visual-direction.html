@@ -1,0 +1,120 @@
+<style>
+  .direction-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 24px; }
+  .direction-card { cursor: pointer; border: 2px solid transparent; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 10px 28px rgba(22, 36, 54, .10); transition: transform .18s ease, border-color .18s ease; }
+  .direction-card:hover { transform: translateY(-3px); }
+  .direction-card.selected { border-color: #1f6db2; box-shadow: 0 0 0 3px rgba(31,109,178,.16), 0 14px 32px rgba(22,36,54,.14); }
+  .direction-preview { height: 300px; overflow: hidden; }
+  .direction-meta { padding: 16px; }
+  .direction-meta h3 { margin: 0 0 6px; font-size: 17px; }
+  .direction-meta p { margin: 0; color: #657180; font-size: 13px; line-height: 1.45; }
+  .recommended { display: inline-flex; margin-bottom: 9px; padding: 4px 8px; border-radius: 4px; background: #dff3e7; color: #17653b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+  .app { height: 100%; display: grid; grid-template-columns: 78px 1fr; font-family: Inter, Arial, sans-serif; }
+  .side { padding: 16px 10px; display: flex; flex-direction: column; gap: 8px; }
+  .brand { width: 34px; height: 34px; display: grid; place-items: center; margin: 0 auto 12px; border-radius: 7px; font-size: 11px; font-weight: 900; }
+  .nav-dot { height: 30px; border-radius: 5px; display: grid; place-items: center; font-size: 9px; font-weight: 800; }
+  .main { min-width: 0; }
+  .bar { height: 50px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid; }
+  .bar strong { font-size: 12px; }
+  .bar-actions { display: flex; gap: 6px; }
+  .icon-chip { width: 26px; height: 26px; border-radius: 5px; border: 1px solid; display: grid; place-items: center; font-size: 10px; }
+  .workspace { padding: 14px; }
+  .intro { display: flex; justify-content: space-between; align-items: end; margin-bottom: 12px; }
+  .intro h4 { margin: 0; font-size: 14px; }
+  .intro span { font-size: 9px; opacity: .72; }
+  .metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .metric { padding: 10px; border: 1px solid; border-radius: 6px; }
+  .metric b { display: block; font-size: 17px; margin-top: 4px; }
+  .metric small { font-size: 8px; text-transform: uppercase; font-weight: 800; }
+  .table-shell { margin-top: 10px; border: 1px solid; border-radius: 6px; overflow: hidden; }
+  .table-head, .table-row { display: grid; grid-template-columns: 1.5fr .8fr .7fr; gap: 8px; padding: 8px 10px; align-items: center; }
+  .table-head { font-size: 8px; font-weight: 800; text-transform: uppercase; }
+  .table-row { font-size: 9px; border-top: 1px solid; }
+  .status { justify-self: start; padding: 3px 6px; border-radius: 999px; font-size: 7px; font-weight: 800; }
+  .a .app { grid-template-columns: 82px 1fr; background: #f4f6f8; color: #17212b; }
+  .a .side { background: #123f78; color: #dcecf9; }
+  .a .brand { background: #fff; color: #123f78; }
+  .a .nav-dot.active { background: #fff; color: #123f78; }
+  .a .bar { background: #fff; border-color: #d9e0e7; }
+  .a .icon-chip, .a .metric, .a .table-shell { background: #fff; border-color: #d9e0e7; }
+  .a .table-head { background: #f2f8fd; }
+  .a .table-row { border-color: #e5e9ee; }
+  .a .status { background: #dff3e7; color: #17653b; }
+  .b .app { grid-template-columns: 78px 1fr; background: #fff; color: #1a252f; }
+  .b .side { background: #f7f9fb; color: #526170; border-right: 1px solid #dce2e8; }
+  .b .brand { background: #16569a; color: #fff; }
+  .b .nav-dot.active { background: #dcecf9; color: #123f78; }
+  .b .bar { background: #fff; border-color: #e2e7ec; }
+  .b .icon-chip, .b .metric, .b .table-shell { background: #fff; border-color: #e2e7ec; }
+  .b .metric { border-top: 3px solid #1f6db2; border-radius: 3px; }
+  .b .table-head { background: #f7f9fb; }
+  .b .table-row { border-color: #e9edf1; }
+  .b .status { background: #eef2f5; color: #40505f; }
+  .c .app { grid-template-columns: 82px 1fr; background: #0f1720; color: #e8eef4; }
+  .c .side { background: #111f2d; color: #9fb4c8; border-right: 1px solid #294056; }
+  .c .brand { background: #1f6db2; color: #fff; }
+  .c .nav-dot.active { background: #1f6db2; color: #fff; }
+  .c .bar { background: #142230; border-color: #294056; }
+  .c .icon-chip, .c .metric, .c .table-shell { background: #142230; border-color: #294056; }
+  .c .metric:nth-child(2) { border-color: #2d8b57; }
+  .c .metric:nth-child(3) { border-color: #b17a16; }
+  .c .table-head { background: #192b3b; color: #a9bed1; }
+  .c .table-row { border-color: #263c4f; }
+  .c .status { background: #173f2d; color: #87d9aa; }
+  @media (max-width: 980px) { .direction-grid { grid-template-columns: 1fr; } .direction-preview { height: 330px; } }
+</style>
+
+<h2>Which visual direction feels right for DICT?</h2>
+<p class="subtitle">Same dashboard structure, different visual personalities. Click one to select it.</p>
+
+<div class="direction-grid">
+  <div class="direction-card a" data-choice="quiet-operations" onclick="toggleSelect(this)">
+    <div class="direction-preview">
+      <div class="app">
+        <aside class="side"><div class="brand">DICT</div><div class="nav-dot active">DB</div><div class="nav-dot">PR</div><div class="nav-dot">EV</div><div class="nav-dot">RP</div><div class="nav-dot">AD</div></aside>
+        <section class="main">
+          <div class="bar"><strong>Dashboard</strong><div class="bar-actions"><div class="icon-chip">L/D</div><div class="icon-chip">R</div></div></div>
+          <div class="workspace">
+            <div class="intro"><div><h4>Operations overview</h4><span>Tuesday, July 21</span></div><span>Updated now</span></div>
+            <div class="metric-row"><div class="metric"><small>Programs</small><b>12</b></div><div class="metric"><small>Events</small><b>8</b></div><div class="metric"><small>Attendees</small><b>486</b></div><div class="metric"><small>Review</small><b>7</b></div></div>
+            <div class="table-shell"><div class="table-head"><span>Recent event</span><span>Program</span><span>Status</span></div><div class="table-row"><span>Digital Inclusion Forum</span><span>Free Wi-Fi</span><span class="status">OPEN</span></div><div class="table-row"><span>eGov Orientation</span><span>eGov App</span><span class="status">CLOSED</span></div><div class="table-row"><span>NBP Consultation</span><span>NBP</span><span class="status">DRAFT</span></div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="direction-meta"><span class="recommended">Recommended</span><h3>Quiet Operations</h3><p>Strong DICT identity, neutral work surface, restrained color, and compact information.</p></div>
+  </div>
+
+  <div class="direction-card b" data-choice="civic-minimal" onclick="toggleSelect(this)">
+    <div class="direction-preview">
+      <div class="app">
+        <aside class="side"><div class="brand">DICT</div><div class="nav-dot active">DB</div><div class="nav-dot">PR</div><div class="nav-dot">EV</div><div class="nav-dot">RP</div><div class="nav-dot">AD</div></aside>
+        <section class="main">
+          <div class="bar"><strong>Dashboard</strong><div class="bar-actions"><div class="icon-chip">L/D</div><div class="icon-chip">R</div></div></div>
+          <div class="workspace">
+            <div class="intro"><div><h4>Operations overview</h4><span>Tuesday, July 21</span></div><span>Updated now</span></div>
+            <div class="metric-row"><div class="metric"><small>Programs</small><b>12</b></div><div class="metric"><small>Events</small><b>8</b></div><div class="metric"><small>Attendees</small><b>486</b></div><div class="metric"><small>Review</small><b>7</b></div></div>
+            <div class="table-shell"><div class="table-head"><span>Recent event</span><span>Program</span><span>Status</span></div><div class="table-row"><span>Digital Inclusion Forum</span><span>Free Wi-Fi</span><span class="status">OPEN</span></div><div class="table-row"><span>eGov Orientation</span><span>eGov App</span><span class="status">CLOSED</span></div><div class="table-row"><span>NBP Consultation</span><span>NBP</span><span class="status">DRAFT</span></div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="direction-meta"><h3>Civic Minimal</h3><p>Lighter institutional feel with thin borders and very restrained branding.</p></div>
+  </div>
+
+  <div class="direction-card c" data-choice="digital-command" onclick="toggleSelect(this)">
+    <div class="direction-preview">
+      <div class="app">
+        <aside class="side"><div class="brand">DICT</div><div class="nav-dot active">DB</div><div class="nav-dot">PR</div><div class="nav-dot">EV</div><div class="nav-dot">RP</div><div class="nav-dot">AD</div></aside>
+        <section class="main">
+          <div class="bar"><strong>Dashboard</strong><div class="bar-actions"><div class="icon-chip">L/D</div><div class="icon-chip">R</div></div></div>
+          <div class="workspace">
+            <div class="intro"><div><h4>Operations overview</h4><span>Tuesday, July 21</span></div><span>Updated now</span></div>
+            <div class="metric-row"><div class="metric"><small>Programs</small><b>12</b></div><div class="metric"><small>Events</small><b>8</b></div><div class="metric"><small>Attendees</small><b>486</b></div><div class="metric"><small>Review</small><b>7</b></div></div>
+            <div class="table-shell"><div class="table-head"><span>Recent event</span><span>Program</span><span>Status</span></div><div class="table-row"><span>Digital Inclusion Forum</span><span>Free Wi-Fi</span><span class="status">OPEN</span></div><div class="table-row"><span>eGov Orientation</span><span>eGov App</span><span class="status">CLOSED</span></div><div class="table-row"><span>NBP Consultation</span><span>NBP</span><span class="status">DRAFT</span></div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="direction-meta"><h3>Digital Command</h3><p>Higher contrast and more technical, with a permanently dark operational surface.</p></div>
+  </div>
+</div>

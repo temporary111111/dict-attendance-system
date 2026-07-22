@@ -1,0 +1,172 @@
+<style>
+  .design-note { max-width: 760px; margin-bottom: 22px; }
+  .showcase-grid { display: grid; gap: 24px; }
+  .showcase { border: 1px solid #d9e0e7; border-radius: 10px; overflow: hidden; background: #eef2f5; box-shadow: 0 14px 38px rgba(18, 34, 52, .12); }
+  .showcase-label { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fff; border-bottom: 1px solid #d9e0e7; color: #526170; font-size: 11px; font-weight: 750; }
+  .showcase-label span:last-child { color: #7c8793; font-weight: 500; }
+  .admin-shell { min-height: 590px; display: grid; grid-template-columns: 226px minmax(0, 1fr); font-family: Inter, Arial, sans-serif; letter-spacing: 0; }
+  .admin-shell.collapsed { grid-template-columns: 72px minmax(0, 1fr); }
+  .admin-side { padding: 18px 12px 14px; display: flex; flex-direction: column; min-width: 0; }
+  .admin-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 18px; }
+  .brand-seal { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border-radius: 6px; background: #fff; color: #123f78; font-weight: 900; font-size: 10px; }
+  .brand-copy strong { display: block; font-size: 16px; line-height: 1; }
+  .brand-copy small { display: block; margin-top: 5px; font-size: 9px; opacity: .72; }
+  .nav-group { margin-top: 12px; }
+  .nav-caption { padding: 0 10px 7px; font-size: 8px; text-transform: uppercase; font-weight: 800; opacity: .54; }
+  .nav-link { height: 36px; display: flex; align-items: center; gap: 11px; padding: 0 10px; margin: 3px 0; border-radius: 5px; font-size: 11px; font-weight: 650; }
+  .nav-icon { width: 20px; height: 20px; display: grid; place-items: center; flex: 0 0 20px; font-size: 9px; font-weight: 900; border-radius: 4px; }
+  .side-user { margin-top: auto; display: grid; grid-template-columns: 30px 1fr 24px; gap: 8px; align-items: center; padding: 12px 7px 0; border-top: 1px solid; }
+  .avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; font-size: 10px; font-weight: 850; }
+  .side-user strong { display: block; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side-user small { display: block; margin-top: 2px; font-size: 8px; opacity: .65; }
+  .collapsed .brand-copy, .collapsed .nav-caption, .collapsed .nav-link span:last-child, .collapsed .side-user > div:nth-child(2), .collapsed .side-user > span:last-child { display: none; }
+  .collapsed .admin-brand { justify-content: center; padding-inline: 0; }
+  .collapsed .nav-link { justify-content: center; padding: 0; }
+  .collapsed .side-user { display: flex; justify-content: center; padding-inline: 0; }
+  .admin-main { min-width: 0; }
+  .topbar { height: 58px; display: flex; align-items: center; gap: 12px; padding: 0 20px; border-bottom: 1px solid; }
+  .topbar-title { min-width: 0; }
+  .topbar-title strong { display: block; font-size: 14px; }
+  .topbar-title small { display: block; margin-top: 2px; font-size: 8px; opacity: .62; }
+  .top-actions { margin-left: auto; display: flex; align-items: center; gap: 7px; }
+  .icon-button { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 5px; border: 1px solid; font-size: 9px; font-weight: 800; }
+  .workspace { padding: 20px; }
+  .page-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  .page-head h3 { margin: 0; font-size: 22px; }
+  .page-head p { margin: 5px 0 0; font-size: 10px; opacity: .65; }
+  .updated { font-size: 9px; opacity: .58; white-space: nowrap; }
+  .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .metric-card { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; padding: 13px; border: 1px solid; border-radius: 7px; }
+  .metric-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 6px; font-size: 10px; font-weight: 900; }
+  .metric-card small { display: block; font-size: 8px; font-weight: 750; text-transform: uppercase; opacity: .62; }
+  .metric-card b { display: block; margin-top: 3px; font-size: 19px; line-height: 1; }
+  .metric-card em { display: block; margin-top: 5px; font-style: normal; font-size: 8px; opacity: .58; }
+  .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(220px, .8fr); gap: 12px; margin-top: 12px; }
+  .panel { border: 1px solid; border-radius: 7px; overflow: hidden; }
+  .panel-head { height: 45px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid; }
+  .panel-head h4 { margin: 0; font-size: 12px; }
+  .panel-head button { border: 0; background: transparent; color: inherit; font-size: 9px; font-weight: 750; }
+  .event-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .event-table th { padding: 9px 12px; text-align: left; font-size: 7px; text-transform: uppercase; opacity: .58; }
+  .event-table td { padding: 10px 12px; border-top: 1px solid; font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-table td:first-child { font-weight: 700; }
+  .badge { display: inline-flex; padding: 3px 7px; border-radius: 999px; font-size: 7px; font-weight: 850; text-transform: uppercase; }
+  .status-list { padding: 14px; display: grid; gap: 15px; }
+  .status-line { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .status-line span { font-size: 9px; font-weight: 650; }
+  .status-line b { font-size: 10px; }
+  .track { grid-column: 1 / -1; height: 5px; border-radius: 3px; overflow: hidden; }
+  .fill { height: 100%; border-radius: inherit; }
+  .quick-note { margin: 0 14px 14px; padding: 11px; border-left: 3px solid; font-size: 8px; line-height: 1.5; }
+  .light { background: #f4f6f8; color: #18212b; }
+  .light .admin-side { background: #123f78; color: #e7f1fa; }
+  .light .nav-link.active { background: #fff; color: #123f78; }
+  .light .nav-link:not(.active) .nav-icon { background: rgba(255,255,255,.08); }
+  .light .side-user { border-color: rgba(255,255,255,.16); }
+  .light .avatar { background: #fff; color: #123f78; }
+  .light .topbar, .light .panel, .light .metric-card { background: #fff; border-color: #d9e0e7; }
+  .light .topbar { border-color: #d9e0e7; }
+  .light .icon-button { background: #fff; border-color: #d9e0e7; color: #3f4b59; }
+  .light .metric-icon.blue { background: #dcecf9; color: #16569a; }
+  .light .metric-icon.green { background: #dff3e7; color: #217a4a; }
+  .light .metric-icon.amber { background: #fff0c7; color: #946200; }
+  .light .metric-icon.red { background: #fde4e6; color: #b4232f; }
+  .light .panel-head, .light .event-table td { border-color: #e3e8ed; }
+  .light .event-table th { background: #f7f9fb; }
+  .light .badge.open { background: #dff3e7; color: #217a4a; }
+  .light .badge.closed { background: #eef1f4; color: #53606d; }
+  .light .badge.draft { background: #fff0c7; color: #946200; }
+  .light .track { background: #e9edf1; }
+  .light .fill.valid { background: #217a4a; width: 78%; }
+  .light .fill.duplicate { background: #946200; width: 14%; }
+  .light .fill.invalid { background: #b4232f; width: 8%; }
+  .light .quick-note { background: #f2f8fd; border-color: #1f6db2; color: #3f4b59; }
+  .dark { background: #15191d; color: #edf1f4; }
+  .dark .admin-side { background: #1b2025; color: #cbd4dc; border-right: 1px solid #303840; }
+  .dark .brand-seal { background: #1f6db2; color: #fff; }
+  .dark .nav-link.active { background: #243a50; color: #8fc7f2; }
+  .dark .nav-link:not(.active) .nav-icon { background: #242b31; }
+  .dark .side-user { border-color: #303840; }
+  .dark .avatar { background: #2a333b; color: #edf1f4; }
+  .dark .topbar, .dark .panel, .dark .metric-card { background: #1e2429; border-color: #343d45; }
+  .dark .topbar { border-color: #343d45; }
+  .dark .icon-button { background: #252c32; border-color: #3b454e; color: #d7dee4; }
+  .dark .metric-icon.blue { background: #203b52; color: #91c9f2; }
+  .dark .metric-icon.green { background: #1d3b2c; color: #8ad1a8; }
+  .dark .metric-icon.amber { background: #40351d; color: #e8c46b; }
+  .dark .metric-icon.red { background: #44272b; color: #ef9ca4; }
+  .dark .panel-head, .dark .event-table td { border-color: #343d45; }
+  .dark .event-table th { background: #252c32; }
+  .dark .badge.open { background: #1d3b2c; color: #8ad1a8; }
+  .dark .badge.closed { background: #2a3137; color: #b7c1ca; }
+  .dark .badge.draft { background: #40351d; color: #e8c46b; }
+  .dark .track { background: #303840; }
+  .dark .fill.valid { background: #54ad78; width: 78%; }
+  .dark .fill.duplicate { background: #d3a438; width: 14%; }
+  .dark .fill.invalid { background: #d46873; width: 8%; }
+  .dark .quick-note { background: #1c3041; border-color: #4c96cf; color: #bdcbd7; }
+  .approval { margin-top: 20px; }
+  .approval .option { max-width: 620px; margin-inline: auto; }
+  @media (max-width: 900px) { .metrics { grid-template-columns: repeat(2, 1fr); } .dashboard-grid { grid-template-columns: 1fr; } .admin-shell { grid-template-columns: 72px 1fr; } .admin-shell .brand-copy, .admin-shell .nav-caption, .admin-shell .nav-link span:last-child, .admin-shell .side-user > div:nth-child(2), .admin-shell .side-user > span:last-child { display: none; } .admin-shell .admin-brand, .admin-shell .nav-link, .admin-shell .side-user { justify-content: center; } }
+</style>
+
+<div class="design-note">
+  <h2>Modern DICT operations direction</h2>
+  <p class="subtitle">Polish and hierarchy inspired by your references, using only current system capabilities. The two previews are the same design system in different states.</p>
+</div>
+
+<div class="showcase-grid">
+  <section class="showcase">
+    <div class="showcase-label"><span>Light mode / expanded sidebar</span><span>Default desktop state</span></div>
+    <div class="admin-shell light">
+      <aside class="admin-side">
+        <div class="admin-brand"><div class="brand-seal">DICT</div><div class="brand-copy"><strong>Attendance</strong><small>Monitoring System</small></div></div>
+        <div class="nav-group"><div class="nav-caption">Overview</div><div class="nav-link active"><span class="nav-icon">D</span><span>Dashboard</span></div></div>
+        <div class="nav-group"><div class="nav-caption">Operations</div><div class="nav-link"><span class="nav-icon">P</span><span>Programs</span></div><div class="nav-link"><span class="nav-icon">E</span><span>Events</span></div><div class="nav-link"><span class="nav-icon">R</span><span>Reports</span></div></div>
+        <div class="nav-group"><div class="nav-caption">Administration</div><div class="nav-link"><span class="nav-icon">O</span><span>Organizational Units</span></div><div class="nav-link"><span class="nav-icon">U</span><span>Admin Users</span></div><div class="nav-link"><span class="nav-icon">G</span><span>PSGC Data</span></div></div>
+        <div class="nav-group"><div class="nav-caption">Governance</div><div class="nav-link"><span class="nav-icon">A</span><span>Audit Logs</span></div></div>
+        <div class="side-user"><div class="avatar">JD</div><div><strong>Juan Dela Cruz</strong><small>Super Admin</small></div><span>Exit</span></div>
+      </aside>
+      <main class="admin-main">
+        <header class="topbar"><button class="icon-button">&lt;&lt;</button><div class="topbar-title"><strong>Dashboard</strong><small>DICT Attendance</small></div><div class="top-actions"><button class="icon-button">Theme</button><button class="icon-button">Sync</button></div></header>
+        <div class="workspace">
+          <div class="page-head"><div><h3>Operations overview</h3><p>Role-scoped attendance activity across accessible programs.</p></div><span class="updated">Updated just now</span></div>
+          <div class="metrics"><div class="metric-card"><span class="metric-icon blue">P</span><div><small>Active programs</small><b>12</b><em>Visible to your role</em></div></div><div class="metric-card"><span class="metric-icon green">E</span><div><small>Current events</small><b>8</b><em>Not archived</em></div></div><div class="metric-card"><span class="metric-icon amber">A</span><div><small>Total attendance</small><b>486</b><em>Across visible events</em></div></div><div class="metric-card"><span class="metric-icon red">R</span><div><small>Needs review</small><b>7</b><em>Duplicate or invalid</em></div></div></div>
+          <div class="dashboard-grid">
+            <section class="panel"><div class="panel-head"><h4>Recent events</h4><button>View all events</button></div><table class="event-table"><thead><tr><th style="width:34%">Event</th><th style="width:26%">Program</th><th style="width:18%">Date</th><th>Status</th></tr></thead><tbody><tr><td>Digital Inclusion Forum</td><td>Free Wi-Fi for All</td><td>Jul 21, 2026</td><td><span class="badge open">Open</span></td></tr><tr><td>eGov Orientation</td><td>eGov Super App</td><td>Jul 19, 2026</td><td><span class="badge closed">Closed</span></td></tr><tr><td>NBP Consultation</td><td>National Broadband Plan</td><td>Jul 28, 2026</td><td><span class="badge draft">Draft</span></td></tr><tr><td>Cybersecurity Briefing</td><td>Cybersecurity Program</td><td>Aug 2, 2026</td><td><span class="badge draft">Draft</span></td></tr></tbody></table></section>
+            <section class="panel"><div class="panel-head"><h4>Attendance status</h4><button>Reports</button></div><div class="status-list"><div class="status-line"><span>Valid</span><b>438</b><div class="track"><div class="fill valid"></div></div></div><div class="status-line"><span>Duplicate</span><b>31</b><div class="track"><div class="fill duplicate"></div></div></div><div class="status-line"><span>Invalid or void</span><b>17</b><div class="track"><div class="fill invalid"></div></div></div></div><p class="quick-note">Review flagged records before generating the final attendance sheet.</p></section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="showcase">
+    <div class="showcase-label"><span>Dark mode / collapsed sidebar</span><span>Remembered desktop preference</span></div>
+    <div class="admin-shell collapsed dark">
+      <aside class="admin-side">
+        <div class="admin-brand"><div class="brand-seal">DICT</div><div class="brand-copy"><strong>Attendance</strong><small>Monitoring System</small></div></div>
+        <div class="nav-group"><div class="nav-caption">Overview</div><div class="nav-link active"><span class="nav-icon">D</span><span>Dashboard</span></div></div>
+        <div class="nav-group"><div class="nav-caption">Operations</div><div class="nav-link"><span class="nav-icon">P</span><span>Programs</span></div><div class="nav-link"><span class="nav-icon">E</span><span>Events</span></div><div class="nav-link"><span class="nav-icon">R</span><span>Reports</span></div></div>
+        <div class="nav-group"><div class="nav-caption">Administration</div><div class="nav-link"><span class="nav-icon">O</span><span>Organizational Units</span></div><div class="nav-link"><span class="nav-icon">U</span><span>Admin Users</span></div><div class="nav-link"><span class="nav-icon">G</span><span>PSGC Data</span></div></div>
+        <div class="nav-group"><div class="nav-caption">Governance</div><div class="nav-link"><span class="nav-icon">A</span><span>Audit Logs</span></div></div>
+        <div class="side-user"><div class="avatar">JD</div><div><strong>Juan Dela Cruz</strong><small>Super Admin</small></div><span>Exit</span></div>
+      </aside>
+      <main class="admin-main">
+        <header class="topbar"><button class="icon-button">&gt;&gt;</button><div class="topbar-title"><strong>Dashboard</strong><small>DICT Attendance</small></div><div class="top-actions"><button class="icon-button">Theme</button><button class="icon-button">Sync</button></div></header>
+        <div class="workspace">
+          <div class="page-head"><div><h3>Operations overview</h3><p>Role-scoped attendance activity across accessible programs.</p></div><span class="updated">Updated just now</span></div>
+          <div class="metrics"><div class="metric-card"><span class="metric-icon blue">P</span><div><small>Active programs</small><b>12</b><em>Visible to your role</em></div></div><div class="metric-card"><span class="metric-icon green">E</span><div><small>Current events</small><b>8</b><em>Not archived</em></div></div><div class="metric-card"><span class="metric-icon amber">A</span><div><small>Total attendance</small><b>486</b><em>Across visible events</em></div></div><div class="metric-card"><span class="metric-icon red">R</span><div><small>Needs review</small><b>7</b><em>Duplicate or invalid</em></div></div></div>
+          <div class="dashboard-grid"><section class="panel"><div class="panel-head"><h4>Recent events</h4><button>View all events</button></div><table class="event-table"><thead><tr><th style="width:34%">Event</th><th style="width:26%">Program</th><th style="width:18%">Date</th><th>Status</th></tr></thead><tbody><tr><td>Digital Inclusion Forum</td><td>Free Wi-Fi for All</td><td>Jul 21, 2026</td><td><span class="badge open">Open</span></td></tr><tr><td>eGov Orientation</td><td>eGov Super App</td><td>Jul 19, 2026</td><td><span class="badge closed">Closed</span></td></tr><tr><td>NBP Consultation</td><td>National Broadband Plan</td><td>Jul 28, 2026</td><td><span class="badge draft">Draft</span></td></tr><tr><td>Cybersecurity Briefing</td><td>Cybersecurity Program</td><td>Aug 2, 2026</td><td><span class="badge draft">Draft</span></td></tr></tbody></table></section><section class="panel"><div class="panel-head"><h4>Attendance status</h4><button>Reports</button></div><div class="status-list"><div class="status-line"><span>Valid</span><b>438</b><div class="track"><div class="fill valid"></div></div></div><div class="status-line"><span>Duplicate</span><b>31</b><div class="track"><div class="fill duplicate"></div></div></div><div class="status-line"><span>Invalid or void</span><b>17</b><div class="track"><div class="fill invalid"></div></div></div></div><p class="quick-note">Review flagged records before generating the final attendance sheet.</p></section></div>
+        </div>
+      </main>
+    </div>
+  </section>
+</div>
+
+<div class="approval options">
+  <div class="option" data-choice="approve-modern-dict-direction" onclick="toggleSelect(this)">
+    <div class="letter">OK</div>
+    <div class="content"><h3>This direction feels right</h3><p>Use this as the visual foundation, then refine each workflow screen.</p></div>
+  </div>
+</div>

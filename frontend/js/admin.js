@@ -1,5 +1,6 @@
 import { apiDownload, apiRequest, getApiOrigin } from "./api.js";
 import { logout, requireAdmin } from "./auth.js";
+import { initializeThemeToggle } from "./theme.js";
 
 const app = document.querySelector("#admin-app");
 const appLoading = document.querySelector("#app-loading");
@@ -7,11 +8,14 @@ const root = document.querySelector("#view-root");
 const pageTitle = document.querySelector("#page-title");
 const refreshButton = document.querySelector("#refresh-button");
 const menuButton = document.querySelector("#menu-button");
+const themeToggle = document.querySelector("#theme-toggle");
 const sidebar = document.querySelector("#sidebar");
 const scrim = document.querySelector("#sidebar-scrim");
 const dialog = document.querySelector("#workspace-dialog");
 const dialogTitle = document.querySelector("#dialog-title");
 const dialogContent = document.querySelector("#dialog-content");
+const desktopSidebar = window.matchMedia("(min-width: 981px)");
+const SIDEBAR_STORAGE_KEY = "dict-attendance-sidebar-collapsed";
 
 const state = {
   user: null,
@@ -232,10 +236,10 @@ function renderEmpty(container, title, message) {
     <div class="empty-state">
       <div class="state-symbol" aria-hidden="true"><span class="material-symbols-outlined">inventory_2</span></div>
       <strong></strong>
-      <span></span>
+      <span class="empty-message"></span>
     </div>`;
   setText("strong", title, container);
-  setText("span", message, container);
+  setText(".empty-message", message, container);
 }
 
 function statusBars(container, values) {
@@ -265,19 +269,20 @@ async function renderDashboard() {
       <section class="view-intro">
         <div><h2>Operational overview</h2><p id="dashboard-scope"></p></div>
       </section>
-      <section class="summary-grid" aria-label="Summary totals">
-        <article class="summary-card"><span class="summary-label">Active programs</span><strong id="program-total" class="summary-value"></strong></article>
-        <article class="summary-card green"><span class="summary-label">Visible events</span><strong id="event-total" class="summary-value"></strong></article>
-        <article class="summary-card amber"><span class="summary-label">Attendance records</span><strong id="attendance-total" class="summary-value"></strong></article>
+      <section class="summary-grid dashboard-summary-grid" aria-label="Summary totals">
+        <article class="summary-card"><span class="summary-icon material-symbols-outlined" aria-hidden="true">view_list</span><div><span class="summary-label">Active programs</span><strong id="program-total" class="summary-value"></strong><small>Visible to your role</small></div></article>
+        <article class="summary-card green"><span class="summary-icon material-symbols-outlined" aria-hidden="true">calendar_month</span><div><span class="summary-label">Visible events</span><strong id="event-total" class="summary-value"></strong><small>Across active programs</small></div></article>
+        <article class="summary-card amber"><span class="summary-icon material-symbols-outlined" aria-hidden="true">groups</span><div><span class="summary-label">Attendance records</span><strong id="attendance-total" class="summary-value"></strong><small>Across visible events</small></div></article>
+        <article class="summary-card red"><span class="summary-icon material-symbols-outlined" aria-hidden="true">fact_check</span><div><span class="summary-label">Needs review</span><strong id="review-total" class="summary-value"></strong><small>Duplicate, invalid, or void</small></div></article>
       </section>
       <section class="dashboard-grid">
         <article class="panel">
-          <header class="panel-header"><h3>Attendance status</h3></header>
-          <div id="attendance-bars" class="panel-body status-bars"></div>
+          <header class="panel-header"><div><h3>Recent events</h3><p>Latest activity in your accessible programs</p></div></header>
+          <div id="recent-events" class="table-wrap"></div>
         </article>
         <article class="panel">
-          <header class="panel-header"><h3>Recent events</h3></header>
-          <div id="recent-events" class="table-wrap"></div>
+          <header class="panel-header"><div><h3>Attendance status</h3><p>Current record classification</p></div></header>
+          <div id="attendance-bars" class="panel-body status-bars"></div>
         </article>
       </section>`;
 
@@ -290,6 +295,11 @@ async function renderDashboard() {
     setText("#program-total", formatNumber(data.totals.programs));
     setText("#event-total", formatNumber(data.totals.events));
     setText("#attendance-total", formatNumber(data.totals.attendance_records));
+    const needsReview = ["duplicate", "invalid", "void"].reduce(
+      (total, status) => total + Number(data.attendance_by_status[status] || 0),
+      0,
+    );
+    setText("#review-total", formatNumber(needsReview));
     statusBars(document.querySelector("#attendance-bars"), data.attendance_by_status);
 
     const recentContainer = document.querySelector("#recent-events");
@@ -1894,7 +1904,34 @@ async function renderAuditLogs() {
 function closeSidebar() {
   sidebar.classList.remove("open");
   scrim.hidden = true;
-  menuButton.setAttribute("aria-expanded", "false");
+  const expanded = desktopSidebar.matches && !app.classList.contains("sidebar-collapsed");
+  menuButton.setAttribute("aria-expanded", String(expanded));
+}
+
+function readSidebarPreference() {
+  try {
+    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function setSidebarCollapsed(collapsed, persist = false) {
+  const isCollapsed = desktopSidebar.matches && collapsed;
+  app.classList.toggle("sidebar-collapsed", isCollapsed);
+  menuButton.setAttribute("aria-expanded", String(!isCollapsed));
+  menuButton.setAttribute("aria-label", isCollapsed ? "Expand navigation" : "Collapse navigation");
+  menuButton.title = isCollapsed ? "Expand navigation" : "Collapse navigation";
+  menuButton.querySelector(".material-symbols-outlined").textContent = isCollapsed
+    ? "left_panel_open"
+    : "left_panel_close";
+  if (persist) {
+    try {
+      window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(isCollapsed));
+    } catch {
+      // Hindi dapat mapigil ang navigation kapag unavailable ang browser storage.
+    }
+  }
 }
 
 function navigate(requestedView) {
@@ -1920,7 +1957,10 @@ function initializeUser(user) {
   state.user = user;
   setText("#sidebar-user-name", user.full_name);
   setText("#sidebar-user-role", formatRole(user.role.role_name));
+  setText("#user-avatar", initials(user.full_name));
   const showSuperAdminNavigation = user.role.role_name === "super_admin";
+  document.querySelector("#administration-nav-group").hidden = !showSuperAdminNavigation;
+  document.querySelector("#governance-nav-group").hidden = !showSuperAdminNavigation;
   document.querySelector("#units-nav").hidden = !showSuperAdminNavigation;
   document.querySelector("#users-nav").hidden = !showSuperAdminNavigation;
   document.querySelector("#psgc-nav").hidden = !showSuperAdminNavigation;
@@ -1936,12 +1976,21 @@ for (const item of document.querySelectorAll(".nav-item")) {
 }
 document.querySelector("#logout-button").addEventListener("click", logout);
 menuButton.setAttribute("aria-controls", "sidebar");
-menuButton.setAttribute("aria-expanded", "false");
 menuButton.addEventListener("click", () => {
+  if (desktopSidebar.matches) {
+    setSidebarCollapsed(!app.classList.contains("sidebar-collapsed"), true);
+    return;
+  }
   sidebar.classList.add("open");
   scrim.hidden = false;
   menuButton.setAttribute("aria-expanded", "true");
 });
+desktopSidebar.addEventListener("change", () => {
+  closeSidebar();
+  setSidebarCollapsed(readSidebarPreference());
+});
+initializeThemeToggle(themeToggle);
+setSidebarCollapsed(readSidebarPreference());
 scrim.addEventListener("click", closeSidebar);
 refreshButton.addEventListener("click", async () => {
   setButtonBusy(refreshButton, true);

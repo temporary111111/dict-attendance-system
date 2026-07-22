@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <title>Admin | DICT Attendance System</title>
     <link rel="icon" type="image/png" href="./assets/favicon.png" />
     <link rel="stylesheet" href="./css/base.css" />
@@ -20,47 +20,59 @@
     <div id="admin-app" class="admin-shell" hidden>
       <aside id="sidebar" class="sidebar" aria-label="Admin navigation">
         <a class="sidebar-brand" href="#dashboard" aria-label="DICT Attendance System dashboard">
-          <img src="./assets/dict-header.png" alt="DICT" />
-          <span>Attendance System</span>
+          <img src="./assets/dict-icon.png" alt="" />
+          <span class="sidebar-brand-copy"><strong>DICT Attendance</strong><small>Monitoring System</small></span>
         </a>
 
         <nav class="sidebar-nav">
-          <button class="nav-item" data-view="dashboard" type="button">
-            <span class="nav-symbol material-symbols-outlined" aria-hidden="true">dashboard</span>
-            <span>Dashboard</span>
-          </button>
-          <button class="nav-item" data-view="programs" type="button">
-            <span class="nav-symbol material-symbols-outlined" aria-hidden="true">content_paste</span>
-            <span>Programs</span>
-          </button>
-          <button class="nav-item" data-view="events" type="button">
-            <span class="nav-symbol material-symbols-outlined" aria-hidden="true">event</span>
-            <span>Events</span>
-          </button>
-          <button class="nav-item" data-view="reports" type="button">
-            <span class="nav-symbol material-symbols-outlined" aria-hidden="true">bar_chart</span>
-            <span>Reports</span>
-          </button>
-          <button id="units-nav" class="nav-item" data-view="units" type="button" hidden>
-            <span class="nav-symbol material-symbols-outlined" aria-hidden="true">account_tree</span>
-            <span>Organizational Units</span>
-          </button>
-          <button id="users-nav" class="nav-item" data-view="users" type="button" hidden>
-            <span class="nav-symbol material-symbols-outlined" aria-hidden="true">admin_panel_settings</span>
-            <span>Admin Users</span>
-          </button>
-          <button id="psgc-nav" class="nav-item" data-view="psgc" type="button" hidden>
-            <span class="nav-symbol material-symbols-outlined" aria-hidden="true">map</span>
-            <span>PSGC Data</span>
-          </button>
-          <button id="audit-nav" class="nav-item" data-view="audit" type="button" hidden>
-            <span class="nav-symbol material-symbols-outlined" aria-hidden="true">history</span>
-            <span>Audit Logs</span>
-          </button>
+          <div class="nav-group">
+            <p class="nav-group-label">Overview</p>
+            <button class="nav-item" data-view="dashboard" type="button" title="Dashboard">
+              <span class="nav-symbol material-symbols-outlined" aria-hidden="true">space_dashboard</span>
+              <span>Dashboard</span>
+            </button>
+          </div>
+          <div class="nav-group">
+            <p class="nav-group-label">Operations</p>
+            <button class="nav-item" data-view="programs" type="button" title="Programs">
+              <span class="nav-symbol material-symbols-outlined" aria-hidden="true">view_list</span>
+              <span>Programs</span>
+            </button>
+            <button class="nav-item" data-view="events" type="button" title="Events">
+              <span class="nav-symbol material-symbols-outlined" aria-hidden="true">calendar_month</span>
+              <span>Events</span>
+            </button>
+            <button class="nav-item" data-view="reports" type="button" title="Reports">
+              <span class="nav-symbol material-symbols-outlined" aria-hidden="true">analytics</span>
+              <span>Reports</span>
+            </button>
+          </div>
+          <div id="administration-nav-group" class="nav-group" hidden>
+            <p class="nav-group-label">Administration</p>
+            <button id="units-nav" class="nav-item" data-view="units" type="button" title="Organizational Units" hidden>
+              <span class="nav-symbol material-symbols-outlined" aria-hidden="true">account_tree</span>
+              <span>Organizational Units</span>
+            </button>
+            <button id="users-nav" class="nav-item" data-view="users" type="button" title="Admin Users" hidden>
+              <span class="nav-symbol material-symbols-outlined" aria-hidden="true">manage_accounts</span>
+              <span>Admin Users</span>
+            </button>
+            <button id="psgc-nav" class="nav-item" data-view="psgc" type="button" title="PSGC Data" hidden>
+              <span class="nav-symbol material-symbols-outlined" aria-hidden="true">map</span>
+              <span>PSGC Data</span>
+            </button>
+          </div>
+          <div id="governance-nav-group" class="nav-group" hidden>
+            <p class="nav-group-label">Governance</p>
+            <button id="audit-nav" class="nav-item" data-view="audit" type="button" title="Audit Logs" hidden>
+              <span class="nav-symbol material-symbols-outlined" aria-hidden="true">history</span>
+              <span>Audit Logs</span>
+            </button>
+          </div>
         </nav>
 
         <div class="sidebar-user">
-          <div id="user-avatar" class="user-avatar" aria-hidden="true"><span class="material-symbols-outlined">person</span></div>
+          <div id="user-avatar" class="user-avatar" aria-hidden="true"></div>
           <div class="user-meta">
             <strong id="sidebar-user-name"></strong>
             <span id="sidebar-user-role"></span>
@@ -74,16 +86,19 @@
       <section class="workspace">
         <header class="topbar">
           <div class="topbar-left">
-            <button id="menu-button" class="icon-button menu-button" type="button" title="Open navigation" aria-label="Open navigation"><span class="material-symbols-outlined" aria-hidden="true">menu</span></button>
+            <button id="menu-button" class="icon-button menu-button" type="button" title="Collapse navigation" aria-label="Collapse navigation"><span class="material-symbols-outlined" aria-hidden="true">left_panel_close</span></button>
             <div>
               <p class="topbar-context">DICT ATTENDANCE</p>
               <h1 id="page-title">Dashboard</h1>
             </div>
           </div>
-          <button id="refresh-button" class="secondary-button refresh-button" type="button">
-            <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
-            <span>Refresh</span>
-          </button>
+          <div class="topbar-actions">
+            <button id="theme-toggle" class="icon-button" type="button" title="Use dark theme" aria-label="Use dark theme" aria-pressed="false"><span class="material-symbols-outlined" aria-hidden="true">dark_mode</span></button>
+            <button id="refresh-button" class="secondary-button refresh-button" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+              <span>Refresh</span>
+            </button>
+          </div>
         </header>
 
         <main id="view-root" class="view-root" tabindex="-1"></main>
