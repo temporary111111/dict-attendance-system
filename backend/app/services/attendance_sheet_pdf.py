@@ -36,6 +36,8 @@ PRIVACY_NOTICE = (
     "publications if needed. Should you wish to withdraw your consent, please "
     "contact the respective organizers."
 )
+FORM_RULE_COLOR = colors.HexColor("#4B5563")
+TABLE_HEADER_COLOR = colors.HexColor("#E9F2F8")
 
 
 class AttendanceSheetPDFError(Exception):
@@ -126,17 +128,16 @@ def _logos_cell(
 ) -> object:
     """Dalawang logo side-by-side kung may program logo; DICT logo lang kung wala."""
     if program_logo_path is None or not program_logo_path.is_file():
-        return ReportLabImage(str(dict_logo_path), width=42 * mm, height=21.42 * mm)
+        return ReportLabImage(str(dict_logo_path), width=38 * mm, height=19.38 * mm)
 
-    # Each logo gets roughly half the column (column is ~0.35 of total width).
-    # Target height: 18mm to fit comfortably in the 26mm row span.
-    dict_img = ReportLabImage(str(dict_logo_path), width=40 * mm, height=20.4 * mm)
+    # Mas maliit ang program logo para DICT ang manatiling primary identity sa sheet.
+    dict_img = ReportLabImage(str(dict_logo_path), width=36 * mm, height=18.36 * mm)
 
     try:
         with PILImage.open(program_logo_path) as src:
             pw, ph = src.size
-        # Scale program logo to fit max 40mm wide × 20mm tall.
-        scale = min((40 * mm) / pw, (20 * mm) / ph)
+        # I-fit ang program logo sa compact 32mm x 16mm area.
+        scale = min((32 * mm) / pw, (16 * mm) / ph)
         prog_img = ReportLabImage(
             str(program_logo_path),
             width=pw * scale,
@@ -144,11 +145,11 @@ def _logos_cell(
         )
     except (OSError, ValueError):
         # Fallback: mostra lang ang DICT logo kung may issue sa program logo file.
-        return ReportLabImage(str(dict_logo_path), width=42 * mm, height=21.42 * mm)
+        return ReportLabImage(str(dict_logo_path), width=38 * mm, height=19.38 * mm)
 
     logos_table = Table(
         [[dict_img, prog_img]],
-        colWidths=[42 * mm, 42 * mm],
+        colWidths=[37 * mm, 33 * mm],
     )
     logos_table.setStyle(
         TableStyle(
@@ -185,8 +186,7 @@ def _header_story(
         f"<b>{escape(event.event_title)}</b>",
         styles["event"],
     )
-    # Kapag may program logo, dagdag ang column width para magkasya ang dalawang logo.
-    logo_col_width = (0.40 if program_logo_path else 0.35) * width
+    logo_col_width = (0.37 if program_logo_path else 0.33) * width
     event_col_width = width - logo_col_width - 0.11 * width - 0.07 * width
     header = Table(
         [
@@ -210,7 +210,7 @@ def _header_story(
         TableStyle(
             [
                 ("SPAN", (0, 0), (0, 1)),
-                ("GRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#333333")),
+                ("GRID", (0, 0), (-1, -1), 0.35, FORM_RULE_COLOR),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ALIGN", (0, 0), (-1, -1), "CENTER"),
                 ("LEFTPADDING", (0, 0), (-1, -1), 2),
@@ -230,7 +230,7 @@ def _header_story(
     notice.setStyle(
         TableStyle(
             [
-                ("GRID", (0, 0), (-1, -1), 0.45, colors.HexColor("#333333")),
+                ("GRID", (0, 0), (-1, -1), 0.35, FORM_RULE_COLOR),
                 ("ALIGN", (0, 0), (0, 0), "LEFT"),
                 ("LEFTPADDING", (0, 0), (-1, -1), 2),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 2),
@@ -308,13 +308,13 @@ def _attendance_table(
         repeatRows=1,
     )
     table_commands = [
-                ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#333333")),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D9EAF7")),
+                ("GRID", (0, 0), (-1, -1), 0.35, FORM_RULE_COLOR),
+                ("BACKGROUND", (0, 0), (-1, 0), TABLE_HEADER_COLOR),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("LEFTPADDING", (0, 0), (-1, -1), 1.5),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 1.5),
-                ("TOPPADDING", (0, 0), (-1, -1), 2),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+                ("TOPPADDING", (0, 0), (-1, -1), 1.5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5),
     ]
     table.setStyle(TableStyle(table_commands))
     return table

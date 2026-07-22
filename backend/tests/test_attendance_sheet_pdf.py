@@ -5,10 +5,15 @@ from pathlib import Path
 
 from PIL import Image
 from pypdf import PdfReader
+from reportlab.lib import colors
+from reportlab.lib.units import mm
 
 from app.services.attendance_sheet_pdf import (
     AttendanceSheetEvent,
     AttendanceSheetRow,
+    _attendance_table,
+    _logos_cell,
+    _styles,
     render_attendance_sheet_pdf,
 )
 
@@ -111,6 +116,21 @@ def test_renderer_keeps_the_attendance_table_close_to_its_title():
 
     vertical_distance = text_positions["ATTENDANCE SHEET"] - text_positions["NAME"]
     assert vertical_distance < 12 * 2.83465
+
+
+def test_renderer_uses_compact_logo_and_table_visuals(tmp_path):
+    program_logo_path = tmp_path / "program-logo.png"
+    Image.new("RGB", (400, 200), "blue").save(program_logo_path)
+
+    logos = _logos_cell(LOGO_PATH, program_logo_path, _styles())
+    table = _attendance_table([make_row()], _styles(), 800)
+    table_header_color = table._bkgrndcmds[0][-1]
+    grid_command = table._linecmds[0]
+
+    assert logos._argW == [37 * mm, 33 * mm]
+    assert table_header_color == colors.HexColor("#E9F2F8")
+    assert grid_command[3] == 0.35
+    assert grid_command[4] == colors.HexColor("#4B5563")
 
 
 def test_renderer_paginates_27_standard_rows_and_repeats_complete_header():
