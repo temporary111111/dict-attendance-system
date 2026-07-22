@@ -109,12 +109,12 @@ def test_renderer_keeps_the_attendance_table_close_to_its_title():
 
     def capture_position(text, canvas_matrix, _text_matrix, _font, _size):
         normalized = text.strip()
-        if normalized in {"ATTENDANCE SHEET", "NAME"}:
+        if normalized in {"ATTENDANCE SHEET", "SEX"}:
             text_positions[normalized] = canvas_matrix[5]
 
     page.extract_text(visitor_text=capture_position)
 
-    vertical_distance = text_positions["ATTENDANCE SHEET"] - text_positions["NAME"]
+    vertical_distance = text_positions["ATTENDANCE SHEET"] - text_positions["SEX"]
     assert vertical_distance < 12 * 2.83465
 
 
@@ -131,6 +131,24 @@ def test_renderer_uses_compact_logo_and_table_visuals(tmp_path):
     assert table_header_color == colors.HexColor("#E9F2F8")
     assert grid_command[3] == 0.35
     assert grid_command[4] == colors.HexColor("#4B5563")
+
+
+def test_renderer_groups_sex_and_consent_columns_with_template_wording():
+    table = _attendance_table([make_row()], _styles(), 800)
+
+    assert ("SPAN", (4, 0), (5, 0)) in table._spanCmds
+    assert ("SPAN", (7, 0), (8, 0)) in table._spanCmds
+    assert table._cellvalues[0][4].getPlainText() == "SEX"
+    assert table._cellvalues[0][7].getPlainText() == "CONSENT"
+    assert table._cellvalues[1][7].getPlainText() == (
+        "I consent to having my photos, videos, and audio taken during the "
+        "event and to be included in DICT publications if needed (Please "
+        "check the box if yes)"
+    )
+    assert table._cellvalues[1][8].getPlainText() == (
+        "I consent to be included in the organizer's database for future "
+        "processing of relevant documents (Please check the box if yes)"
+    )
 
 
 def test_renderer_paginates_27_standard_rows_and_repeats_complete_header():

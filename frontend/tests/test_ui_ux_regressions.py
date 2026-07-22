@@ -146,6 +146,20 @@ class UiUxRegressionTests(unittest.TestCase):
         self.assertIn("context.strokeStyle = signatureInkColor();", attendance_js)
         self.assertIn("context.fillStyle = signatureInkColor();", attendance_js)
 
+    def test_public_attendance_uses_the_official_consent_copy(self) -> None:
+        attendance_js = (FRONTEND_ROOT / "js" / "attendance.js").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "I consent to having my photos, videos, and audio taken during the "
+            "event and to be included in DICT publications if needed.",
+            attendance_js,
+        )
+        self.assertIn(
+            "I consent to be included in the organizer's database for future "
+            "processing of relevant documents.",
+            attendance_js,
+        )
+
     def test_dark_theme_defines_shared_surface_tokens(self) -> None:
         base_css = (FRONTEND_ROOT / "css" / "base.css").read_text(encoding="utf-8")
 

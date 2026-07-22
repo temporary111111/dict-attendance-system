@@ -21,6 +21,8 @@ const fieldLabels = {
   street_address: "Street address",
   postal_code: "Postal code",
 };
+const documentationPublicationConsentCopy = "I consent to having my photos, videos, and audio taken during the event and to be included in DICT publications if needed.";
+const databaseProcessingConsentCopy = "I consent to be included in the organizer's database for future processing of relevant documents.";
 
 let signaturePadState = null;
 
@@ -318,7 +320,7 @@ function confirmConsentBeforeSubmitting(publicEvent) {
   if (!publicationVisible) {
     publicationSummary.textContent = "This event does not request documentation or publication consent.";
   } else if (publicationConsent.checked) {
-    publicationSummary.textContent = "You consented to having your photos, videos, and audio recorded during the event and included in DICT publications, if needed.";
+    publicationSummary.textContent = documentationPublicationConsentCopy;
   } else {
     publicationSummary.textContent = "You are submitting without documentation or publication consent for this event.";
   }
@@ -377,7 +379,7 @@ function renderAttendanceForm(event) {
         <div class="field-group" data-field="postal_code" data-label-key="postal_code"><label for="postal-code">${requiredLabel("postal_code", requirements)}</label><input id="postal-code" name="postal_code" maxlength="10" inputmode="numeric" autocomplete="postal-code" /><span class="field-error"></span></div>
       </div><span class="field-error" data-error-for="psgc_address"></span></section>
       <section class="form-section" data-field="signature" data-label-key="signature"><h2>${requiredLabel("signature", requirements)}</h2><div class="signature-methods" role="group" aria-label="Signature method"><button id="signature-mode-draw" class="signature-method-button" type="button" aria-pressed="true">Draw signature</button><button id="signature-mode-upload" class="signature-method-button" type="button" aria-pressed="false">Upload image</button></div><div id="signature-draw-panel" class="field-group"><label for="signature-pad">Draw your signature</label><canvas id="signature-pad" class="signature-pad" width="900" height="250" aria-label="Draw your signature using a mouse, finger, or stylus">Your browser does not support digital signature drawing.</canvas><div class="signature-pad-actions"><button id="clear-drawn-signature" class="secondary-button" type="button">Clear drawing</button></div></div><div id="signature-upload-panel" class="field-group" hidden><label for="signature-image">Upload a PNG or JPEG signature image</label><input id="signature-image" name="signature_image" type="file" accept="image/png,image/jpeg" disabled /><span class="field-error"></span></div><p class="field-help">Choose one signature method. Provide a signature when this field is required.</p><span class="field-error" data-error-for="signature"></span></section>
-      <section class="form-section"><h2>Consent</h2><div class="attendance-grid"><div class="wide-field" data-field="consent_documentation_publication" data-label-key="consent_documentation_publication"><label class="checkbox-field" for="consent-documentation-publication"><input id="consent-documentation-publication" name="consent_documentation_publication" type="checkbox" /><span>${requiredLabel("consent_documentation_publication", requirements)}. I consent to having my photos, videos, and audio recorded during the event and included in DICT publications, if needed.</span></label><span class="field-error"></span></div><div class="wide-field" data-field="consent_database_processing" data-label-key="consent_database_processing"><label class="checkbox-field" for="consent-database-processing"><input id="consent-database-processing" name="consent_database_processing" type="checkbox" required /><span>${requiredLabel("consent_database_processing", requirements)}. I consent to the inclusion of my personal information in the organizer's database for future processing of relevant documents.</span></label><span class="field-error"></span></div></div></section>
+      <section class="form-section"><h2>Consent</h2><div class="attendance-grid"><div class="wide-field" data-field="consent_documentation_publication" data-label-key="consent_documentation_publication"><label class="checkbox-field" for="consent-documentation-publication"><input id="consent-documentation-publication" name="consent_documentation_publication" type="checkbox" /><span>${requiredLabel("consent_documentation_publication", requirements)}. ${documentationPublicationConsentCopy}</span></label><span class="field-error"></span></div><div class="wide-field" data-field="consent_database_processing" data-label-key="consent_database_processing"><label class="checkbox-field" for="consent-database-processing"><input id="consent-database-processing" name="consent_database_processing" type="checkbox" required /><span>${requiredLabel("consent_database_processing", requirements)}. ${databaseProcessingConsentCopy}</span></label><span class="field-error"></span></div></div></section>
       <div class="submit-row"><button id="attendance-submit" class="primary-button" type="submit"><span class="button-label">Submit attendance</span><span class="button-spinner"></span></button></div>
     </form>
     <dialog id="consent-confirmation-dialog" class="consent-confirmation-dialog" aria-labelledby="consent-confirmation-title">
@@ -385,7 +387,7 @@ function renderAttendanceForm(event) {
         <h2 id="consent-confirmation-title">Review your consent</h2>
         <p>Please review the Privacy Notice and confirm your consent before submitting your attendance.</p>
         <ul class="consent-summary-list">
-          <li>You consented to the inclusion of your personal information in the organizer's database for future processing of relevant documents.</li>
+          <li>${databaseProcessingConsentCopy}</li>
           <li id="publication-consent-summary"></li>
         </ul>
         <div class="consent-confirmation-actions">

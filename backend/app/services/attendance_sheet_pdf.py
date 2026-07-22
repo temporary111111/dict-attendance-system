@@ -38,6 +38,14 @@ PRIVACY_NOTICE = (
 )
 FORM_RULE_COLOR = colors.HexColor("#4B5563")
 TABLE_HEADER_COLOR = colors.HexColor("#E9F2F8")
+DOCUMENTATION_PUBLICATION_CONSENT_COPY = (
+    "I consent to having my photos, videos, and audio taken during the event "
+    "and to be included in DICT publications if needed"
+)
+DATABASE_PROCESSING_CONSENT_COPY = (
+    "I consent to be included in the organizer's database for future "
+    "processing of relevant documents"
+)
 
 
 class AttendanceSheetPDFError(Exception):
@@ -92,6 +100,14 @@ def _styles() -> dict[str, ParagraphStyle]:
             fontName="Helvetica-Bold",
             fontSize=6,
             leading=7,
+            alignment=TA_CENTER,
+        ),
+        "consent_header": ParagraphStyle(
+            "AttendanceConsentHeader",
+            parent=base,
+            fontName="Helvetica-Bold",
+            fontSize=4.5,
+            leading=5.1,
             alignment=TA_CENTER,
         ),
         "event": ParagraphStyle(
@@ -252,20 +268,39 @@ def _attendance_table(
     styles: dict[str, ParagraphStyle],
     width: float,
 ) -> Table:
-    header = [
-        "#",
-        "NAME",
-        "AFFILIATION",
-        "DESIGNATION/CATEGORY",
-        "F",
-        "M",
-        "EMAIL ADDRESS",
-        "CONSENT: DOCUMENTATION/PUBLICATION",
-        "CONSENT: DATABASE PROCESSING",
-        "SIGNATURE",
-    ]
     data: list[list[object]] = [
-        [_text(value, styles["header"]) for value in header]
+        [
+            _text("#", styles["header"]),
+            _text("NAME", styles["header"]),
+            _text("AFFILIATION", styles["header"]),
+            _text("DESIGNATION/CATEGORY", styles["header"]),
+            _text("SEX", styles["header"]),
+            "",
+            _text("EMAIL ADDRESS", styles["header"]),
+            _text("CONSENT", styles["header"]),
+            "",
+            _text("SIGNATURE", styles["header"]),
+        ],
+        [
+            "",
+            "",
+            "",
+            "",
+            _text("F", styles["header"]),
+            _text("M", styles["header"]),
+            "",
+            _text(
+                f"{DOCUMENTATION_PUBLICATION_CONSENT_COPY} "
+                "(Please check the box if yes)",
+                styles["consent_header"],
+            ),
+            _text(
+                f"{DATABASE_PROCESSING_CONSENT_COPY} "
+                "(Please check the box if yes)",
+                styles["consent_header"],
+            ),
+            "",
+        ],
     ]
     if not rows:
         data.append([_text(1, styles["small_center"])] + [""] * 9)
@@ -305,16 +340,24 @@ def _attendance_table(
             0.12 * width,
             0.095 * width,
         ],
-        repeatRows=1,
+        repeatRows=2,
     )
     table_commands = [
-                ("GRID", (0, 0), (-1, -1), 0.35, FORM_RULE_COLOR),
-                ("BACKGROUND", (0, 0), (-1, 0), TABLE_HEADER_COLOR),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 1.5),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 1.5),
-                ("TOPPADDING", (0, 0), (-1, -1), 1.5),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5),
+        ("SPAN", (0, 0), (0, 1)),
+        ("SPAN", (1, 0), (1, 1)),
+        ("SPAN", (2, 0), (2, 1)),
+        ("SPAN", (3, 0), (3, 1)),
+        ("SPAN", (4, 0), (5, 0)),
+        ("SPAN", (6, 0), (6, 1)),
+        ("SPAN", (7, 0), (8, 0)),
+        ("SPAN", (9, 0), (9, 1)),
+        ("GRID", (0, 0), (-1, -1), 0.35, FORM_RULE_COLOR),
+        ("BACKGROUND", (0, 0), (-1, 1), TABLE_HEADER_COLOR),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 1.5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 1.5),
+        ("TOPPADDING", (0, 0), (-1, -1), 1.5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5),
     ]
     table.setStyle(TableStyle(table_commands))
     return table
