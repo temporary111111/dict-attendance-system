@@ -68,12 +68,25 @@ class UiUxRegressionTests(unittest.TestCase):
         admin_html = (FRONTEND_ROOT / "admin.html").read_text(encoding="utf-8")
         admin_css = (FRONTEND_ROOT / "css" / "admin.css").read_text(encoding="utf-8")
 
-        self.assertEqual(admin_html.count('<svg class="nav-symbol"'), 8)
+        self.assertEqual(admin_html.count('<svg class="nav-symbol nav-symbol-bootstrap"'), 8)
         self.assertNotIn('nav-symbol material-symbols-outlined', admin_html)
-        self.assertIn('viewBox="0 0 24 24"', admin_html)
+        self.assertIn('viewBox="0 0 16 16"', admin_html)
+        for icon_name in ("grid", "clipboard", "calendar-event", "bar-chart", "diagram-3", "person-gear", "map", "clock-history"):
+            self.assertIn(f'data-icon="{icon_name}"', admin_html)
         self.assertIn('.nav-symbol {\n  width: 19px;\n  height: 19px;', admin_css)
         self.assertIn(".nav-item.active .nav-symbol", admin_css)
         self.assertIn(":root[data-theme=\"dark\"] .nav-item.active .nav-symbol", admin_css)
+
+    def test_sidebar_brand_uses_full_logo_when_expanded_and_icon_when_collapsed(self) -> None:
+        admin_html = (FRONTEND_ROOT / "admin.html").read_text(encoding="utf-8")
+        admin_css = (FRONTEND_ROOT / "css" / "admin.css").read_text(encoding="utf-8")
+
+        self.assertIn('class="sidebar-brand-header-logo" src="./assets/dict-header.png"', admin_html)
+        self.assertIn('class="sidebar-brand-icon-logo" src="./assets/dict-icon.png"', admin_html)
+        self.assertIn(".sidebar-brand .sidebar-brand-header-logo {", admin_css)
+        self.assertIn(".sidebar-brand .sidebar-brand-icon-logo {", admin_css)
+        self.assertIn(".sidebar-collapsed .sidebar-brand-header-logo", admin_css)
+        self.assertIn(".sidebar-collapsed .sidebar-brand-icon-logo", admin_css)
 
     def test_admin_and_public_themes_use_separate_storage_keys(self) -> None:
         theme_js = (FRONTEND_ROOT / "js" / "theme.js").read_text(encoding="utf-8")
