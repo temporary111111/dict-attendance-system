@@ -28,6 +28,8 @@ Gagamitin ang consistent DICT workspace style:
 
 Sa desktop, mananatili ang dalawang malinaw na bahagi: DICT identity panel at actual login form. Ang branding panel ay magiging simple at official-looking, hindi marketing page. Ang form ang pangunahing action at makikita agad ang email, password, remember-device option, submit button, at backend connection status.
 
+Ang desktop DICT identity panel ay gagamit ng enlarged `dict-header.png` bilang background image sa ilalim ng controlled dark-blue overlay. Mananatili ang white DICT logo card sa taas, habang ang overlay ang magpapanatiling readable ng title at supporting text. Hindi ito gagamitin sa mobile layout para manatiling compact ang sign-in workflow.
+
 Sa mobile, mawawala ang malaking side panel. Lalabas ang compact DICT identity, theme toggle, at login form sa isang readable single-column layout. Walang horizontal overflow at hindi tatama ang controls sa viewport edges.
 
 Ang password visibility control ay gagamit ng familiar visibility icon na may tooltip at accessible label. Hindi babaguhin ang login validation, session storage, o redirect behavior.

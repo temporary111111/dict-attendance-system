@@ -95,6 +95,14 @@ class UiUxRegressionTests(unittest.TestCase):
         self.assertIn("  display: grid;", login_css)
         self.assertIn("  overflow: hidden;", login_css)
 
+    def test_login_brand_restores_the_dict_header_background(self) -> None:
+        login_css = (FRONTEND_ROOT / "css" / "login.css").read_text(encoding="utf-8")
+
+        self.assertIn('background-image: url("../assets/dict-header.png");', login_css)
+        self.assertIn("background-position: center;", login_css)
+        self.assertIn("background-size: cover;", login_css)
+        self.assertIn("background-blend-mode: multiply;", login_css)
+
     def test_public_attendance_has_an_isolated_accessible_theme_toggle(self) -> None:
         attendance_html = (FRONTEND_ROOT / "attendance.html").read_text(encoding="utf-8")
         attendance_js = (FRONTEND_ROOT / "js" / "attendance.js").read_text(encoding="utf-8")
